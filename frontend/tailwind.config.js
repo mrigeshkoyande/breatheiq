@@ -4,29 +4,69 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
+        // Stitch atmospheric theme tokens
+        "primary": "#005c55",
+        "primary-container": "#0f766e",
+        "primary-fixed": "#9cf2e8",
+        "primary-fixed-dim": "#80d5cb",
+        "on-primary": "#ffffff",
+        "on-primary-container": "#a3faef",
+        "on-primary-fixed": "#00201d",
+        "on-primary-fixed-variant": "#00504a",
+        "inverse-primary": "#80d5cb",
+
+        "secondary": "#216963",
+        "secondary-container": "#a8ece5",
+        "secondary-fixed": "#abefe8",
+        "secondary-fixed-dim": "#8fd3cc",
+        "on-secondary": "#ffffff",
+        "on-secondary-container": "#266d68",
+        "on-secondary-fixed": "#00201e",
+        "on-secondary-fixed-variant": "#00504b",
+
+        "tertiary": "#40564f",
+        "tertiary-container": "#586e67",
+        "tertiary-fixed": "#d0e8df",
+        "tertiary-fixed-dim": "#b4ccc3",
+        "on-tertiary": "#ffffff",
+        "on-tertiary-container": "#d8f0e7",
+        "on-tertiary-fixed": "#0a1f1a",
+        "on-tertiary-fixed-variant": "#364b45",
+
+        "surface": "#e9fefb",
+        "surface-bright": "#e9fefb",
+        "surface-dim": "#cadedc",
+        "surface-variant": "#d2e7e5",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#e3f8f6",
+        "surface-container": "#ddf2f0",
+        "surface-container-high": "#d8ecea",
+        "surface-container-highest": "#d2e7e5",
+        "surface-tint": "#006a63",
+
+        "on-surface": "#0c1f1e",
+        "on-surface-variant": "#3e4947",
+        "on-background": "#0c1f1e",
+        "inverse-surface": "#223433",
+        "inverse-on-surface": "#e0f5f3",
+
+        "outline": "#6e7977",
+        "outline-variant": "#bdc9c6",
+
+        "error": "#ba1a1a",
+        "error-container": "#ffdad6",
+        "on-error": "#ffffff",
+        "on-error-container": "#93000a",
+
+        // Original BreatheIQ Palette Tokens
         canvas: "#F8FAF7",
-        surface: "#FFFFFF",
-        primary: {
-          DEFAULT: "#005C55",
-          container: "#0F766E",
-          deep: "#115E59",
-          tint: "#DDF5EC",
-        },
-        secondary: {
-          DEFAULT: "#216963",
-          soft: "#A7E8C6",
-          container: "#A8ECE5",
-        },
         ink: {
           DEFAULT: "#182A29",
           muted: "#64748B",
-        },
-        outline: {
-          DEFAULT: "#E2E8F0",
-          focused: "#CCFBF1",
         },
         cpcb: {
           good: "#2F9E62",
@@ -40,6 +80,27 @@ export default {
       fontFamily: {
         heading: ["'Plus Jakarta Sans'", "sans-serif"],
         sans: ["'Inter'", "sans-serif"],
+        "headline-lg": ["'Plus Jakarta Sans'", "sans-serif"],
+        "headline-md": ["'Plus Jakarta Sans'", "sans-serif"],
+        "headline-sm": ["'Plus Jakarta Sans'", "sans-serif"],
+        "body-lg": ["'Inter'", "sans-serif"],
+        "body-md": ["'Inter'", "sans-serif"],
+        "body-sm": ["'Inter'", "sans-serif"],
+        "label-md": ["'Inter'", "sans-serif"],
+        "label-sm": ["'Inter'", "sans-serif"],
+        "display-hero": ["'Plus Jakarta Sans'", "sans-serif"],
+        "metric-display": ["'Plus Jakarta Sans'", "sans-serif"],
+      },
+      spacing: {
+        "space-xs": "0.25rem",
+        "space-sm": "0.5rem",
+        "space-md": "1rem",
+        "space-lg": "1.5rem",
+        "space-xl": "2.5rem",
+        "gutter": "1.5rem",
+        "gutter-mobile": "0.75rem",
+        "margin": "2.5rem",
+        "margin-mobile": "1rem",
       },
       boxShadow: {
         atmospheric: "0 4px 20px -2px rgba(24, 42, 41, 0.04), 0 2px 6px -1px rgba(24, 42, 41, 0.02)",

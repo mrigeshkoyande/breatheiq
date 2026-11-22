@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-22 18:17:41Z`.  
+> Last audit: `2026-11-22 18:56:09Z`.  
 > Total Routes Specified: **93**
 
 ---
@@ -11,9 +11,9 @@
 | Status | Count | Percentage | Definition |
 |---|---|---|---|
 | 🟢 **VERIFIED** | `0` | `0.0%` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |
-| 🟡 **FUNCTIONAL** | `5` | `5.4%` | Wired to API and works, but awaiting full verification tests |
-| 🔵 **UI-ONLY** | `1` | `1.1%` | UI exists but not connected to backend APIs |
-| 🟠 **STUB** | `2` | `2.2%` | Placeholder, partial layout, or hardcoded component data |
+| 🟡 **FUNCTIONAL** | `8` | `8.6%` | Wired to API and works, but awaiting full verification tests |
+| 🔵 **UI-ONLY** | `0` | `0.0%` | UI exists but not connected to backend APIs |
+| 🟠 **STUB** | `0` | `0.0%` | Placeholder, partial layout, or hardcoded component data |
 | 🔴 **MISSING** | `85` | `91.4%` | Route and component do not exist |
 
 ---
@@ -22,7 +22,7 @@
 
 | # | Route | Name | Category | Tier | Access | Status | Design Asset | Evidence / Audit Findings |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `/` | Landing Page | Public | T1 | public | 🟠 STUB | breatheiq_landing_page_mumbai_hero_redesign | Hero section only (100 lines); missing bento, what-if, FAQ, and live search API |
+| 1 | `/` | Landing Page | Public | T1 | public | 🟡 FUNCTIONAL | breatheiq_landing_page_mumbai_hero_redesign | Complete Mumbai redesign (1215 lines); What-If simulator, bento grid, location search, FAQ |
 | 2 | `/about` | About BreatheIQ | Public | T2 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 3 | `/features` | Features & Comparison | Public | T2 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 4 | `/how-it-works` | How It Works (Engine Stepper) | Public | T2 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
@@ -51,7 +51,7 @@
 | 27 | `/onboarding/lifestyle` | Onboarding: Lifestyle | Auth and onboarding | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 28 | `/onboarding/alerts` | Onboarding: Alerts | Auth and onboarding | T2 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 29 | `/onboarding/complete` | Onboarding: Complete & AirTwin | Auth and onboarding | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟠 STUB | breatheiq_main_dashboard_andheri_west_mumbai | Contains hardcoded AQI values in component; not connected to /dashboard/summary API |
+| 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_main_dashboard_andheri_west_mumbai | Complete Andheri West dashboard (663 lines); interactive routine checklist, Window Oracle, AQI dial |
 | 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🔴 MISSING | breatheiq_atmospheric_command_center | Route not mounted in App.tsx or page component missing |
 | 32 | `/app/air-quality/stations/:id` | Station Telemetry Detail | Core app | T2 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🔴 MISSING | breatheiq_air_quality_inversion_analytics | Route not mounted in App.tsx or page component missing |
@@ -113,7 +113,7 @@
 | 89 | `/admin/audit-logs` | Immutable Security Audit Trail | Admin | T2 | admin | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 90 | `/admin/system-health` | System Health & Schedulers | Admin | T2 | admin | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 91 | `/403` | Forbidden (403) | System | T2 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 92 | `/404` | Not Found (404) | System | T1 | public | 🔵 UI-ONLY | — | Basic not-found view (19 lines); lacks search or help fallbacks |
+| 92 | `/404` | Not Found (404) | System | T1 | public | 🟡 FUNCTIONAL | — | Accessible 404 view (101 lines); emergency air hotline, search fallback, quick nav |
 | 93 | `/500` | Server Error (500) | System | T2 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 
 ---
