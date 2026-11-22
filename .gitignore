@@ -1,0 +1,63 @@
+# BreatheIQ .gitignore
+
+# Protected original assets (never commit - repo limit constraint)
+Design file/
+Media/
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Python Virtual Environments & Bytecode
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Local SQLite databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build Outputs & Bundles
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Testing & Coverage
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+playwright-report/
+test-results/
+
+# Editor & System Artifacts
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Vite / Cache
+.vite/
+.turbo/
+.cache/
