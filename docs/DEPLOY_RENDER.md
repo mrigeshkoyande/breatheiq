@@ -42,12 +42,18 @@ If creating a Web Service manually without Blueprints:
 
 ## 2. Deploying Frontend to Vercel (Alternative Frontend-Only Host)
 
-If you prefer deploying the React frontend to Vercel while keeping the backend on Render:
+If you deploy the React frontend to Vercel while keeping the backend on Render:
 
 1. Import the repository in [Vercel Dashboard](https://vercel.com/new).
-2. `vercel.json` in the repository root is preconfigured with:
-   - **Install Command:** `cd frontend && npm install`
-   - **Build Command:** `cd frontend && npm run build`
+2. Configure Project Settings:
+   - **Root Directory:** `frontend`
+   - **Framework Preset:** `Vite`
+   - **Build Command:** default / override off (`npm run build`)
+   - **Output Directory:** default / override off (`dist`)
+   - **Install Command:** default / override off (`npm install`)
+3. Add Environment Variable:
+   - `VITE_API_BASE_URL`: `https://<your-render-backend>.onrender.com/api/v1`
+4. Deploy. Vercel automatically deploys the frontend and uses `frontend/vercel.json` for SPA rewrites.
    - **Output Directory:** `frontend/dist`
    - **Framework:** `Vite`
 3. If prompted for **Root Directory**, you can leave it at repository root (`.`) or select `frontend`.

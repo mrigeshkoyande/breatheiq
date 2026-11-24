@@ -30,15 +30,15 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.5-flash"
     OPENAQ_API_KEY: str = ""
 
-    # CORS Allowed Origins
-    ALLOWED_ORIGINS: List[str] = [
+    # CORS Allowed Origins (Union allows EnvSettingsSource to accept raw comma-separated strings without json.loads error)
+    ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://localhost:8000",
     ]
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @field_validator("ALLOWED_ORIGINS")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, list):

@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Ensure 'backend' directory is in sys.path regardless of execution working directory
+_BACKEND_DIR = str(Path(__file__).resolve().parent.parent)
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 import pytest
 from app.core.config import Settings
 
@@ -40,4 +48,29 @@ def test_settings_debug_boolean_normalization():
     assert Settings(DEBUG="1").DEBUG is True
     assert Settings(DEBUG="false").DEBUG is False
     assert Settings(DEBUG="0").DEBUG is False
+
+
+def test_settings_env_var_json(monkeypatch):
+    monkeypatch.setenv("ALLOWED_ORIGINS", '["https://breatheiq.vercel.app"]')
+    s = Settings()
+    assert s.ALLOWED_ORIGINS == ["https://breatheiq.vercel.app"]
+
+
+def test_settings_env_var_csv(monkeypatch):
+    monkeypatch.setenv("ALLOWED_ORIGINS", "https://breatheiq.vercel.app, https://preview.vercel.app")
+    s = Settings()
+    assert s.ALLOWED_ORIGINS == ["https://breatheiq.vercel.app", "https://preview.vercel.app"]
+
+
+def test_settings_env_var_single(monkeypatch):
+    monkeypatch.setenv("ALLOWED_ORIGINS", "https://breatheiq.vercel.app")
+    s = Settings()
+    assert s.ALLOWED_ORIGINS == ["https://breatheiq.vercel.app"]
+
+
+def test_settings_env_var_single_quoted_json(monkeypatch):
+    monkeypatch.setenv("ALLOWED_ORIGINS", "['https://breatheiq.vercel.app']")
+    s = Settings()
+    assert s.ALLOWED_ORIGINS == ["https://breatheiq.vercel.app"]
+
 

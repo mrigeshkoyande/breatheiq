@@ -39,11 +39,24 @@ This guide provides exact deployment instructions for:
 2. Click **Add New...** → **Project** and select your GitHub repository (`breatheiq`).
 
 ### Step 2: Configure Project Settings
+
+#### Recommended (Vercel Monorepo Setting):
 - **Framework Preset:** `Vite`
-- **Root Directory:** `./` (Leave as repository root; `vercel.json` coordinates the build)
-- **Install Command:** `cd frontend && npm install` (automatically specified in `vercel.json`)
-- **Build Command:** `cd frontend && npm run build` (automatically specified in `vercel.json`)
-- **Output Directory:** `frontend/dist` (automatically specified in `vercel.json`)
+- **Root Directory:** Click "Edit" and choose `frontend`
+- **Build Command:** Leave default / Override OFF (runs `npm run build`)
+- **Output Directory:** Leave default / Override OFF (`dist`)
+- **Install Command:** Leave default / Override OFF (runs `npm install`)
+
+*(Note: `frontend/vercel.json` is provided in the repository to automatically handle SPA client-side routing on page refreshes).*
+
+#### Alternative (Root Directory Setting):
+If you leave **Root Directory** as `./` (repository root):
+- **Framework Preset:** `Vite`
+- **Install Command:** `npm --prefix frontend install`
+- **Build Command:** `npm --prefix frontend run build`
+- **Output Directory:** `frontend/dist`
+
+> ⚠️ **Important:** Do NOT set Build Command to `cd frontend && ...` if your Root Directory in Vercel is already set to `frontend`. Doing so causes `sh: line 1: cd: frontend: No such file or directory` because Vercel is already inside the `frontend` folder.
 
 ### Step 3: Configure Environment Variables
 In the Vercel project settings (**Settings** → **Environment Variables**), add:
@@ -72,13 +85,27 @@ You can deploy the backend using either **Render Blueprints** or **Manual Web Se
    - Database: `breatheiq-db` (Free PostgreSQL)
 4. Click **Apply**.
 
-### Option B: Manual Web Service Setup
+### Option B: Manual Web Service Setup (Python 3 Native)
 1. In Render Dashboard, click **New** → **Web Service**.
 2. Connect your GitHub repository.
 3. Configure settings:
    - **Name:** `breatheiq-backend`
-   - **Region:** `Singapore` (or region closest to Indian subcontinent)
-   - **Environment:** `Docker` (or `Python 3`)
+   - **Region:** `Singapore` (or closest region)
+   - **Runtime:** `Python 3`
+   - **Branch:** `main`
+   - **Root Directory:** `backend`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Health Check Path:** `/healthz`
+   - **Plan:** `Free`
+
+### Option C: Manual Web Service Setup (Docker Container)
+1. In Render Dashboard, click **New** → **Web Service**.
+2. Connect your GitHub repository.
+3. Configure settings:
+   - **Name:** `breatheiq-backend`
+   - **Region:** `Singapore`
+   - **Runtime / Environment:** `Docker`
    - **Branch:** `main`
    - **Root Directory:** Leave blank (repository root)
    - **Dockerfile Path:** `./Dockerfile`

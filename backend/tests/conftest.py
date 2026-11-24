@@ -1,4 +1,12 @@
 import os
+import sys
+from pathlib import Path
+
+# Ensure 'backend' directory is in sys.path regardless of execution working directory
+_BACKEND_DIR = str(Path(__file__).resolve().parent.parent)
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
