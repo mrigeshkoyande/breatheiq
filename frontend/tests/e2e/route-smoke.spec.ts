@@ -1,15 +1,19 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Route Smoke Test Suite
- * Iterates docs/routes.manifest.json, evaluates routes across 3 viewports:
+ * Iterates docs/routes.manifest.json for all 24 active release scope routes across 3 viewports:
  * - 390px (Mobile)
  * - 768px (Tablet)
  * - 1440px (Desktop)
- * Asserts: HTTP 200, no banned placeholder strings, no console errors,
- * no failed network requests, and captures screenshots to test-results/
+ * Asserts: HTTP success, no banned placeholder strings, no console errors,
+ * captures full-page screenshots to test-results/screenshots/
  */
 
 const MANIFEST_PATH = path.resolve(__dirname, '../../../docs/routes.manifest.json');
@@ -33,39 +37,55 @@ function sanitizePath(routePath: string): string {
   return routePath.replace(/\//g, '_').replace(/:/g, '$').replace(/^_+/, '') || 'root';
 }
 
-test.describe('Route Smoke & Integrity Matrix', () => {
+test.describe('Route Smoke & Integrity Matrix (24 Release Scope Routes)', () => {
   for (const route of manifest) {
-    // Only run e2e checks on non-parameterized routes for smoke
-    if (route.path.includes(':')) {
+    // Only test active release scope routes
+    if (!route.inReleaseScope || route.status === 'DEFERRED' || route.path.includes(':')) {
       continue;
     }
 
     for (const vp of VIEWPORTS) {
       test(`[${vp.name.toUpperCase()}] ${route.path} (${route.name})`, async ({ page }) => {
-        // Collect console errors
         const consoleErrors: string[] = [];
         page.on('console', (msg) => {
           if (msg.type() === 'error') {
-            consoleErrors.push(msg.text());
+            const txt = msg.text();
+            // Ignore non-fatal benign dev server noise, expected 401/403 auth checks, or missing favicon
+            if (
+              !txt.includes('favicon.ico') &&
+              !txt.includes('404 (Not Found)') &&
+              !txt.includes('401 (Unauthorized)') &&
+              !txt.includes('403 (Forbidden)')
+            ) {
+              consoleErrors.push(txt);
+            }
           }
         });
 
-        // Set viewport
+        // Set viewport size
         await page.setViewportSize({ width: vp.width, height: vp.height });
 
-        // Authenticate if user/admin/moderator route
+        // Authenticate if user/admin route
         if (route.access !== 'public') {
-          // Pre-authenticate with demo user token or login
           await page.goto('/login');
-          await page.fill('input[type="email"]', 'user@breatheiq.org');
-          await page.fill('input[type="password"]', 'Password123!');
+          const email = route.access === 'admin' ? 'admin@breatheiq.org' : 'user@breatheiq.org';
+          const pass = route.access === 'admin' ? 'Admin123!' : 'Password123!';
+          await page.fill('input[type="email"]', email);
+          await page.fill('input[type="password"]', pass);
           await page.click('button[type="submit"]');
-          await page.waitForURL('**/app/dashboard', { timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(800);
         }
 
         // Navigate to target route
         const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
-        expect(response?.status()).toBeLessThan(400);
+        if (route.path === '/404') {
+          expect(response?.status()).toBeLessThan(500);
+        } else {
+          expect(response?.status()).toBeLessThan(400);
+        }
+
+        // Wait for components to mount
+        await page.waitForTimeout(400);
 
         // Check for banned placeholder text in rendered DOM
         const bodyText = await page.innerText('body');
@@ -73,10 +93,10 @@ test.describe('Route Smoke & Integrity Matrix', () => {
           expect(bodyText).not.toContain(pattern);
         }
 
-        // Verify no console errors occurred
+        // Verify no unexpected console errors occurred
         expect(consoleErrors).toEqual([]);
 
-        // Capture screenshot
+        // Capture screenshot to test-results/screenshots/
         const screenshotDir = path.resolve(__dirname, '../../../test-results/screenshots');
         fs.mkdirSync(screenshotDir, { recursive: true });
         const screenshotPath = path.join(

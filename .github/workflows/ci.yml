@@ -1,53 +1,76 @@
-name: BreatheIQ CI
+name: BreatheIQ Continuous Integration
 
 on:
   push:
-    branches: [main]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  repo-size:
-    name: Repository Size Budget (< 8 MB)
+  backend-and-audits:
+    name: Backend Pytest & Truth Audits
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Check Repository Size Budget
-        run: python scripts/check_repo_size.py
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  backend-check:
-    name: Backend Tests & Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
+          cache: 'pip'
+
+      - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
-      - name: Run Backend Tests
-        run: |
-          if [ -d backend/tests ]; then pytest backend/tests; fi
+          pip install -r backend/requirements.txt
 
-  frontend-check:
-    name: Frontend Build & Typecheck
+      - name: Run Backend Unit & Integration Tests
+        run: |
+          cd backend
+          pytest -v --durations=10
+
+      - name: Enforce Truth & Anti-Hallucination Claims Check
+        run: |
+          python scripts/check_claims.py
+
+      - name: Enforce Anti-Stub & Completeness Check
+        run: |
+          python scripts/audit_stubs.py
+
+      - name: Audit Route Ledger Build Status
+        run: |
+          python scripts/build_status.py
+
+      - name: Enforce Repository Size Budget (< 1.5 MB tracked)
+        run: |
+          python scripts/check_repo_size.py
+
+  frontend-build-and-test:
+    name: Frontend Build & Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
         run: |
-          if [ -f frontend/package.json ]; then cd frontend && npm ci; fi
-      - name: Typecheck and Build
+          cd frontend
+          npm ci
+
+      - name: TypeScript Typecheck & Vite Production Build
         run: |
-          if [ -f frontend/package.json ]; then cd frontend && npm run build; fi
+          cd frontend
+          npm run build
+
+      - name: Run Frontend Unit Tests
+        run: |
+          cd frontend
+          npm test
