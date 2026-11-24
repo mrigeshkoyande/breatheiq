@@ -13,7 +13,7 @@ async def test_health_endpoints(client):
 @pytest.mark.asyncio
 async def test_signup_and_login_flow(client):
     # Signup
-    signup_res = await client.post("/api/auth/signup", json={
+    signup_res = await client.post("/api/v1/auth/signup", json={
         "email": "testuser@example.com",
         "password": "Password123!",
         "full_name": "Test User"
@@ -25,14 +25,14 @@ async def test_signup_and_login_flow(client):
     assert "breatheiq_refresh" in signup_res.cookies
 
     # Duplicate signup should fail
-    dup_res = await client.post("/api/auth/signup", json={
+    dup_res = await client.post("/api/v1/auth/signup", json={
         "email": "testuser@example.com",
         "password": "Password123!"
     })
     assert dup_res.status_code == 400
 
     # Login
-    login_res = await client.post("/api/auth/login", json={
+    login_res = await client.post("/api/v1/auth/login", json={
         "email": "testuser@example.com",
         "password": "Password123!"
     })
@@ -40,7 +40,7 @@ async def test_signup_and_login_flow(client):
     assert "access_token" in login_res.json()
 
     # Login with bad password
-    bad_login = await client.post("/api/auth/login", json={
+    bad_login = await client.post("/api/v1/auth/login", json={
         "email": "testuser@example.com",
         "password": "WrongPassword!"
     })
@@ -49,7 +49,7 @@ async def test_signup_and_login_flow(client):
 @pytest.mark.asyncio
 async def test_refresh_token_rotation_and_reuse_detection(client):
     # Signup to get initial cookie
-    signup_res = await client.post("/api/auth/signup", json={
+    signup_res = await client.post("/api/v1/auth/signup", json={
         "email": "rotate@example.com",
         "password": "Password123!"
     })
@@ -58,18 +58,18 @@ async def test_refresh_token_rotation_and_reuse_detection(client):
 
     # First refresh (valid)
     client.cookies.set("breatheiq_refresh", initial_refresh_cookie)
-    ref1 = await client.post("/api/auth/refresh")
+    ref1 = await client.post("/api/v1/auth/refresh")
     assert ref1.status_code == 200
     new_refresh_cookie = ref1.cookies["breatheiq_refresh"]
     assert new_refresh_cookie != initial_refresh_cookie
 
     # Attempt to reuse old rotated token (reuse attack!)
     client.cookies.set("breatheiq_refresh", initial_refresh_cookie)
-    reuse_res = await client.post("/api/auth/refresh")
+    reuse_res = await client.post("/api/v1/auth/refresh")
     assert reuse_res.status_code == 401
     assert "compromise detected" in reuse_res.json()["detail"].lower()
 
     # Legitimate token should now also be invalidated because whole family was revoked
     client.cookies.set("breatheiq_refresh", new_refresh_cookie)
-    family_dead_res = await client.post("/api/auth/refresh")
+    family_dead_res = await client.post("/api/v1/auth/refresh")
     assert family_dead_res.status_code == 401

@@ -91,13 +91,9 @@ export const NotFoundPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Emergency Assistance Footer */}
+      {/* Helpful Navigation Footer */}
       <footer className="max-w-md mx-auto w-full text-center text-xs text-[#64748B] border-t border-[#E2E8F0] pt-6 flex flex-col items-center gap-1">
-        <div className="flex items-center gap-1.5 text-[#DC5252] font-semibold">
-          <ShieldAlert className="w-4 h-4" />
-          <span>Experiencing severe respiratory distress?</span>
-        </div>
-        <span>Consult immediate medical attention or call emergency services (112 in India).</span>
+        <span>Need guidance? Return to the home dashboard or search your neighborhood above.</span>
       </footer>
     </div>
   );

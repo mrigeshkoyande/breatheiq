@@ -29,14 +29,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Routers (Mounted under /api/v1 and aliased to /api for client compatibility)
+# API Routers (Mounted under canonical /api/v1 prefix)
 app.include_router(health.router)
 
-for prefix in ["/api/v1", "/api"]:
-    app.include_router(auth.router, prefix=prefix)
-    app.include_router(air_quality.router, prefix=prefix)
-    app.include_router(engines.router, prefix=prefix)
-    app.include_router(copilot.router, prefix=prefix)
-    app.include_router(user_flow.router, prefix=prefix)
-    app.include_router(community.router, prefix=prefix)
-    app.include_router(admin.router, prefix=prefix)
+API_V1_PREFIX = "/api/v1"
+app.include_router(auth.router, prefix=API_V1_PREFIX)
+app.include_router(air_quality.router, prefix=API_V1_PREFIX)
+app.include_router(engines.router, prefix=API_V1_PREFIX)
+app.include_router(copilot.router, prefix=API_V1_PREFIX)
+app.include_router(user_flow.router, prefix=API_V1_PREFIX)
+app.include_router(community.router, prefix=API_V1_PREFIX)
+app.include_router(admin.router, prefix=API_V1_PREFIX)
