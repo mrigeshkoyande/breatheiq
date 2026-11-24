@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary & Verification Ledger
 
-- **Release Scope:** 24 Routes (100% of Release Scope VERIFIED)
+- **Release Scope:** 24 Routes (All 24 VERIFIED)
 - **Deferred Scope:** 70 non-core routes recorded in `docs/DECISIONS.md` (ADR 001)
 - **Active Route Ledger:** `docs/BUILD_STATUS.md` (Automated single source of truth)
 - **Total Tracked Repository Size:** `0.965 MB` (Hard budget: `< 1.5 MB`)
