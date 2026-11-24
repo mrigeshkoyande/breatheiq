@@ -9,12 +9,14 @@ Supports:
 """
 
 import time
+import asyncio
 import httpx
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel, Field
 from app.engines.naqi import calculate_cpcb_naqi, NAQIResult
+from app.core.config import settings
 
 # Preconfigured Indian Metropolitan Corridors
 PRECONFIGURED_CITIES = {
@@ -252,6 +254,9 @@ class OpenMeteoAirQualityProvider(AirDataProvider):
         self.demo = DemoAirDataProvider()
 
     async def get_current(self, lat: float, lon: float, city_name: Optional[str] = None) -> AirDataPayload:
+        if getattr(settings, "DEMO_MODE", False) or getattr(settings, "ENVIRONMENT", "") in ["testing", "test"]:
+            return await self.demo.get_current(lat, lon, city_name)
+
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
                 aq_url = (
@@ -316,6 +321,9 @@ class OpenMeteoAirQualityProvider(AirDataProvider):
         return await self.demo.get_current(lat, lon, city_name)
 
     async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
+        if getattr(settings, "DEMO_MODE", False) or getattr(settings, "ENVIRONMENT", "") in ["testing", "test"]:
+            return await self.demo.get_forecast(lat, lon, hours)
+
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
                 url = (
@@ -351,13 +359,15 @@ class OpenMeteoAirQualityProvider(AirDataProvider):
 
         return await self.demo.get_forecast(lat, lon, hours)
 
-# Ingest Orchestrator with in-memory TTL caching
+# Ingest Orchestrator with single-flight request coalescing and in-memory TTL caching
 class AirDataService:
     def __init__(self):
         self.provider = OpenMeteoAirQualityProvider()
         self.demo = DemoAirDataProvider()
         self._current_cache: Dict[str, Tuple[float, AirDataPayload]] = {}
         self._forecast_cache: Dict[str, Tuple[float, List[Dict[str, Any]]]] = {}
+        self._current_locks: Dict[str, asyncio.Lock] = {}
+        self._forecast_locks: Dict[str, asyncio.Lock] = {}
         self.CURRENT_TTL = 900.0  # 15 minutes
         self.FORECAST_TTL = 3600.0  # 1 hour
 
@@ -372,9 +382,21 @@ class AirDataService:
             if now - cached_time < self.CURRENT_TTL:
                 return cached_val
 
-        data = await self.provider.get_current(lat, lon, city)
-        self._current_cache[key] = (now, data)
-        return data
+        # Single-flight request coalescing
+        if key not in self._current_locks:
+            self._current_locks[key] = asyncio.Lock()
+
+        async with self._current_locks[key]:
+            # Double check cache inside lock
+            now = time.time()
+            if key in self._current_cache:
+                cached_time, cached_val = self._current_cache[key]
+                if now - cached_time < self.CURRENT_TTL:
+                    return cached_val
+
+            data = await self.provider.get_current(lat, lon, city)
+            self._current_cache[key] = (now, data)
+            return data
 
     async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
         key = f"{self._cache_key(lat, lon)}:{hours}"
@@ -384,9 +406,20 @@ class AirDataService:
             if now - cached_time < self.FORECAST_TTL:
                 return cached_val
 
-        data = await self.provider.get_forecast(lat, lon, hours)
-        self._forecast_cache[key] = (now, data)
-        return data
+        # Single-flight request coalescing
+        if key not in self._forecast_locks:
+            self._forecast_locks[key] = asyncio.Lock()
+
+        async with self._forecast_locks[key]:
+            now = time.time()
+            if key in self._forecast_cache:
+                cached_time, cached_val = self._forecast_cache[key]
+                if now - cached_time < self.FORECAST_TTL:
+                    return cached_val
+
+            data = await self.provider.get_forecast(lat, lon, hours)
+            self._forecast_cache[key] = (now, data)
+            return data
 
     def get_cities(self) -> List[Dict[str, Any]]:
         return list(PRECONFIGURED_CITIES.values())

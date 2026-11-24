@@ -10,7 +10,11 @@ import app.models.auth
 import app.models.copilot
 import app.models.app_data
 
+from app.core.security import hash_password
+from app.db.seed import DEMO_ACCOUNTS
+
 settings.ENVIRONMENT = "testing"
+_CACHED_DEMO_HASH = hash_password("Password123!")
 
 @pytest_asyncio.fixture(scope="function")
 async def test_db():
@@ -24,14 +28,12 @@ async def test_db():
 
     async_session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-    # Seed demo accounts into test db
+    # Seed demo accounts into test db using precomputed hash for performance
     async with async_session() as session:
-        from app.db.seed import DEMO_ACCOUNTS
-        from app.core.security import hash_password
         for acc in DEMO_ACCOUNTS:
             u = app.models.auth.User(
                 email=acc["email"],
-                hashed_password=hash_password(acc["password"]),
+                hashed_password=_CACHED_DEMO_HASH,
                 full_name=acc["full_name"],
                 role=acc["role"],
                 is_active=acc["is_active"],

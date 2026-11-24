@@ -97,56 +97,58 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans selection:bg-[#DDF5EC] selection:text-[#0F766E]">
       {/* FLOATING GLASSMORPHIC NAVIGATION BAR - COMPACT FLOATING ISLAND */}
-      <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-fit max-w-[95vw] sm:max-w-4xl z-50 rounded-full glass-nav px-3.5 sm:px-6 py-2 transition-all duration-200 shadow-xl shadow-teal-950/5">
-        <div className="flex items-center gap-3 sm:gap-6 justify-between">
+      <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-fit max-w-[95vw] sm:max-w-3xl z-50 rounded-full glass-nav px-3 sm:px-4 py-1.5 transition-all duration-200 shadow-xl shadow-teal-950/10 ring-1 ring-black/[0.04]">
+        <div className="flex items-center gap-2 sm:gap-4 justify-between">
           <Link to="/" className="flex items-center gap-2 group shrink-0" title="BreatheIQ Home">
-            <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg shadow-sm group-hover:scale-105 transition-transform" />
+            <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-7 h-7 rounded-lg shadow-xs group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
-              <span className="font-heading font-extrabold text-base sm:text-lg text-[#182A29] leading-none tracking-tight">
+              <span className="font-heading font-extrabold text-sm sm:text-base text-[#182A29] leading-none tracking-tight">
                 Breathe<span className="text-[#0F766E]">IQ</span>
               </span>
-              <span className="text-[9px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
+              <span className="text-[8px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
                 Urban Air
               </span>
             </div>
           </Link>
 
+          <div className="hidden md:block h-4 w-px bg-slate-200/80"></div>
+
           <nav className="hidden md:flex items-center gap-1 sm:gap-1.5">
             <a
               href="#features"
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
+              className="whitespace-nowrap px-2.5 py-1 rounded-full text-[12px] font-semibold text-slate-700 hover:text-[#0F766E] bg-white/40 hover:bg-white/90 border border-white/60 hover:border-teal-200/60 shadow-xs active:scale-95 transition-all duration-150"
             >
               Features
             </a>
             <a
               href="#how-it-works"
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
+              className="whitespace-nowrap px-2.5 py-1 rounded-full text-[12px] font-semibold text-slate-700 hover:text-[#0F766E] bg-white/40 hover:bg-white/90 border border-white/60 hover:border-teal-200/60 shadow-xs active:scale-95 transition-all duration-150"
             >
               How It Works
             </a>
             <a
               href="#what-if"
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
+              className="whitespace-nowrap px-2.5 py-1 rounded-full text-[12px] font-semibold text-slate-700 hover:text-[#0F766E] bg-white/40 hover:bg-white/90 border border-white/60 hover:border-teal-200/60 shadow-xs active:scale-95 transition-all duration-150"
             >
               What-If
             </a>
             <a
               href="#transparency"
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
+              className="whitespace-nowrap px-2.5 py-1 rounded-full text-[12px] font-semibold text-slate-700 hover:text-[#0F766E] bg-white/40 hover:bg-white/90 border border-white/60 hover:border-teal-200/60 shadow-xs active:scale-95 transition-all duration-150"
             >
               Provenance
             </a>
             <a
               href="#faq"
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
+              className="whitespace-nowrap px-2.5 py-1 rounded-full text-[12px] font-semibold text-slate-700 hover:text-[#0F766E] bg-white/40 hover:bg-white/90 border border-white/60 hover:border-teal-200/60 shadow-xs active:scale-95 transition-all duration-150"
             >
               FAQ
             </a>
             <Link
               to="/dev/ui"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#0F766E] via-[#0D9488] to-[#14B8A6] hover:from-[#115E59] hover:to-[#0F766E] shadow-sm shadow-[#0F766E]/25 hover:shadow-md hover:shadow-[#0F766E]/35 hover:scale-105 active:scale-95 transition-all duration-150 border border-teal-300/40 ml-1"
+              className="whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#0F766E] via-[#0D9488] to-[#14B8A6] hover:from-[#115E59] hover:to-[#0F766E] shadow-sm shadow-[#0F766E]/25 hover:shadow-md hover:shadow-[#0F766E]/35 hover:scale-105 active:scale-95 transition-all duration-150 border border-teal-200/40 ml-1"
             >
-              <Sparkles className="w-3.5 h-3.5 text-teal-200" />
+              <Sparkles className="w-3 h-3 text-teal-200" />
               <span>Sandbox</span>
             </Link>
           </nav>
@@ -164,6 +166,53 @@ export const LandingPage: React.FC = () => {
           />
           {/* Soft gradient overlay for text readability while preserving the vibrant sunset & bridge */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-transparent"></div>
+        </div>
+
+        {/* Floating View & Grid Layout Controller */}
+        <div className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-white/80 backdrop-blur-xl border border-white/90 shadow-lg shadow-teal-950/10 absolute top-20 right-4 sm:right-6 lg:right-10 z-20">
+          <span className="text-[10px] uppercase font-bold text-slate-600 pl-2 pr-1 flex items-center gap-1">
+            <SlidersHorizontal className="w-3 h-3 text-[#0F766E]" />
+            Layout:
+          </span>
+          <button
+            type="button"
+            onClick={() => setGridMode('balanced')}
+            className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+              gridMode === 'balanced'
+                ? 'bg-[#0F766E] text-white shadow-xs'
+                : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+            }`}
+            title="Balanced 2-Column Grid Layout"
+          >
+            <Columns className="w-3 h-3" />
+            <span>Balanced</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setGridMode('panoramic')}
+            className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+              gridMode === 'panoramic'
+                ? 'bg-[#0F766E] text-white shadow-xs'
+                : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+            }`}
+            title="Wide Panoramic Spacing — Clear Center Sea Link View"
+          >
+            <Maximize2 className="w-3 h-3" />
+            <span>Panoramic</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setGridMode('backdrop')}
+            className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+              gridMode === 'backdrop'
+                ? 'bg-[#0F766E] text-white shadow-xs'
+                : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+            }`}
+            title="Photo Focus Mode — Minimize Card"
+          >
+            <Eye className="w-3 h-3" />
+            <span>Photo Focus</span>
+          </button>
         </div>
 
         {/* Dynamic Adjustable Grid Container */}
@@ -186,53 +235,6 @@ export const LandingPage: React.FC = () => {
                 : 'lg:col-span-7 xl:col-span-7'
             }`}
           >
-            {/* Interactive Grid Adjustment Bar */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-white/75 backdrop-blur-md border border-white/80 shadow-sm self-start">
-              <span className="text-[10px] uppercase font-bold text-slate-600 px-2 flex items-center gap-1">
-                <SlidersHorizontal className="w-3 h-3 text-[#0F766E]" />
-                Grid:
-              </span>
-              <button
-                type="button"
-                onClick={() => setGridMode('balanced')}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
-                  gridMode === 'balanced'
-                    ? 'bg-[#0F766E] text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-                }`}
-                title="Balanced 2-Column Layout"
-              >
-                <Columns className="w-3 h-3" />
-                <span>Balanced</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setGridMode('panoramic')}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
-                  gridMode === 'panoramic'
-                    ? 'bg-[#0F766E] text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-                }`}
-                title="Wide Panoramic Spacing — Clear Center Bridge View"
-              >
-                <Maximize2 className="w-3 h-3" />
-                <span>Panoramic</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setGridMode('backdrop')}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
-                  gridMode === 'backdrop'
-                    ? 'bg-[#0F766E] text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-                }`}
-                title="Full Photo Focus — Minimize Card"
-              >
-                <Eye className="w-3 h-3" />
-                <span>Photo Focus</span>
-              </button>
-            </div>
-
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-[#0F2926] tracking-tight leading-[1.08]">
               Breathe Smarter. <span className="text-[#0F766E] block sm:inline">Live Healthier.</span>
             </h1>
