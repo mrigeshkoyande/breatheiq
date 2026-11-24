@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 08:16:59Z`.  
+> Last audit: `2026-11-24 08:31:19Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -23,7 +23,7 @@
 
 | # | Route | Name | Category | Tier | Access | Status | Design Asset | Evidence / Audit Findings |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `/` | Landing Page | Public | T1 | public | 🟢 VERIFIED | breatheiq_landing_page_mumbai_hero_redesign | Verified across 3 viewports (390/768/1440px); Complete Mumbai redesign (1199 lines); What-If simulator, bento grid, location search, FAQ |
+| 1 | `/` | Landing Page | Public | T1 | public | 🟢 VERIFIED | breatheiq_landing_page_mumbai_hero_redesign | Verified across 3 viewports (390/768/1440px); Complete Mumbai redesign (1146 lines); What-If simulator, bento grid, location search, FAQ |
 | 5 | `/explore` | Explore Indian Cities | Public | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (499 lines) |
 | 7 | `/methodology` | CPCB NAQI Methodology & Calculator | Public | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (430 lines) |
 | 17 | `/privacy` | Privacy Policy | Public | T2 | public | 🟢 VERIFIED | breatheiq_privacy_policy_terms | Verified across 3 viewports; Connected to backend API (252 lines) |

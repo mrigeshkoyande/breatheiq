@@ -71,7 +71,6 @@ export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedCity, setSelectedCity] = useState<CityOption>(CITIES[0]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [language, setLanguage] = useState<'EN' | 'HI' | 'MR'>('EN');
   const [audienceTab, setAudienceTab] = useState<'families' | 'schools' | 'communities'>('families');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -94,103 +93,56 @@ export const LandingPage: React.FC = () => {
       {/* FLOATING GLASSMORPHIC NAVIGATION BAR */}
       <header className="fixed top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 rounded-2xl glass-nav px-4 lg:px-7 py-2.5 transition-all">
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2.5" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-9 h-9 rounded-lg shadow-sm" />
-              <div className="flex flex-col">
-                <span className="font-heading font-extrabold text-xl text-[#182A29] leading-none tracking-tight">
-                  Breathe<span className="text-[#0F766E]">IQ</span>
-                </span>
-                <span className="text-[10px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
-                  Urban Air Quality Assistant
-                </span>
-              </div>
-            </Link>
-
-            <nav className="hidden xl:flex items-center gap-1 pl-4">
-              <a
-                href="#features"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-              >
-                How It Works
-              </a>
-              <a
-                href="#what-if"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-              >
-                What-If Simulator
-              </a>
-              <a
-                href="#transparency"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-              >
-                Data Provenance
-              </a>
-              <a
-                href="#faq"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-              >
-                FAQ
-              </a>
-              <Link
-                to="/dev/ui"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#0F766E] hover:bg-[#DDF5EC] transition-colors"
-              >
-                Design Sandbox (/dev/ui)
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Language Switcher */}
-            <div className="flex items-center glass-pill rounded-lg p-0.5">
-              {(['EN', 'HI', 'MR'] as const).map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  onClick={() => setLanguage(lang)}
-                  className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                    language === lang
-                      ? 'bg-white text-[#182A29] shadow-sm'
-                      : 'text-slate-600 hover:text-[#182A29]'
-                  }`}
-                >
-                  {lang}
-                </button>
-              ))}
+          <Link to="/" className="flex items-center gap-2.5" title="BreatheIQ Home">
+            <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-9 h-9 rounded-lg shadow-sm" />
+            <div className="flex flex-col">
+              <span className="font-heading font-extrabold text-xl text-[#182A29] leading-none tracking-tight">
+                Breathe<span className="text-[#0F766E]">IQ</span>
+              </span>
+              <span className="text-[10px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
+                Urban Air Quality Assistant
+              </span>
             </div>
+          </Link>
 
-            {user ? (
-              <Link
-                to="/app/dashboard"
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-[#0F766E] text-white hover:bg-[#115E59] text-xs font-bold transition-colors shadow-sm"
-              >
-                Dashboard
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-              </Link>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="hidden sm:inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/signup"
-                  className="inline-flex items-center px-4 py-2 rounded-lg bg-[#0F766E] text-white hover:bg-[#115E59] text-xs font-bold transition-colors shadow-sm"
-                >
-                  Get Started Free
-                </Link>
-              </div>
-            )}
-          </div>
+          <nav className="hidden md:flex items-center gap-1">
+            <a
+              href="#features"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+            >
+              How It Works
+            </a>
+            <a
+              href="#what-if"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+            >
+              What-If Simulator
+            </a>
+            <a
+              href="#transparency"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+            >
+              Data Provenance
+            </a>
+            <a
+              href="#faq"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+            >
+              FAQ
+            </a>
+            <Link
+              to="/dev/ui"
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-[#0F766E] hover:bg-[#DDF5EC] transition-colors"
+            >
+              Design Sandbox (/dev/ui)
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -210,11 +162,6 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column: Headlines & Location Typeahead */}
           <div className="lg:col-span-6 flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 self-start px-3.5 py-1 rounded-full bg-white/75 backdrop-blur-md border border-white/80 text-xs font-bold text-[#0F766E] shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-              <span>Challenge 6 — Urban Air Quality Assistant</span>
-            </div>
-
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-[#0F2926] tracking-tight leading-[1.08]">
               Breathe Smarter. <span className="text-[#0F766E] block sm:inline">Live Healthier.</span>
             </h1>
@@ -268,17 +215,17 @@ export const LandingPage: React.FC = () => {
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-4 pt-1">
               <Link
-                to="/signup"
+                to={user ? '/app/dashboard' : '/signup'}
                 className="inline-flex items-center px-6 py-3.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] font-heading font-bold text-sm shadow-xl transition-all hover:-translate-y-0.5"
               >
                 Start Protecting Your Family
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
               <Link
-                to="/login"
+                to={user ? '/app/dashboard' : '/login'}
                 className="inline-flex items-center px-6 py-3.5 rounded-xl bg-white text-[#182A29] hover:bg-slate-50 border border-white/90 font-heading font-bold text-sm shadow-md transition-all hover:-translate-y-0.5"
               >
-                Explore Live Demo
+                {user ? 'Go to Dashboard' : 'Explore Live Demo'}
               </Link>
             </div>
           </div>
