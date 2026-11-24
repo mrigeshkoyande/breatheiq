@@ -47,6 +47,25 @@ async def get_current_user(
 
     return user
 
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security_scheme),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    if not credentials:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("type") != "access":
+            return None
+        user_id = int(payload.get("sub"))
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
+        if user and user.is_active:
+            return user
+    except Exception:
+        pass
+    return None
+
 def require_role(*allowed_roles: str):
     async def role_checker(user: User = Depends(get_current_user)) -> User:
         if user.role not in allowed_roles:

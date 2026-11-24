@@ -4,8 +4,10 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
 from app.core.config import settings
-from app.main import app
+from app.main import app as fastapi_app
 from app.db.session import Base, get_db
+import app.models.auth
+import app.models.copilot
 
 settings.ENVIRONMENT = "testing"
 
@@ -25,13 +27,13 @@ async def test_db():
         async with async_session() as session:
             yield session
 
-    app.dependency_overrides[get_db] = _get_test_db
+    fastapi_app.dependency_overrides[get_db] = _get_test_db
     yield
-    app.dependency_overrides.clear()
+    fastapi_app.dependency_overrides.clear()
     await engine.dispose()
 
 @pytest_asyncio.fixture(scope="function")
 async def client(test_db):
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

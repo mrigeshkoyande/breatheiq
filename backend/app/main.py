@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.seed import seed_database
-from app.api.v1.endpoints import auth, health, air_quality, engines
+from app.api.v1.endpoints import auth, health, air_quality, engines, copilot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,3 +36,4 @@ for prefix in ["/api/v1", "/api"]:
     app.include_router(auth.router, prefix=prefix)
     app.include_router(air_quality.router, prefix=prefix)
     app.include_router(engines.router, prefix=prefix)
+    app.include_router(copilot.router, prefix=prefix)

@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 06:20:12Z`.  
+> Last audit: `2026-11-24 06:26:21Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -11,10 +11,10 @@
 | Status | Count | Percentage of Release | Definition |
 |---|---|---|---|
 | 🟢 **VERIFIED** | `0` | `0.0%` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |
-| 🟡 **FUNCTIONAL** | `10` | `41.7%` | Wired to API and mounted, awaiting full automated verification run |
+| 🟡 **FUNCTIONAL** | `11` | `45.8%` | Wired to API and mounted, awaiting full automated verification run |
 | 🔵 **UI-ONLY** | `0` | `0.0%` | UI exists but not connected to backend APIs |
 | 🟠 **STUB** | `0` | `0.0%` | Placeholder, partial layout, or hardcoded component data |
-| 🔴 **MISSING** | `14` | `58.3%` | Route and component do not exist |
+| 🔴 **MISSING** | `13` | `54.2%` | Route and component do not exist |
 | ⚪ **DEFERRED** | `70` | — | Scoped out for v1 release to ensure rigorous depth on core family flow |
 
 ---
@@ -34,7 +34,7 @@
 | 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_main_dashboard_andheri_west_mumbai | Complete Andheri West dashboard (663 lines); interactive routine, Window Oracle, AQI dial |
 | 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🔴 MISSING | breatheiq_atmospheric_command_center | Route not mounted in App.tsx or page component missing |
 | 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🔴 MISSING | breatheiq_air_quality_inversion_analytics | Route not mounted in App.tsx or page component missing |
-| 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🔴 MISSING | breatheiq_ai_atmospheric_assistant | Route not mounted in App.tsx or page component missing |
+| 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_ai_atmospheric_assistant | Implemented and mounted (331 lines); connected to API |
 | 38 | `/app/routine` | Adaptive Daily Routine | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 40 | `/app/home` | Home & Indoor Air Oracle | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
 | 44 | `/app/family` | Family Air Guardians | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |

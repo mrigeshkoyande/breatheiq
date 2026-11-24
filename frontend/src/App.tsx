@@ -12,6 +12,7 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { DevUiPage } from './pages/DevUiPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { AssistantPage } from './pages/AssistantPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -58,6 +59,14 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/assistant"
+              element={
+                <ProtectedRoute>
+                  <AssistantPage />
                 </ProtectedRoute>
               }
             />
