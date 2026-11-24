@@ -16,6 +16,11 @@ import {
   Calendar,
   Layers,
   Search,
+  SlidersHorizontal,
+  Maximize2,
+  Columns,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface CityOption {
@@ -71,6 +76,7 @@ export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedCity, setSelectedCity] = useState<CityOption>(CITIES[0]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [gridMode, setGridMode] = useState<'balanced' | 'panoramic' | 'backdrop'>('balanced');
   const [audienceTab, setAudienceTab] = useState<'families' | 'schools' | 'communities'>('families');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -90,78 +96,143 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans selection:bg-[#DDF5EC] selection:text-[#0F766E]">
-      {/* FLOATING GLASSMORPHIC NAVIGATION BAR */}
-      <header className="fixed top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 rounded-2xl glass-nav px-4 lg:px-7 py-2.5 transition-all">
-        <div className="w-full flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5" title="BreatheIQ Home">
-            <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-9 h-9 rounded-lg shadow-sm" />
+      {/* FLOATING GLASSMORPHIC NAVIGATION BAR - COMPACT FLOATING ISLAND */}
+      <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-fit max-w-[95vw] sm:max-w-4xl z-50 rounded-full glass-nav px-3.5 sm:px-6 py-2 transition-all duration-200 shadow-xl shadow-teal-950/5">
+        <div className="flex items-center gap-3 sm:gap-6 justify-between">
+          <Link to="/" className="flex items-center gap-2 group shrink-0" title="BreatheIQ Home">
+            <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg shadow-sm group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
-              <span className="font-heading font-extrabold text-xl text-[#182A29] leading-none tracking-tight">
+              <span className="font-heading font-extrabold text-base sm:text-lg text-[#182A29] leading-none tracking-tight">
                 Breathe<span className="text-[#0F766E]">IQ</span>
               </span>
-              <span className="text-[10px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
-                Urban Air Quality Assistant
+              <span className="text-[9px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
+                Urban Air
               </span>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1 sm:gap-1.5">
             <a
               href="#features"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
             >
               Features
             </a>
             <a
               href="#how-it-works"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
             >
               How It Works
             </a>
             <a
               href="#what-if"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
             >
-              What-If Simulator
+              What-If
             </a>
             <a
               href="#transparency"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
             >
-              Data Provenance
+              Provenance
             </a>
             <a
               href="#faq"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-[#0F766E] hover:bg-white/80 hover:shadow-xs border border-transparent hover:border-white/80 active:scale-95 transition-all duration-150"
             >
               FAQ
             </a>
             <Link
               to="/dev/ui"
-              className="px-3 py-2 rounded-lg text-xs font-semibold text-[#0F766E] hover:bg-[#DDF5EC] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#0F766E] via-[#0D9488] to-[#14B8A6] hover:from-[#115E59] hover:to-[#0F766E] shadow-sm shadow-[#0F766E]/25 hover:shadow-md hover:shadow-[#0F766E]/35 hover:scale-105 active:scale-95 transition-all duration-150 border border-teal-300/40 ml-1"
             >
-              Design Sandbox (/dev/ui)
+              <Sparkles className="w-3.5 h-3.5 text-teal-200" />
+              <span>Sandbox</span>
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & LIVE AIR CARD */}
-      <section className="relative w-full px-4 lg:px-8 pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
+      {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & ADJUSTABLE LIVE AIR GRID */}
+      <section className="relative w-full px-4 sm:px-6 lg:px-10 xl:px-14 pt-24 pb-16 lg:pt-28 lg:pb-24 min-h-[85vh] sm:min-h-[90vh] flex flex-col justify-center overflow-hidden transition-all duration-500">
         {/* Mumbai Coastal Skyline & Bandra-Worli Sea Link photographic backdrop */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
           <img
             src="/mumbai-sealink-bg.webp"
             alt="Mumbai Bandra-Worli Sea Link Backdrop"
-            className="w-full h-full object-cover object-[center_65%]"
+            className="w-full h-full object-cover object-[center_65%] transition-transform duration-700"
           />
           {/* Soft gradient overlay for text readability while preserving the vibrant sunset & bridge */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-transparent"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-          {/* Left Column: Headlines & Location Typeahead */}
-          <div className="lg:col-span-6 flex flex-col gap-6">
+        {/* Dynamic Adjustable Grid Container */}
+        <div
+          className={`w-full mx-auto grid grid-cols-1 lg:grid-cols-12 items-center relative z-10 transition-all duration-500 ${
+            gridMode === 'panoramic'
+              ? 'max-w-[1600px] gap-8 lg:gap-16 xl:gap-24'
+              : gridMode === 'backdrop'
+              ? 'max-w-7xl lg:max-w-[1400px] gap-8'
+              : 'max-w-7xl lg:max-w-[1400px] gap-8 lg:gap-10 xl:gap-14'
+          }`}
+        >
+          {/* Left Column: Headlines, Location Typeahead & Grid Controls */}
+          <div
+            className={`flex flex-col gap-5 sm:gap-6 transition-all duration-500 ${
+              gridMode === 'panoramic'
+                ? 'lg:col-span-6'
+                : gridMode === 'backdrop'
+                ? 'lg:col-span-8 max-w-2xl'
+                : 'lg:col-span-7 xl:col-span-7'
+            }`}
+          >
+            {/* Interactive Grid Adjustment Bar */}
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-white/75 backdrop-blur-md border border-white/80 shadow-sm self-start">
+              <span className="text-[10px] uppercase font-bold text-slate-600 px-2 flex items-center gap-1">
+                <SlidersHorizontal className="w-3 h-3 text-[#0F766E]" />
+                Grid:
+              </span>
+              <button
+                type="button"
+                onClick={() => setGridMode('balanced')}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                  gridMode === 'balanced'
+                    ? 'bg-[#0F766E] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+                }`}
+                title="Balanced 2-Column Layout"
+              >
+                <Columns className="w-3 h-3" />
+                <span>Balanced</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGridMode('panoramic')}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                  gridMode === 'panoramic'
+                    ? 'bg-[#0F766E] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+                }`}
+                title="Wide Panoramic Spacing — Clear Center Bridge View"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span>Panoramic</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGridMode('backdrop')}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                  gridMode === 'backdrop'
+                    ? 'bg-[#0F766E] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+                }`}
+                title="Full Photo Focus — Minimize Card"
+              >
+                <Eye className="w-3 h-3" />
+                <span>Photo Focus</span>
+              </button>
+            </div>
+
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-[#0F2926] tracking-tight leading-[1.08]">
               Breathe Smarter. <span className="text-[#0F766E] block sm:inline">Live Healthier.</span>
             </h1>
@@ -172,7 +243,7 @@ export const LandingPage: React.FC = () => {
             </p>
 
             {/* Location Typeahead & Search */}
-            <div className="bg-white/60 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/80 flex flex-col gap-2 max-w-lg">
+            <div className="bg-white/65 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/80 flex flex-col gap-2 max-w-lg">
               <label htmlFor="landing-city-search" className="sr-only">
                 Search city or monitoring station
               </label>
@@ -216,44 +287,91 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4 pt-1">
               <Link
                 to={user ? '/app/dashboard' : '/signup'}
-                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] font-heading font-bold text-sm shadow-xl transition-all hover:-translate-y-0.5"
+                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] font-heading font-bold text-sm shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
                 Start Protecting Your Family
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
               <Link
                 to={user ? '/app/dashboard' : '/login'}
-                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-white text-[#182A29] hover:bg-slate-50 border border-white/90 font-heading font-bold text-sm shadow-md transition-all hover:-translate-y-0.5"
+                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-white text-[#182A29] hover:bg-slate-50 border border-white/90 font-heading font-bold text-sm shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
                 {user ? 'Go to Dashboard' : 'Explore Live Demo'}
               </Link>
             </div>
           </div>
 
-          {/* Right Column: Live Ambient Air Telemetry Card */}
-          <div className="lg:col-span-6 flex flex-col items-center lg:items-end relative">
-            <div className="w-full max-w-lg bg-white/85 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white/75 p-6 lg:p-7 space-y-5 relative z-10">
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
-                <div>
+          {/* Right Column: Live Ambient Air Telemetry Card or Compact Floating Pill */}
+          <div
+            className={`flex flex-col items-center lg:items-end relative transition-all duration-500 ${
+              gridMode === 'panoramic'
+                ? 'lg:col-span-6'
+                : gridMode === 'backdrop'
+                ? 'lg:col-span-4'
+                : 'lg:col-span-5 xl:col-span-5'
+            }`}
+          >
+            {gridMode === 'backdrop' ? (
+              /* Minimized Floating Telemetry Pill to Reveal the Full Photo */
+              <div className="w-full flex justify-center lg:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setGridMode('balanced')}
+                  className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/90 backdrop-blur-xl border border-white/90 shadow-2xl hover:shadow-3xl hover:bg-white transition-all group"
+                  title="Click to expand telemetry card"
+                >
                   <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-[#0F766E]" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
-                      Live Ambient Air Telemetry
+                    <span className="font-heading font-extrabold text-sm text-slate-900">
+                      {selectedCity.name}: <span className="text-[#0F766E]">{selectedCity.aqi} AQI</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold">
+                      {selectedCity.category.toUpperCase()}
                     </span>
                   </div>
-                  <h3 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 mt-0.5">
-                    {selectedCity.name}
-                  </h3>
-                  <span className="text-xs text-slate-500 font-medium">{selectedCity.station}</span>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase tracking-wider">
-                    LIVE
+                  <span className="text-xs font-semibold text-slate-600 group-hover:text-[#0F766E] flex items-center gap-1 border-l border-slate-200/80 pl-3">
+                    Expand Card <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </span>
-                  <span className="text-[10px] text-slate-500">Updated 4m ago</span>
-                </div>
+                </button>
               </div>
+            ) : (
+              /* Full Ambient Air Telemetry Card with Smooth Scaling */
+              <div
+                className={`w-full bg-white/85 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white/75 p-6 lg:p-7 space-y-5 relative z-10 transition-all duration-500 ${
+                  gridMode === 'panoramic' ? 'max-w-md xl:max-w-lg' : 'max-w-lg'
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-[#0F766E]" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                        Live Ambient Air Telemetry
+                      </span>
+                    </div>
+                    <h3 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 mt-0.5">
+                      {selectedCity.name}
+                    </h3>
+                    <span className="text-xs text-slate-500 font-medium">{selectedCity.station}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setGridMode('backdrop')}
+                        className="p-1 rounded-md text-slate-400 hover:text-[#0F766E] hover:bg-slate-100 transition-colors"
+                        title="Minimize card to view full photo"
+                      >
+                        <EyeOff className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase tracking-wider">
+                        LIVE
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500">Updated 4m ago</span>
+                  </div>
+                </div>
 
               {/* Main Gauge & Category */}
               <div className="flex flex-wrap items-baseline justify-between gap-4">
@@ -353,13 +471,16 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
 
             {/* Glowing 4-Point Star Ornament at bottom right */}
-            <div className="absolute -bottom-5 -right-5 pointer-events-none select-none text-white/90 drop-shadow-md z-20">
-              <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-            </div>
+            {gridMode !== 'backdrop' && (
+              <div className="absolute -bottom-5 -right-5 pointer-events-none select-none text-white/90 drop-shadow-md z-20">
+                <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                </svg>
+              </div>
+            )}
           </div>
         </div>
       </section>
