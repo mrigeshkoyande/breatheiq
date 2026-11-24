@@ -21,6 +21,9 @@ import {
   ChevronRight,
   X,
   AlertTriangle,
+  Menu,
+  Shield,
+  Settings,
 } from 'lucide-react';
 
 interface RoutineTask {
@@ -41,6 +44,7 @@ export const DashboardPage: React.FC = () => {
   const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
   const [language, setLanguage] = useState<'EN' | 'HI' | 'MR'>('EN');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Interactive routine checklist state
   const [tasks, setTasks] = useState<RoutineTask[]>([
@@ -235,25 +239,201 @@ export const DashboardPage: React.FC = () => {
         </div>
       </aside>
 
+      {/* MOBILE SLIDE-OVER NAVIGATION DRAWER */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="relative w-80 max-w-[85vw] bg-white h-full shadow-2xl flex flex-col z-10 overflow-y-auto">
+            <div className="p-5 flex items-center justify-between border-b border-slate-100">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5">
+                <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg" />
+                <div className="flex flex-col">
+                  <span className="font-heading font-extrabold text-base text-[#182A29] leading-tight">
+                    Breathe<span className="text-[#0F766E]">IQ</span>
+                  </span>
+                  <span className="text-[9px] font-bold text-[#64748B] uppercase tracking-wider">
+                    Urban Air Platform
+                  </span>
+                </div>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+                aria-label="Close Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <nav className="flex-1 p-4 space-y-5">
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] uppercase font-bold tracking-wider text-[#64748B]">Core Modules</p>
+                <Link
+                  to="/app/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#0F766E] text-white text-xs font-bold shadow-sm"
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>Overview</span>
+                </Link>
+                <Link
+                  to="/app/air-quality"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Wind className="w-4 h-4" />
+                  <span>Air Quality</span>
+                </Link>
+                <Link
+                  to="/app/analytics"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Analytics</span>
+                </Link>
+                <Link
+                  to="/app/assistant"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 text-[#0F766E]" />
+                  <span>AI Copilot</span>
+                </Link>
+              </div>
+
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] uppercase font-bold tracking-wider text-[#64748B]">Family & Living</p>
+                <Link
+                  to="/app/routine"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Daily Routine</span>
+                </Link>
+                <Link
+                  to="/app/home"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Home & Window Oracle</span>
+                </Link>
+                <Link
+                  to="/app/family"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Family AirGuard</span>
+                </Link>
+                <Link
+                  to="/app/routes"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Compass className="w-4 h-4" />
+                  <span>CleanRoute</span>
+                </Link>
+              </div>
+
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] uppercase font-bold tracking-wider text-[#64748B]">Civic & Impact</p>
+                <Link
+                  to="/app/community"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Citizen Air Watch</span>
+                </Link>
+                <Link
+                  to="/app/impact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>Sustainability Ledger</span>
+                </Link>
+                <Link
+                  to="/app/settings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>Settings</span>
+                </Link>
+                {(user?.role === 'admin' || user?.role === 'moderator') && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Admin Center</span>
+                  </Link>
+                )}
+              </div>
+            </nav>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[#182A29]">
+                  {user?.full_name || user?.email?.split('@')[0] || 'User'}
+                </span>
+                <span className="text-[10px] text-[#64748B] uppercase font-semibold">
+                  {user?.role || 'user'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="p-2 rounded-xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TOP HEADER (OFFSET ON DESKTOP) */}
-      <div className="lg:pl-72 flex-1 flex flex-col">
-        <div className="sticky top-2.5 z-40 px-4 lg:px-8">
-          <header className="h-16 glass-nav rounded-2xl px-4 lg:px-7 flex items-center justify-between gap-4 transition-all shadow-md">
-            <div className="flex items-center gap-3">
+      <div className="lg:pl-72 flex-1 flex flex-col min-w-0">
+        <div className="sticky top-2 sm:top-2.5 z-40 px-2 sm:px-4 lg:px-8">
+          <header className="h-14 sm:h-16 glass-nav rounded-2xl px-3 sm:px-4 lg:px-7 flex items-center justify-between gap-2 sm:gap-4 transition-all shadow-md">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Mobile Sidebar Hamburger Trigger */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-1.5 sm:p-2 rounded-xl glass-pill lg:hidden text-slate-700 hover:text-[#0F766E] transition-colors shadow-xs shrink-0"
+                aria-label="Open Navigation Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+
               {/* Mobile Logo Link (Redirects to Home) */}
-              <Link to="/" className="flex lg:hidden items-center gap-2 mr-2 group" title="Back to Home Page">
-                <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
-                <span className="font-extrabold text-base text-[#182A29]">
+              <Link to="/" className="flex lg:hidden items-center gap-1.5 shrink-0 group" title="Back to Home Page">
+                <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg group-hover:scale-105 transition-transform" />
+                <span className="font-extrabold text-sm sm:text-base text-[#182A29] hidden sm:inline">
                   Breathe<span className="text-[#0F766E]">IQ</span>
                 </span>
               </Link>
 
-              {/* Location Pill Selector */}
-              <div className="inline-flex items-center gap-2 glass-pill px-3.5 py-1.5 rounded-xl border border-white/70 shadow-xs">
-                <MapPin className="w-4 h-4 text-[#0F766E]" />
-                <span className="text-xs font-bold text-[#182A29]">{activeLocation}</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-[10px] font-bold">
-                  AQI 168 · Moderate
+              {/* Adaptive Location Pill Selector */}
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 glass-pill px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl border border-white/70 shadow-xs min-w-0">
+                <MapPin className="w-3.5 h-3.5 text-[#0F766E] shrink-0" />
+                <span className="text-[11px] sm:text-xs font-bold text-[#182A29] truncate max-w-[85px] sm:max-w-none">
+                  {activeLocation.split(',')[0]}
+                </span>
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-[9px] sm:text-[10px] font-bold shrink-0">
+                  168 · Mod
                 </span>
                 <button
                   type="button"
@@ -262,16 +442,16 @@ export const DashboardPage: React.FC = () => {
                       prev.includes('Mumbai') ? 'Connaught Place, Delhi' : 'Andheri West, Mumbai'
                     )
                   }
-                  className="text-[10px] text-[#0F766E] underline ml-1 font-semibold"
+                  className="text-[9px] sm:text-[10px] text-[#0F766E] underline ml-0.5 sm:ml-1 font-semibold shrink-0"
                 >
                   Switch
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Language Switch */}
-              <div className="hidden sm:flex items-center glass-pill rounded-xl p-0.5 border border-white/60">
+              <div className="hidden md:flex items-center glass-pill rounded-xl p-0.5 border border-white/60">
                 {(['EN', 'HI', 'MR'] as const).map((lang) => (
                   <button
                     key={lang}
@@ -289,15 +469,15 @@ export const DashboardPage: React.FC = () => {
               {/* Notification Bell */}
               <button
                 type="button"
-                className="p-2 rounded-xl glass-pill text-[#64748B] hover:text-[#182A29] relative transition-colors shadow-xs"
+                className="p-1.5 sm:p-2 rounded-xl glass-pill text-[#64748B] hover:text-[#182A29] relative transition-colors shadow-xs"
                 aria-label="View notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#DC5252]"></span>
+                <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 rounded-full bg-[#DC5252]"></span>
               </button>
 
               {/* User Session Capsule & Logout */}
-              <div className="flex items-center gap-3 pl-2 border-l border-slate-200/60">
+              <div className="flex items-center gap-2 sm:gap-3 pl-1.5 sm:pl-2 border-l border-slate-200/60">
                 <div className="hidden sm:flex flex-col text-right">
                   <span className="text-xs font-bold text-[#182A29] leading-tight">
                     {user?.full_name || user?.email?.split('@')[0] || 'Aarav Sharma'}
@@ -309,7 +489,7 @@ export const DashboardPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="p-2 rounded-xl glass-pill hover:bg-[#FFDAD6] text-[#64748B] hover:text-[#DC5252] transition-colors shadow-xs"
+                  className="p-1.5 sm:p-2 rounded-xl glass-pill hover:bg-[#FFDAD6] text-[#64748B] hover:text-[#DC5252] transition-colors shadow-xs"
                   title="Sign Out"
                   aria-label="Sign out"
                 >
@@ -321,7 +501,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* MAIN DASHBOARD CONTENT */}
-        <main className="flex-1 p-6 lg:p-10 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-10 pb-24 lg:pb-10 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full">
           {/* Hero Greeting & Status */}
           <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -711,6 +891,51 @@ export const DashboardPage: React.FC = () => {
             </div>
           </section>
         </main>
+
+        {/* MOBILE FIXED BOTTOM NAVIGATION BAR */}
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 px-4 py-2 flex justify-around items-center lg:hidden shadow-lg shadow-teal-950/10">
+          <Link
+            to="/app/dashboard"
+            className="flex flex-col items-center gap-0.5 text-[#0F766E]"
+            title="Overview"
+          >
+            <Activity className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Home</span>
+          </Link>
+          <Link
+            to="/app/air-quality"
+            className="flex flex-col items-center gap-0.5 text-slate-500 hover:text-[#0F766E]"
+            title="Air Quality"
+          >
+            <Wind className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Air</span>
+          </Link>
+          <Link
+            to="/app/assistant"
+            className="flex flex-col items-center gap-0.5 text-slate-500 hover:text-[#0F766E]"
+            title="AI Copilot"
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Copilot</span>
+          </Link>
+          <Link
+            to="/app/routine"
+            className="flex flex-col items-center gap-0.5 text-slate-500 hover:text-[#0F766E]"
+            title="Daily Routine"
+          >
+            <Calendar className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Routine</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-500 hover:text-[#0F766E]"
+            title="All Modules"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-medium">More</span>
+          </button>
+        </nav>
       </div>
     </div>
   );

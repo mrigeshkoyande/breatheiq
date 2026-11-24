@@ -21,6 +21,8 @@ import {
   Columns,
   Eye,
   EyeOff,
+  Menu,
+  X,
 } from 'lucide-react';
 
 interface CityOption {
@@ -79,6 +81,7 @@ export const LandingPage: React.FC = () => {
   const [gridMode, setGridMode] = useState<'balanced' | 'panoramic' | 'backdrop'>('balanced');
   const [audienceTab, setAudienceTab] = useState<'families' | 'schools' | 'communities'>('families');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // What-If interactive simulator state
   const [metroDays, setMetroDays] = useState(4);
@@ -97,7 +100,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans selection:bg-[#DDF5EC] selection:text-[#0F766E]">
       {/* FLOATING GLASSMORPHIC NAVIGATION BAR - COMPACT FLOATING ISLAND */}
-      <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-fit max-w-[95vw] sm:max-w-3xl z-50 rounded-full glass-nav px-3 sm:px-4 py-1.5 transition-all duration-200 shadow-xl shadow-teal-950/10 ring-1 ring-black/[0.04]">
+      <header className={`fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-[94vw] sm:w-fit sm:max-w-3xl z-50 glass-nav transition-all duration-200 shadow-xl shadow-teal-950/10 ring-1 ring-black/[0.04] ${mobileMenuOpen ? 'rounded-2xl p-3 bg-white/90' : 'rounded-full px-3 sm:px-4 py-1.5'}`}>
         <div className="flex items-center gap-2 sm:gap-4 justify-between">
           <Link to="/" className="flex items-center gap-2 group shrink-0" title="BreatheIQ Home">
             <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-7 h-7 rounded-lg shadow-xs group-hover:scale-105 transition-transform" />
@@ -152,7 +155,91 @@ export const LandingPage: React.FC = () => {
               <span>Sandbox</span>
             </Link>
           </nav>
+
+          {/* Mobile Actions: Explore button & hamburger toggle */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <Link
+              to="/explore"
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-[#0F766E] bg-white/70 hover:bg-white border border-teal-200/50 shadow-xs"
+            >
+              Explore
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1 rounded-full text-slate-700 hover:text-[#0F766E] hover:bg-white/80 transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-[#0F766E]" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Accordion Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-2.5 pt-2.5 border-t border-slate-200/70 flex flex-col gap-1">
+            <a
+              href="#features"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-[#0F766E]"
+            >
+              Features & Protection
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-[#0F766E]"
+            >
+              How It Works
+            </a>
+            <a
+              href="#what-if"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-[#0F766E]"
+            >
+              What-If Simulator
+            </a>
+            <a
+              href="#transparency"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-[#0F766E]"
+            >
+              Data Provenance & Audits
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-[#0F766E]"
+            >
+              FAQ & Guidance
+            </a>
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60 mt-1">
+              {user ? (
+                <Link
+                  to="/app/dashboard"
+                  className="flex-1 text-center py-2 px-3 rounded-xl text-xs font-bold text-white bg-[#0F766E] shadow-sm"
+                >
+                  Go to Dashboard &rarr;
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="flex-1 text-center py-2 px-3 rounded-xl text-xs font-bold text-[#0F766E] bg-white border border-teal-200/80 shadow-xs"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="flex-1 text-center py-2 px-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#0F766E] to-[#14B8A6] shadow-sm"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & ADJUSTABLE LIVE AIR GRID */}
