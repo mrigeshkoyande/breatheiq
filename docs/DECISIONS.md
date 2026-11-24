@@ -104,3 +104,55 @@ All remaining 70 routes are formally marked `DEFERRED` in `docs/routes.manifest.
 - **Positive:** Repo footprint remains under 1.5 MB tracked files.
 - **Positive:** Development focus is centered on deep, reliable features directly answering the hackathon brief.
 - **Negative:** Some secondary tools (e.g. standalone industrial sensor provisioning, enterprise billing, individual multi-page research whitepapers) are postponed to future releases.
+
+
+## ADR 002: Canonical Single-Origin Deployment Architecture
+
+### Date
+2026-11-24
+
+### Status
+Accepted & Implemented
+
+### Context
+Deploying the React SPA to Vercel and the FastAPI API to Render causes the browser to treat them as different sites (`vercel.app` vs `onrender.com`). Under modern browser privacy defaults (e.g. Chrome, Safari, Firefox), cross-site requests require `SameSite=None; Secure` cookies, third-party cookie permissions, and complex CORS preflight negotiations. If cookie partitioning or adblockers block third-party cookies, JWT refresh tokens fail silently.
+
+### Decision
+Establish a **Single Render Docker Web Service** as the canonical production deployment architecture:
+1. Multi-stage `Dockerfile`: Stage 1 compiles the Vite frontend (`frontend/dist`); Stage 2 runs FastAPI and serves both the API (`/api/v1/*`) and the compiled SPA (`/*`).
+2. Single-origin relative requests (`/api/v1`): zero CORS overhead, zero cross-origin latency, and robust `HttpOnly; SameSite=Strict; Secure` refresh cookies.
+3. Vercel remains fully supported as a secondary/decoupled frontend host via `docs/DEPLOY_VERCEL.md` with explicit CORS origin configuration and SPA rewrites.
+
+### Consequences
+- **Positive:** Guaranteed cookie delivery on all browsers without third-party cookie degradation.
+- **Positive:** Single URL for users and judges to access the complete application.
+- **Positive:** Simplified environment variable management (no public API URL required in frontend builds).
+
+
+## ADR 003: Robust Multi-Format ALLOWED_ORIGINS Parsing & Deployment Guardrails
+
+### Date
+2026-11-24
+
+### Status
+Accepted & Implemented
+
+### Context
+Render failed to boot because `ALLOWED_ORIGINS` was typed as `list[str]`, causing `pydantic-settings` to attempt JSON decoding on raw comma-separated environment variables, throwing `json.JSONDecodeError` during `Settings()` instantiation.
+
+### Decision
+1. Update `ALLOWED_ORIGINS: Union[List[str], str]` with a robust `mode="before"` field validator supporting:
+   - Empty or unset string -> empty list `[]`
+   - Single URL string -> single-element list
+   - Comma-delimited string -> trimmed list of URLs
+   - JSON array string -> parsed list of URLs
+2. Enforce CORS security invariants:
+   - Prohibit wildcard `*` origins when credentials (`allow_credentials=True`) are enabled.
+   - Require explicit `http://` or `https://` protocols for each origin.
+3. Wrap settings initialization in `config.py` with an informative error catcher that logs the exact configuration error and accepted formats to `sys.stderr` before exiting with code 1.
+4. Bound start command to `${PORT:-10000}` and `0.0.0.0` with `--proxy-headers` for reverse proxy compatibility.
+5. In production environment (`ENVIRONMENT=production`): refuse to boot without a strong, non-default `JWT_SECRET_KEY` (minimum 32 characters) and never seed demo accounts.
+
+### Consequences
+- **Positive:** Eliminates Render boot crashes caused by environment variable syntax variations.
+- **Positive:** Hardens production security against default secrets and wildcard credential leaks.
