@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Ensure backend root is in sys.path when executed directly as a script
+_BACKEND_DIR = str(Path(__file__).resolve().parent.parent.parent)
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 import asyncio
 from datetime import datetime, timezone, date, timedelta
 from sqlalchemy import select
