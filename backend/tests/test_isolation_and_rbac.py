@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Ensure 'backend' directory is in sys.path regardless of execution working directory
+_BACKEND_DIR = str(Path(__file__).resolve().parent.parent)
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 import pytest
 from app.core.security import hash_password, verify_password
 from app.main import app
