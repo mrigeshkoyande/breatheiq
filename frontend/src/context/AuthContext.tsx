@@ -13,6 +13,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const SESSION_HINT_KEY = 'breatheiq_has_session';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,15 +24,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' });
       setAccessToken(res.access_token);
       setUser(res.user);
+      localStorage.setItem(SESSION_HINT_KEY, 'true');
     } catch {
       setAccessToken(null);
       setUser(null);
+      localStorage.removeItem(SESSION_HINT_KEY);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Only attempt silent session refresh if a previous session existed
+    const hasSession = localStorage.getItem(SESSION_HINT_KEY) === 'true';
+    if (!hasSession) {
+      setLoading(false);
+      return;
+    }
     refreshAuth();
   }, []);
 
@@ -41,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setAccessToken(res.access_token);
     setUser(res.user);
+    localStorage.setItem(SESSION_HINT_KEY, 'true');
   };
 
   const signup = async (email: string, password: string, fullName?: string) => {
@@ -50,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setAccessToken(res.access_token);
     setUser(res.user);
+    localStorage.setItem(SESSION_HINT_KEY, 'true');
   };
 
   const logout = async () => {
@@ -58,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setAccessToken(null);
       setUser(null);
+      localStorage.removeItem(SESSION_HINT_KEY);
     }
   };
 

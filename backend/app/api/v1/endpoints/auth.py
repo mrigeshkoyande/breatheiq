@@ -94,9 +94,9 @@ async def signup(
         value=raw_refresh,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
-        path="/api/auth"
+        path="/"
     )
 
     access_token = create_access_token(user.id, user.role)
@@ -147,9 +147,9 @@ async def login(
         value=raw_refresh,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
-        path="/api/auth"
+        path="/"
     )
 
     access_token = create_access_token(user.id, user.role)
@@ -196,7 +196,7 @@ async def refresh_tokens(
         )
         log_audit(db, user_id, "AUTH_REFRESH_TOKEN_REUSE_DETECTED", request, f"Family {family_id} revoked")
         await db.commit()
-        response.delete_cookie("breatheiq_refresh", path="/api/auth")
+        response.delete_cookie("breatheiq_refresh", path="/")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session security compromise detected. Please log in again."
@@ -206,7 +206,7 @@ async def refresh_tokens(
     if ensure_utc(token_record.expires_at) < now:
         token_record.revoked_at = now
         await db.commit()
-        response.delete_cookie("breatheiq_refresh", path="/api/auth")
+        response.delete_cookie("breatheiq_refresh", path="/")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
 
     # Rotate token: revoke current token and issue new one in the same family
@@ -235,9 +235,9 @@ async def refresh_tokens(
         value=new_raw_refresh,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
-        path="/api/auth"
+        path="/"
     )
 
     new_access = create_access_token(user.id, user.role)
@@ -269,7 +269,7 @@ async def logout(
         except Exception:
             pass
 
-    response.delete_cookie("breatheiq_refresh", path="/api/auth")
+    response.delete_cookie("breatheiq_refresh", path="/")
     return MessageResponse(message="Logged out successfully")
 
 @router.post("/logout-all", response_model=MessageResponse)
@@ -284,7 +284,7 @@ async def logout_all(
         .values(revoked_at=datetime.now(timezone.utc))
     )
     await db.commit()
-    response.delete_cookie("breatheiq_refresh", path="/api/auth")
+    response.delete_cookie("breatheiq_refresh", path="/")
     return MessageResponse(message="All active sessions revoked")
 
 @router.get("/me", response_model=UserResponse)

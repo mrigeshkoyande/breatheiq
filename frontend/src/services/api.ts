@@ -1,6 +1,7 @@
 import { AuthResponse } from '../types/auth';
 
 let inMemoryToken: string | null = null;
+let refreshPromise: Promise<string | null> | null = null;
 
 export const setAccessToken = (token: string | null) => {
   inMemoryToken = token;
@@ -8,13 +9,56 @@ export const setAccessToken = (token: string | null) => {
 
 export const getAccessToken = () => inMemoryToken;
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+// Compute canonical API base URL
+const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '');
+const BASE_URL = rawBase === '' || rawBase === '/api/v1'
+  ? '/api/v1'
+  : rawBase.endsWith('/api/v1')
+  ? rawBase
+  : rawBase.endsWith('/api')
+  ? `${rawBase}/v1`
+  : `${rawBase}/api/v1`;
+
+async function executeTokenRefresh(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (refreshRes.ok) {
+        const refreshData: AuthResponse = await refreshRes.json();
+        setAccessToken(refreshData.access_token);
+        localStorage.setItem('breatheiq_has_session', 'true');
+        return refreshData.access_token;
+      } else {
+        setAccessToken(null);
+        localStorage.removeItem('breatheiq_has_session');
+        return null;
+      }
+    } catch {
+      setAccessToken(null);
+      localStorage.removeItem('breatheiq_has_session');
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
 
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${BASE_URL}${cleanEndpoint}`;
   const headers = new Headers(options.headers || {});
 
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
@@ -25,30 +69,45 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${inMemoryToken}`);
   }
 
-  options.credentials = 'include'; // Required to send HttpOnly refresh cookie
+  options.credentials = 'include'; // Required to transmit HttpOnly session cookies
   options.headers = headers;
 
-  let res = await fetch(url, options);
+  // Add 15-second request timeout controller if none provided
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  if (!options.signal) {
+    options.signal = controller.signal;
+  }
 
-  // Silent Refresh on 401 Unauthorized
-  if (res.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/refresh' && endpoint !== '/auth/signup') {
-    try {
-      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+  let res: Response;
+  try {
+    res = await fetch(url, options);
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your network connection.');
+    }
+    throw new Error('Unable to connect to air quality server. Please verify your internet connection.');
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
-      if (refreshRes.ok) {
-        const refreshData: AuthResponse = await refreshRes.json();
-        setAccessToken(refreshData.access_token);
-        headers.set('Authorization', `Bearer ${refreshData.access_token}`);
-        options.headers = headers;
+  // Graceful silent refresh on 401 Unauthorized for protected endpoints
+  if (
+    res.status === 401 &&
+    cleanEndpoint !== '/auth/login' &&
+    cleanEndpoint !== '/auth/refresh' &&
+    cleanEndpoint !== '/auth/signup'
+  ) {
+    const newToken = await executeTokenRefresh();
+    if (newToken) {
+      headers.set('Authorization', `Bearer ${newToken}`);
+      options.headers = headers;
+      try {
         res = await fetch(url, options);
-      } else {
-        setAccessToken(null);
+      } catch {
+        throw new Error('Session renewal failed during request retry.');
       }
-    } catch {
-      setAccessToken(null);
     }
   }
 
@@ -58,7 +117,8 @@ export async function apiRequest<T>(
       const errorJson = await res.json();
       errorDetail = errorJson.detail || errorJson.message || errorDetail;
     } catch {
-      // fallback
+      // fallback to status text
+      errorDetail = res.statusText || errorDetail;
     }
     throw new Error(errorDetail);
   }
