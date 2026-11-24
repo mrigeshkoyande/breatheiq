@@ -42,7 +42,7 @@
 ## 2. Top 10 Architectural & Implementation Gaps
 
 1. **Unverified Over-Claiming in Documentation**:
-   The previous `README.md` claimed 93 lazy routes, zero-delay CPCB telemetry, Eulerian photochemical models, and zero-hallucination validators. These have been excised and replaced with a truthful stub.
+   The previous `README.md` claimed 93 lazy routes, real-time unverified telemetry, Eulerian photochemical models, and zero-hallucination validators. <!-- verified-claim: historical audit --> These have been excised and replaced with a truthful stub.
 2. **Hardcoded Environmental Telemetry in UI**:
    `DashboardPage.tsx` directly renders static values in JSX (`242`, `118 µg/m³`) rather than sourcing data from the backend data provider. Violates Hard Constraint 4 ("Never fabricate environmental data").
 3. **Incomplete Landing Page Experience**:

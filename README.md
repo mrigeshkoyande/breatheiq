@@ -37,7 +37,7 @@ Most existing applications function merely as static dashboards or color-coded A
 ### Core Philosophy
 $$\textbf{DETECT} \longrightarrow \textbf{UNDERSTAND} \longrightarrow \textbf{PROTECT} \longrightarrow \textbf{OPTIMIZE} \longrightarrow \textbf{IMPROVE}$$
 
-1. **DETECT**: Ingest official Continuous Ambient Air Quality Monitoring Stations (CAAQMS via OpenAQ) and diurnal atmospheric boundary layer forecasts (Open-Meteo). Every data point displays an explicit provenance badge (`LIVE`, `MODELED`, `FORECAST`, `ESTIMATED`, `USER-REPORTED`, `DEMO`).
+1. **DETECT**: Ingest CAAQMS ground station telemetry (via OpenAQ) and diurnal atmospheric boundary layer forecasts (Open-Meteo). Every data point displays an explicit provenance badge (`LIVE`, `MODELED`, `FORECAST`, `ESTIMATED`, `USER-REPORTED`, `DEMO`).
 2. **UNDERSTAND**: Decompose composite pollution into dominant particulate drivers (PM2.5, PM10, NO2, SO2, CO, O3) using statutory Central Pollution Control Board (CPCB) NAQI breakpoint formulas.
 3. **PROTECT**: Optimize domestic defense via the **Window Oracle** (aeration timing based on midday thermal inversion lifting), air purifier CADR sizing calculations, and tailored family sensitivity profiles.
 4. **OPTIMIZE**: Provide route exposure comparisons (**CleanRoute**) and an adaptive daily protective routine to minimize personal inhaled toxic dosage during peak twilight inversion stagnation.
@@ -170,7 +170,7 @@ Visual styles and tokens are derived from Google Stitch exports stored in `Desig
 ## ⚡ Atmospheric Engines & Methodology
 
 ### 1. CPCB NAQI Calculation Engine (`naqi.py`)
-Computes official Indian National Air Quality Index sub-indices using statutory piecewise-linear breakpoint equations:
+Computes official CPCB NAQI sub-indices using statutory piecewise-linear breakpoint equations:
 $$I_p = \frac{I_{hi} - I_{lo}}{B_{hi} - B_{lo}} (C_p - B_{lo}) + I_{lo}$$
 - Evaluates standard statutory parameters: PM2.5, PM10, NO2, SO2, CO, O3, NH3, and Pb.
 - Enforces validity rules: mandates a reading for at least one particulate pollutant (PM2.5 or PM10) plus at least two other gaseous pollutants before computing a composite AQI.

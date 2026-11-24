@@ -95,7 +95,7 @@ export const LoginPage: React.FC = () => {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-[#3E4947]">
                   <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                  <span>Zero-delay ground station telemetry</span>
+                  <span>Ground station telemetry with timestamped provenance</span>
                 </div>
                 <div className="flex items-center gap-2 text-[#3E4947]">
                   <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />

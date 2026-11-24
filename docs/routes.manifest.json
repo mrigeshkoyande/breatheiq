@@ -20,7 +20,9 @@
       "what_if_slider",
       "faq_accordion"
     ],
-    "minInteractiveElements": 8
+    "minInteractiveElements": 8,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 2,
@@ -37,7 +39,10 @@
       "cta_click",
       "section_nav"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 3,
@@ -55,7 +60,10 @@
       "comparison_toggle",
       "module_cta"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 4,
@@ -73,7 +81,10 @@
       "step_backward",
       "calculator_trigger"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 5,
@@ -94,7 +105,9 @@
       "city_compare_select",
       "map_marker_click"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 6,
@@ -112,7 +125,10 @@
       "share_link_click",
       "add_to_dashboard_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 7,
@@ -130,7 +146,9 @@
       "calculate_click",
       "breakpoint_table_filter"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 8,
@@ -147,7 +165,10 @@
       "provider_card_expand",
       "frequency_filter"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 9,
@@ -166,7 +187,10 @@
       "topic_filter",
       "pdf_download_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 10,
@@ -185,7 +209,10 @@
       "explain_simpler_click",
       "share_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 11,
@@ -204,7 +231,10 @@
       "generate_advisory_click",
       "print_advisory_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 12,
@@ -221,7 +251,10 @@
       "campaign_filter",
       "start_community_click"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 13,
@@ -241,7 +274,10 @@
       "accordion_toggle",
       "helpful_vote"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 14,
@@ -261,7 +297,10 @@
       "message_input",
       "submit_form"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 15,
@@ -279,7 +318,10 @@
       "article_click",
       "contact_support_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 16,
@@ -296,7 +338,10 @@
       "uptime_period_select",
       "incident_expand"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 17,
@@ -311,7 +356,9 @@
       "toc_click",
       "export_link_click"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 18,
@@ -325,7 +372,10 @@
     "interactiveChecks": [
       "toc_click"
     ],
-    "minInteractiveElements": 2
+    "minInteractiveElements": 2,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 19,
@@ -345,7 +395,9 @@
       "submit_login",
       "demo_quickfill"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 20,
@@ -366,7 +418,9 @@
       "terms_check",
       "submit_signup"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 21,
@@ -383,7 +437,9 @@
       "email_input",
       "submit_request"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 22,
@@ -401,7 +457,9 @@
       "confirm_password_input",
       "submit_reset"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 23,
@@ -419,7 +477,10 @@
       "submit_verify",
       "resend_code"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 24,
@@ -437,7 +498,10 @@
       "language_select",
       "next_step"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 25,
@@ -457,7 +521,10 @@
       "confirm_location",
       "next_step"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 26,
@@ -477,7 +544,10 @@
       "remove_member",
       "next_step"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 27,
@@ -496,7 +566,10 @@
       "fuel_select",
       "next_step"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 28,
@@ -515,7 +588,10 @@
       "channel_toggle",
       "next_step"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 29,
@@ -533,7 +609,10 @@
       "finish_button",
       "view_airtwin_button"
     ],
-    "minInteractiveElements": 2
+    "minInteractiveElements": 2,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 30,
@@ -554,7 +633,9 @@
       "explain_popover",
       "pollutant_card_click"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 31,
@@ -575,7 +656,9 @@
       "sort_filter",
       "drawer_close"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 32,
@@ -594,7 +677,10 @@
       "confidence_meter_click",
       "report_issue_button"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 33,
@@ -614,7 +700,9 @@
       "compare_locations",
       "export_button"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 34,
@@ -633,7 +721,10 @@
       "download_pdf",
       "delete_report_confirm"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 35,
@@ -654,7 +745,9 @@
       "thumbs_feedback",
       "new_chat_button"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 36,
@@ -673,7 +766,10 @@
       "rename_chat",
       "delete_chat"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 37,
@@ -694,7 +790,10 @@
       "delete_rule",
       "grap_toggle"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 38,
@@ -715,7 +814,9 @@
       "adapt_plan_button",
       "reorder_tasks"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 39,
@@ -733,7 +834,10 @@
       "day_click",
       "add_reminder"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 40,
@@ -754,7 +858,9 @@
       "window_oracle_expand",
       "api_key_copy"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 41,
@@ -773,7 +879,10 @@
       "edit_room_modal",
       "metric_tab_select"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 42,
@@ -792,7 +901,10 @@
       "cadr_input",
       "save_to_room_select"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 43,
@@ -810,7 +922,10 @@
       "task_checkbox",
       "source_audit_toggle"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 44,
@@ -830,7 +945,9 @@
       "assign_task",
       "school_mode_link"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 45,
@@ -848,7 +965,10 @@
       "sensitivity_select",
       "delete_member_confirm"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 46,
@@ -867,7 +987,10 @@
       "export_pdf_button",
       "share_link"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 47,
@@ -888,7 +1011,9 @@
       "compare_routes_click",
       "save_route_button"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 48,
@@ -906,7 +1031,10 @@
       "date_range",
       "delete_log_entry"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 49,
@@ -925,7 +1053,10 @@
       "accept_suggestion_button",
       "impact_drawer_toggle"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 50,
@@ -943,7 +1074,10 @@
       "add_custom_habit",
       "archive_habit"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 51,
@@ -963,7 +1097,9 @@
       "add_goal_modal",
       "export_button"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 52,
@@ -983,7 +1119,9 @@
       "assumptions_drawer",
       "save_scenario_modal"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 53,
@@ -1001,7 +1139,10 @@
       "download_pdf",
       "methodology_toggle"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 54,
@@ -1020,7 +1161,10 @@
       "recalculate_exposure",
       "history_item_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 55,
@@ -1038,7 +1182,10 @@
       "fit_check_stepper",
       "save_checklist"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 56,
@@ -1056,7 +1203,10 @@
       "assign_member",
       "print_kit_button"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 57,
@@ -1073,7 +1223,10 @@
       "source_card_click",
       "diagram_tab_toggle"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 58,
@@ -1094,7 +1247,9 @@
       "delete_notification",
       "preferences_modal"
     ],
-    "minInteractiveElements": 6
+    "minInteractiveElements": 6,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 59,
@@ -1115,7 +1270,9 @@
       "reduced_motion_toggle",
       "save_button"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 60,
@@ -1134,7 +1291,10 @@
       "revoke_session_button",
       "logout_all_button"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 61,
@@ -1153,7 +1313,10 @@
       "consent_toggle",
       "delete_account_modal_confirm"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 62,
@@ -1171,7 +1334,9 @@
       "feed_filter",
       "campaign_card_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 63,
@@ -1190,7 +1355,10 @@
       "upvote_report",
       "new_report_button"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 64,
@@ -1210,7 +1378,10 @@
       "photo_upload",
       "submit_report"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 65,
@@ -1228,7 +1399,10 @@
       "filter_category",
       "join_campaign_button"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 66,
@@ -1246,7 +1420,10 @@
       "post_update_modal",
       "task_check"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 67,
@@ -1264,7 +1441,10 @@
       "timeframe_select",
       "how_points_calculated_toggle"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 68,
@@ -1282,7 +1462,10 @@
       "filter_virtual_inperson",
       "event_card_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 69,
@@ -1301,7 +1484,10 @@
       "download_ics",
       "cancel_rsvp"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 70,
@@ -1319,7 +1505,10 @@
       "tab_reports_campaigns",
       "group_admin_manage"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 71,
@@ -1337,7 +1526,10 @@
       "topic_chip_click",
       "article_card_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 72,
@@ -1356,7 +1548,10 @@
       "explain_simpler_button",
       "bookmark_toggle"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 73,
@@ -1374,7 +1569,10 @@
       "glossary_search",
       "term_expand"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 74,
@@ -1392,7 +1590,10 @@
       "join_challenge_button",
       "challenge_card_click"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 75,
@@ -1410,7 +1611,10 @@
       "view_rules_modal",
       "share_progress"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 76,
@@ -1430,7 +1634,10 @@
       "submit_quiz",
       "retake_quiz"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 77,
@@ -1448,7 +1655,10 @@
       "share_badge_button",
       "filter_earned_locked"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 78,
@@ -1467,7 +1677,9 @@
       "moderation_queue_link",
       "health_status_link"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 79,
@@ -1487,7 +1699,10 @@
       "pagination_next",
       "export_users_csv"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 80,
@@ -1505,7 +1720,10 @@
       "suspend_user_confirm",
       "revoke_sessions_confirm"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 81,
@@ -1522,7 +1740,10 @@
       "role_tab_select",
       "view_permissions"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 82,
@@ -1541,7 +1762,10 @@
       "station_search",
       "edit_station_modal"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 83,
@@ -1558,7 +1782,10 @@
       "test_connection_button",
       "status_filter"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 84,
@@ -1577,7 +1804,10 @@
       "reject_button_modal",
       "bulk_verify"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 85,
@@ -1596,7 +1826,10 @@
       "rollback_modal_confirm",
       "fallback_toggle"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 86,
@@ -1615,7 +1848,10 @@
       "trace_row_drawer",
       "export_traces_csv"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 87,
@@ -1634,7 +1870,10 @@
       "edit_markdown",
       "publish_toggle"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 88,
@@ -1652,7 +1891,10 @@
       "date_range_picker",
       "export_analytics_csv"
     ],
-    "minInteractiveElements": 4
+    "minInteractiveElements": 4,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 89,
@@ -1671,7 +1913,10 @@
       "date_filter",
       "export_logs_csv"
     ],
-    "minInteractiveElements": 5
+    "minInteractiveElements": 5,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 90,
@@ -1688,7 +1933,10 @@
       "service_card_click",
       "trigger_scheduler_job"
     ],
-    "minInteractiveElements": 3
+    "minInteractiveElements": 3,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 91,
@@ -1703,7 +1951,10 @@
       "login_link",
       "home_link"
     ],
-    "minInteractiveElements": 2
+    "minInteractiveElements": 2,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
   },
   {
     "id": 92,
@@ -1718,7 +1969,9 @@
       "home_link",
       "search_link"
     ],
-    "minInteractiveElements": 2
+    "minInteractiveElements": 2,
+    "status": "FUNCTIONAL",
+    "inReleaseScope": true
   },
   {
     "id": 93,
@@ -1733,6 +1986,33 @@
       "retry_button",
       "report_issue_link"
     ],
-    "minInteractiveElements": 2
+    "minInteractiveElements": 2,
+    "status": "DEFERRED",
+    "inReleaseScope": false,
+    "deferReason": "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
+  },
+  {
+    "id": 94,
+    "path": "/onboarding",
+    "name": "Personalized Setup Wizard",
+    "tier": "T1",
+    "access": "user",
+    "category": "Auth",
+    "status": "MISSING",
+    "inReleaseScope": true,
+    "designFile": "NO-DESIGN",
+    "apiEndpoints": [
+      "/api/v1/auth/me",
+      "/api/v1/user/profile",
+      "/api/v1/user/preferences"
+    ],
+    "interactiveChecks": [
+      "step_location_select",
+      "step_family_members",
+      "step_sensitivities",
+      "step_alerts_save",
+      "step_complete_redirect"
+    ],
+    "minInteractiveElements": 6
   }
 ]

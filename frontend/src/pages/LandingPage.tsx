@@ -1079,7 +1079,7 @@ export const LandingPage: React.FC = () => {
             {[
               {
                 q: 'How does BreatheIQ calculate the National Air Quality Index (NAQI)?',
-                a: 'We strictly implement the official Central Pollution Control Board (CPCB) piecewise-linear breakpoint formulas across Indian statutory pollutants (PM2.5, PM10, NO2, SO2, CO, O3). Sub-indices are computed per pollutant and the highest determines the composite AQI and dominant pollutant.',
+                a: 'We strictly implement the official CPCB piecewise-linear breakpoint formulas across Indian statutory pollutants (PM2.5, PM10, NO2, SO2, CO, O3). Sub-indices are computed per pollutant and the highest determines the composite AQI and dominant pollutant.',
               },
               {
                 q: 'What is the Window Oracle and how does it know when to open windows?',
