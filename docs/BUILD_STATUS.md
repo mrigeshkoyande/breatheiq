@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 06:56:31Z`.  
+> Last audit: `2026-11-24 07:02:21Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
