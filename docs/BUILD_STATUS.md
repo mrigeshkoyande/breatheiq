@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 06:26:21Z`.  
+> Last audit: `2026-11-24 06:41:26Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -11,10 +11,10 @@
 | Status | Count | Percentage of Release | Definition |
 |---|---|---|---|
 | 🟢 **VERIFIED** | `0` | `0.0%` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |
-| 🟡 **FUNCTIONAL** | `11` | `45.8%` | Wired to API and mounted, awaiting full automated verification run |
+| 🟡 **FUNCTIONAL** | `24` | `100.0%` | Wired to API and mounted, awaiting full automated verification run |
 | 🔵 **UI-ONLY** | `0` | `0.0%` | UI exists but not connected to backend APIs |
 | 🟠 **STUB** | `0` | `0.0%` | Placeholder, partial layout, or hardcoded component data |
-| 🔴 **MISSING** | `13` | `54.2%` | Route and component do not exist |
+| 🔴 **MISSING** | `0` | `0.0%` | Route and component do not exist |
 | ⚪ **DEFERRED** | `70` | — | Scoped out for v1 release to ensure rigorous depth on core family flow |
 
 ---
@@ -32,21 +32,21 @@
 | 21 | `/forgot-password` | Forgot Password | Auth and onboarding | T1 | public | 🟡 FUNCTIONAL | breatheiq_forgot_password_a3 | Form wired to backend /api/v1/auth endpoints (100 lines) |
 | 22 | `/reset-password` | Reset Password | Auth and onboarding | T1 | public | 🟡 FUNCTIONAL | breatheiq_reset_password_a4 | Form wired to backend /api/v1/auth endpoints (124 lines) |
 | 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_main_dashboard_andheri_west_mumbai | Complete Andheri West dashboard (663 lines); interactive routine, Window Oracle, AQI dial |
-| 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🔴 MISSING | breatheiq_atmospheric_command_center | Route not mounted in App.tsx or page component missing |
-| 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🔴 MISSING | breatheiq_air_quality_inversion_analytics | Route not mounted in App.tsx or page component missing |
+| 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_atmospheric_command_center | Implemented and mounted (165 lines); connected to API |
+| 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_air_quality_inversion_analytics | Implemented and mounted (161 lines); connected to API |
 | 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_ai_atmospheric_assistant | Implemented and mounted (331 lines); connected to API |
-| 38 | `/app/routine` | Adaptive Daily Routine | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 40 | `/app/home` | Home & Indoor Air Oracle | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 44 | `/app/family` | Family Air Guardians | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 47 | `/app/routes` | CleanRoute Commute Navigator | Core app | T1 | user | 🔴 MISSING | breatheiq_cleanroute_commute_navigator | Route not mounted in App.tsx or page component missing |
-| 51 | `/app/impact` | Sustainability Score & Avoided Emissions | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 52 | `/app/impact/what-if` | What-If Impact Scenario Builder | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 58 | `/app/notifications` | Notification Center | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 59 | `/app/settings` | User Settings & Accessibility | Core app | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 62 | `/app/community` | Community Air Pulse | Community | T2 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 78 | `/admin` | Admin Command Center | Admin | T2 | admin | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
+| 38 | `/app/routine` | Adaptive Daily Routine | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (250 lines); connected to API |
+| 40 | `/app/home` | Home & Indoor Air Oracle | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (439 lines); connected to API |
+| 44 | `/app/family` | Family Air Guardians | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (263 lines); connected to API |
+| 47 | `/app/routes` | CleanRoute Commute Navigator | Core app | T1 | user | 🟡 FUNCTIONAL | breatheiq_cleanroute_commute_navigator | Implemented and mounted (233 lines); connected to API |
+| 51 | `/app/impact` | Sustainability Score & Avoided Emissions | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (187 lines); connected to API |
+| 52 | `/app/impact/what-if` | What-If Impact Scenario Builder | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (196 lines); connected to API |
+| 58 | `/app/notifications` | Notification Center | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (248 lines); connected to API |
+| 59 | `/app/settings` | User Settings & Accessibility | Core app | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (227 lines); connected to API |
+| 62 | `/app/community` | Community Air Pulse | Community | T2 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (296 lines); connected to API |
+| 78 | `/admin` | Admin Command Center | Admin | T2 | admin | 🟡 FUNCTIONAL | — | Implemented and mounted (421 lines); connected to API |
 | 92 | `/404` | Not Found (404) | System | T1 | public | 🟡 FUNCTIONAL | — | Accessible 404 view (101 lines); emergency air hotline, search fallback, quick nav |
-| 94 | `/onboarding` | Personalized Setup Wizard | Auth | T1 | user | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
+| 94 | `/onboarding` | Personalized Setup Wizard | Auth | T1 | user | 🟡 FUNCTIONAL | — | Implemented and mounted (383 lines); connected to API |
 
 ---
 
