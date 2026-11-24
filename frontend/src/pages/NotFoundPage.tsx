@@ -49,7 +49,10 @@ export const NotFoundPage: React.FC = () => {
         <form onSubmit={handleSearch} className="w-full max-w-sm mt-6 flex gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-3" />
+            <label htmlFor="notfound-search-input" className="sr-only">Search</label>
             <input
+              id="notfound-search-input"
+              name="search_query"
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

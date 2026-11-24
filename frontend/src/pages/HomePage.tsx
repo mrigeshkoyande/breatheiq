@@ -275,7 +275,10 @@ export const HomePage: React.FC = () => {
           {/* Add Room Mini Modal/Box */}
           {showAddRoom && (
             <form onSubmit={handleAddRoom} className="bg-white p-4 rounded-xl border border-[#E2E8F0] flex gap-2">
+              <label htmlFor="new-room-name-input" className="sr-only">Room Name</label>
               <input
+                id="new-room-name-input"
+                name="room_name"
                 type="text"
                 value={newRoomName}
                 onChange={(e) => setNewRoomName(e.target.value)}
@@ -335,21 +338,31 @@ export const HomePage: React.FC = () => {
                   <form onSubmit={handleAddReading} className="border-t border-[#F1F5F9] pt-4 space-y-3">
                     <span className="text-xs font-bold text-[#182A29] block">Log manual indoor reading:</span>
                     <div className="flex items-center gap-3">
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={manualPM25}
-                        onChange={(e) => setManualPM25(Number(e.target.value))}
-                        placeholder="PM2.5 (µg/m³)"
-                        className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-32"
-                      />
-                      <input
-                        type="number"
-                        value={manualCO2}
-                        onChange={(e) => setManualCO2(Number(e.target.value))}
-                        placeholder="CO2 (ppm)"
-                        className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-32"
-                      />
+                      <div>
+                        <label htmlFor="manual-pm25-input" className="sr-only">PM2.5</label>
+                        <input
+                          id="manual-pm25-input"
+                          name="pm25_reading"
+                          type="number"
+                          step="0.1"
+                          value={manualPM25}
+                          onChange={(e) => setManualPM25(Number(e.target.value))}
+                          placeholder="PM2.5 (µg/m³)"
+                          className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-32"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="manual-co2-input" className="sr-only">CO2</label>
+                        <input
+                          id="manual-co2-input"
+                          name="co2_reading"
+                          type="number"
+                          value={manualCO2}
+                          onChange={(e) => setManualCO2(Number(e.target.value))}
+                          placeholder="CO2 (ppm)"
+                          className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-32"
+                        />
+                      </div>
                       <button
                         type="submit"
                         className="text-xs font-bold px-4 py-2 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59]"
@@ -372,8 +385,10 @@ export const HomePage: React.FC = () => {
                   <form onSubmit={handleCalculatePurifier} className="space-y-3 text-xs">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-[#64748B] block">Length (m)</label>
+                        <label htmlFor="calc-room-length" className="text-[10px] text-[#64748B] block">Length (m)</label>
                         <input
+                          id="calc-room-length"
+                          name="room_length"
                           type="number"
                           step="0.1"
                           value={calcLength}
@@ -382,8 +397,10 @@ export const HomePage: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-[#64748B] block">Width (m)</label>
+                        <label htmlFor="calc-room-width" className="text-[10px] text-[#64748B] block">Width (m)</label>
                         <input
+                          id="calc-room-width"
+                          name="room_width"
                           type="number"
                           step="0.1"
                           value={calcWidth}

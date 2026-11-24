@@ -111,6 +111,8 @@ export const SignupPage: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
+                  id="signup-fullname"
+                  name="full_name"
                   label="Full Name"
                   type="text"
                   value={fullName}
@@ -120,6 +122,8 @@ export const SignupPage: React.FC = () => {
                 />
 
                 <Input
+                  id="signup-email"
+                  name="email"
                   label="Email Address"
                   type="email"
                   value={email}
@@ -129,6 +133,8 @@ export const SignupPage: React.FC = () => {
                 />
 
                 <Input
+                  id="signup-password"
+                  name="password"
                   label="Password"
                   type="password"
                   value={password}

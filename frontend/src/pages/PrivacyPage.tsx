@@ -86,9 +86,9 @@ export const PrivacyPage: React.FC = () => {
         backgroundImage: 'linear-gradient(135deg, #EDFAF5, #F8FAF7, #E3F8F6)',
       }}
     >
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* Top Navbar (Floating Glass Navbar) */}
+      <div className="sticky top-2.5 z-40 px-4 lg:px-8">
+        <header className="max-w-7xl mx-auto glass-nav rounded-2xl px-4 lg:px-8 py-3 flex items-center justify-between shadow-md">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
             <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
@@ -114,8 +114,8 @@ export const PrivacyPage: React.FC = () => {
               Sign In
             </Link>
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Hero Header */}
       <section className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-10">

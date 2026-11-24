@@ -75,9 +75,9 @@ export const MethodologyPage: React.FC = () => {
         backgroundImage: 'linear-gradient(135deg, #EDFAF5, #F8FAF7, #E3F8F6)',
       }}
     >
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* Top Navbar (Floating Glass Navbar) */}
+      <div className="sticky top-2.5 z-40 px-4 lg:px-8">
+        <header className="max-w-7xl mx-auto glass-nav rounded-2xl px-4 lg:px-8 py-3 flex items-center justify-between shadow-md">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
             <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
@@ -103,8 +103,8 @@ export const MethodologyPage: React.FC = () => {
               Sign In
             </Link>
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Hero Header */}
       <section className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-10">
@@ -190,10 +190,12 @@ export const MethodologyPage: React.FC = () => {
           <form onSubmit={handleCalculate} className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-pm25" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   PM2.5 (µg/m³)
                 </label>
                 <input
+                  id="methodology-pm25"
+                  name="pm25"
                   type="number"
                   step="0.1"
                   value={pm25}
@@ -202,10 +204,12 @@ export const MethodologyPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-pm10" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   PM10 (µg/m³)
                 </label>
                 <input
+                  id="methodology-pm10"
+                  name="pm10"
                   type="number"
                   step="0.1"
                   value={pm10}
@@ -214,10 +218,12 @@ export const MethodologyPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-no2" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   NO2 (µg/m³)
                 </label>
                 <input
+                  id="methodology-no2"
+                  name="no2"
                   type="number"
                   step="0.1"
                   value={no2}
@@ -226,10 +232,12 @@ export const MethodologyPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-so2" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   SO2 (µg/m³)
                 </label>
                 <input
+                  id="methodology-so2"
+                  name="so2"
                   type="number"
                   step="0.1"
                   value={so2}
@@ -238,10 +246,12 @@ export const MethodologyPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-co" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   CO (mg/m³)
                 </label>
                 <input
+                  id="methodology-co"
+                  name="co"
                   type="number"
                   step="0.01"
                   value={co}
@@ -250,10 +260,12 @@ export const MethodologyPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+                <label htmlFor="methodology-o3" className="text-[11px] font-bold text-[#64748B] block mb-1">
                   O3 (µg/m³)
                 </label>
                 <input
+                  id="methodology-o3"
+                  name="o3"
                   type="number"
                   step="0.1"
                   value={o3}

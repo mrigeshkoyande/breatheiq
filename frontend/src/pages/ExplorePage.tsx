@@ -127,9 +127,9 @@ export const ExplorePage: React.FC = () => {
         backgroundImage: 'linear-gradient(135deg, #EDFAF5, #F8FAF7, #E3F8F6)',
       }}
     >
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* Top Navigation (Floating Glass Navbar) */}
+      <div className="sticky top-2.5 z-40 px-4 lg:px-8">
+        <header className="max-w-7xl mx-auto glass-nav rounded-2xl px-4 lg:px-8 py-3 flex items-center justify-between shadow-md">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
             <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
@@ -161,8 +161,8 @@ export const ExplorePage: React.FC = () => {
               Get Started
             </Link>
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Hero Search & City Bar */}
       <section className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-6">
@@ -179,7 +179,12 @@ export const ExplorePage: React.FC = () => {
 
             {/* City Search Box */}
             <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
+              <label htmlFor="explore-city-search" className="sr-only">
+                Search Indian city
+              </label>
               <input
+                id="explore-city-search"
+                name="city_search"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -415,7 +420,12 @@ export const ExplorePage: React.FC = () => {
 
                 {/* Slider Input */}
                 <div className="space-y-2">
+                  <label htmlFor="forecast-hour-slider" className="sr-only">
+                    Select forecast hour
+                  </label>
                   <input
+                    id="forecast-hour-slider"
+                    name="forecast_hour"
                     type="range"
                     min="0"
                     max={Math.max(0, forecast.length - 1)}

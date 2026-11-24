@@ -90,10 +90,12 @@ export const WhatIfPage: React.FC = () => {
           {/* Slider 1: Metro Days */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-bold">
-              <label className="text-[#334155]">Switch car commute to electric metro:</label>
+              <label htmlFor="whatif-metro-days" className="text-[#334155] cursor-pointer">Switch car commute to electric metro:</label>
               <span className="text-[#0F766E]">{metroDays} Days / Week</span>
             </div>
             <input
+              id="whatif-metro-days"
+              name="metro_days"
               type="range"
               min="0"
               max="7"
@@ -106,10 +108,12 @@ export const WhatIfPage: React.FC = () => {
           {/* Slider 2: Purifier Hours */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-bold">
-              <label className="text-[#334155]">Operate HEPA Purifier in living/sleeping rooms:</label>
+              <label htmlFor="whatif-purifier-hours" className="text-[#334155] cursor-pointer">Operate HEPA Purifier in living/sleeping rooms:</label>
               <span className="text-[#0F766E]">{purifierHours} Hours / Day</span>
             </div>
             <input
+              id="whatif-purifier-hours"
+              name="purifier_hours"
               type="range"
               min="2"
               max="24"
@@ -122,10 +126,12 @@ export const WhatIfPage: React.FC = () => {
           {/* Slider 3: Commute Distance */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-bold">
-              <label className="text-[#334155]">One-way daily commute distance:</label>
+              <label htmlFor="whatif-commute-distance" className="text-[#334155] cursor-pointer">One-way daily commute distance:</label>
               <span className="text-[#0F766E]">{commuteDistance} km</span>
             </div>
             <input
+              id="whatif-commute-distance"
+              name="commute_distance"
               type="range"
               min="5"
               max="40"

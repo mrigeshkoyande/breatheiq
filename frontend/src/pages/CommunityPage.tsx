@@ -146,8 +146,10 @@ export const CommunityPage: React.FC = () => {
             <h3 className="text-sm font-black text-[#182A29]">Log Hyper-Local Incident Observation</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">Incident Type</label>
+                <label htmlFor="incident-type-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Incident Type</label>
                 <select
+                  id="incident-type-select"
+                  name="incident_type"
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
@@ -161,8 +163,10 @@ export const CommunityPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">Severity Rating</label>
+                <label htmlFor="incident-severity-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Severity Rating</label>
                 <select
+                  id="incident-severity-select"
+                  name="severity"
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
@@ -175,8 +179,10 @@ export const CommunityPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Location Details</label>
+              <label htmlFor="incident-location-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Location Details</label>
               <input
+                id="incident-location-input"
+                name="location_name"
                 type="text"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
@@ -186,8 +192,10 @@ export const CommunityPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Description</label>
+              <label htmlFor="incident-description-textarea" className="text-[11px] font-bold text-[#64748B] block mb-1">Description</label>
               <textarea
+                id="incident-description-textarea"
+                name="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}

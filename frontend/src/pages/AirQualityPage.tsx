@@ -50,7 +50,12 @@ export const AirQualityPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 text-xs">
+            <label htmlFor="air-quality-city-select" className="sr-only">
+              Select City
+            </label>
             <select
+              id="air-quality-city-select"
+              name="air_quality_city"
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
               className="bg-[#F8FAF7] border border-[#CBD5E1] rounded-lg px-2.5 py-1 font-semibold"

@@ -72,7 +72,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <Suspense fallback={<div className="min-h-screen bg-[#F8FAF7]" />}>
           <Routes>

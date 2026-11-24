@@ -17,3 +17,43 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+@layer utilities {
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow: 0 10px 30px -10px rgba(15, 118, 110, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 12px 36px -8px rgba(15, 118, 110, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  .glass-card-subtle {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  }
+
+  .glass-pill {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+}

@@ -91,9 +91,9 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans selection:bg-[#DDF5EC] selection:text-[#0F766E]">
-      {/* HEADER / NAVIGATION */}
-      <header className="sticky top-0 left-0 right-0 z-50 bg-[#A3D0E8]/40 backdrop-blur-xl border-b border-white/20 shadow-xs">
-        <div className="max-w-7xl mx-auto h-20 px-4 lg:px-8 flex items-center justify-between">
+      {/* FLOATING GLASSMORPHIC NAVIGATION BAR */}
+      <header className="fixed top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 rounded-2xl glass-nav px-4 lg:px-7 py-2.5 transition-all">
+        <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2.5" title="BreatheIQ Home">
               <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-9 h-9 rounded-lg shadow-sm" />
@@ -149,7 +149,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Language Switcher */}
-            <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-lg p-0.5 border border-white/70">
+            <div className="flex items-center glass-pill rounded-lg p-0.5">
               {(['EN', 'HI', 'MR'] as const).map((lang) => (
                 <button
                   key={lang}
@@ -195,7 +195,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & LIVE AIR CARD */}
-      <section className="relative w-full px-4 lg:px-8 pt-8 pb-16 lg:pt-12 lg:pb-24 overflow-hidden">
+      <section className="relative w-full px-4 lg:px-8 pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
         {/* Mumbai Coastal Skyline & Bandra-Worli Sea Link photographic backdrop */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
           <img
@@ -226,9 +226,14 @@ export const LandingPage: React.FC = () => {
 
             {/* Location Typeahead & Search */}
             <div className="bg-white/60 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/80 flex flex-col gap-2 max-w-lg">
+              <label htmlFor="landing-city-search" className="sr-only">
+                Search city or monitoring station
+              </label>
               <div className="flex items-center gap-2 px-2 py-1">
                 <Search className="w-4 h-4 text-slate-700 shrink-0" />
                 <input
+                  id="landing-city-search"
+                  name="city_search"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -828,10 +833,12 @@ export const LandingPage: React.FC = () => {
               {/* Slider 1: Metro */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>Metro commute instead of personal cab:</span>
+                  <label htmlFor="landing-metro-days" className="cursor-pointer">Metro commute instead of personal cab:</label>
                   <span className="text-[#0F766E] font-bold">{metroDays} days / week</span>
                 </div>
                 <input
+                  id="landing-metro-days"
+                  name="metro_commute_days"
                   type="range"
                   min="0"
                   max="7"
@@ -845,10 +852,12 @@ export const LandingPage: React.FC = () => {
               {/* Slider 2: Carpool */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>School car-pooling trips:</span>
+                  <label htmlFor="landing-carpool-trips" className="cursor-pointer">School car-pooling trips:</label>
                   <span className="text-[#0F766E] font-bold">{carpoolTrips} trips / week</span>
                 </div>
                 <input
+                  id="landing-carpool-trips"
+                  name="carpool_trips"
                   type="range"
                   min="0"
                   max="5"
@@ -864,6 +873,7 @@ export const LandingPage: React.FC = () => {
                 <input
                   type="checkbox"
                   id="induction"
+                  name="induction_cooking"
                   checked={inductionStove}
                   onChange={(e) => setInductionStove(e.target.checked)}
                   className="w-4 h-4 accent-[#0F766E] rounded cursor-pointer"

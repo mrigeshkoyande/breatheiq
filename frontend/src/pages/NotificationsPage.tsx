@@ -207,10 +207,12 @@ export const NotificationsPage: React.FC = () => {
 
           <form onSubmit={handleCreateRule} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">
+              <label htmlFor="trigger-threshold-input" className="text-[11px] font-bold text-[#64748B] block mb-1">
                 Trigger Threshold (NAQI)
               </label>
               <input
+                id="trigger-threshold-input"
+                name="trigger_threshold"
                 type="number"
                 min="50"
                 max="400"
@@ -221,8 +223,10 @@ export const NotificationsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Target Member</label>
+              <label htmlFor="target-member-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Target Member</label>
               <select
+                id="target-member-select"
+                name="target_member"
                 value={targetMember}
                 onChange={(e) => setTargetMember(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"

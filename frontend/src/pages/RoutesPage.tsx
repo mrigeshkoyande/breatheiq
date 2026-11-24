@@ -106,8 +106,10 @@ export const RoutesPage: React.FC = () => {
         >
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Origin Landmark</label>
+              <label htmlFor="route-origin-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Origin Landmark</label>
               <input
+                id="route-origin-input"
+                name="origin_landmark"
                 type="text"
                 value={origin}
                 onChange={(e) => setOrigin(e.target.value)}
@@ -115,8 +117,10 @@ export const RoutesPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Destination</label>
+              <label htmlFor="route-destination-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Destination</label>
               <input
+                id="route-destination-input"
+                name="destination_landmark"
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
@@ -124,8 +128,10 @@ export const RoutesPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Departure Hour</label>
+              <label htmlFor="route-departure-hour-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Departure Hour</label>
               <select
+                id="route-departure-hour-select"
+                name="departure_hour"
                 value={departureHour}
                 onChange={(e) => setDepartureHour(Number(e.target.value))}
                 className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
@@ -217,9 +223,11 @@ export const RoutesPage: React.FC = () => {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0F766E]">
+          <label htmlFor="route-n95-mask-mode" className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0F766E]">
             <span>N95 Mask Mode</span>
             <input
+              id="route-n95-mask-mode"
+              name="n95_mask_mode"
               type="checkbox"
               checked={maskActive}
               onChange={(e) => setMaskActive(e.target.checked)}

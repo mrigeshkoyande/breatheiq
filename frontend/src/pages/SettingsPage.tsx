@@ -102,8 +102,10 @@ export const SettingsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Full Name</label>
+              <label htmlFor="settings-fullname-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Full Name</label>
               <input
+                id="settings-fullname-input"
+                name="full_name"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -111,8 +113,10 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-[#64748B] block mb-1">Email Address</label>
+              <label htmlFor="settings-email-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Email Address</label>
               <input
+                id="settings-email-input"
+                name="email"
                 type="email"
                 value={user?.email || ''}
                 disabled

@@ -8,8 +8,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className, id, ...props }, ref) => {
-    const inputId = id || props.name;
+  ({ label, error, helperText, className, id, name, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id || name || generatedId;
+    const inputName = name || inputId;
 
     return (
       <div className="w-full flex flex-col gap-1.5 text-left">
@@ -20,6 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           id={inputId}
+          name={inputName}
           ref={ref}
           className={cn(
             'w-full bg-white border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-sm text-[#182A29] placeholder-[#94A3B8] transition-all',

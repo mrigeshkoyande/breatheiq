@@ -120,7 +120,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* SIDEBAR NAVIGATION (DESKTOP) */}
-      <aside className="fixed left-0 top-0 h-screen w-72 bg-white/95 backdrop-blur-md z-50 hidden lg:flex flex-col border-r border-[#E2E8F0] shadow-sm overflow-y-auto">
+      <aside className="fixed left-0 top-0 h-screen w-72 bg-white/80 backdrop-blur-2xl z-50 hidden lg:flex flex-col border-r border-white/70 shadow-xl overflow-y-auto">
         {/* Brand: Redirects to Home Page when clicked */}
         <Link
           to="/"
@@ -237,84 +237,88 @@ export const DashboardPage: React.FC = () => {
 
       {/* TOP HEADER (OFFSET ON DESKTOP) */}
       <div className="lg:pl-72 flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 h-20 bg-white/90 backdrop-blur-xl border-b border-[#E2E8F0] px-4 lg:px-10 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {/* Mobile Logo Link (Redirects to Home) */}
-            <Link to="/" className="flex lg:hidden items-center gap-2 mr-2 group" title="Back to Home Page">
-              <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
-              <span className="font-extrabold text-base text-[#182A29]">
-                Breathe<span className="text-[#0F766E]">IQ</span>
-              </span>
-            </Link>
+        <div className="sticky top-2.5 z-40 px-4 lg:px-8">
+          <header className="h-16 glass-nav rounded-2xl px-4 lg:px-7 flex items-center justify-between gap-4 transition-all shadow-md">
+            <div className="flex items-center gap-3">
+              {/* Mobile Logo Link (Redirects to Home) */}
+              <Link to="/" className="flex lg:hidden items-center gap-2 mr-2 group" title="Back to Home Page">
+                <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
+                <span className="font-extrabold text-base text-[#182A29]">
+                  Breathe<span className="text-[#0F766E]">IQ</span>
+                </span>
+              </Link>
 
-            {/* Location Pill Selector */}
-            <div className="inline-flex items-center gap-2 bg-[#F8FAF7] px-3.5 py-2 rounded-2xl border border-[#E2E8F0]">
-              <MapPin className="w-4 h-4 text-[#0F766E]" />
-              <span className="text-xs font-bold text-[#182A29]">{activeLocation}</span>
-              <span className="px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-[10px] font-bold">
-                AQI 168 · Moderate
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveLocation((prev) =>
-                    prev.includes('Mumbai') ? 'Connaught Place, Delhi' : 'Andheri West, Mumbai'
-                  )
-                }
-                className="text-[10px] text-[#0F766E] underline ml-1 font-semibold"
-              >
-                Switch
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Language Switch */}
-            <div className="hidden sm:flex items-center bg-[#E3F8F6] rounded-xl p-0.5 border border-[#BDC9C6]">
-              {(['EN', 'HI', 'MR'] as const).map((lang) => (
+              {/* Location Pill Selector */}
+              <div className="inline-flex items-center gap-2 glass-pill px-3.5 py-1.5 rounded-xl border border-white/70 shadow-xs">
+                <MapPin className="w-4 h-4 text-[#0F766E]" />
+                <span className="text-xs font-bold text-[#182A29]">{activeLocation}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-[10px] font-bold">
+                  AQI 168 · Moderate
+                </span>
                 <button
-                  key={lang}
                   type="button"
-                  onClick={() => setLanguage(lang)}
-                  className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                    language === lang ? 'bg-white text-[#182A29] shadow-sm' : 'text-[#64748B]'
-                  }`}
+                  onClick={() =>
+                    setActiveLocation((prev) =>
+                      prev.includes('Mumbai') ? 'Connaught Place, Delhi' : 'Andheri West, Mumbai'
+                    )
+                  }
+                  className="text-[10px] text-[#0F766E] underline ml-1 font-semibold"
                 >
-                  {lang}
+                  Switch
                 </button>
-              ))}
+              </div>
             </div>
 
-            {/* Notification Bell */}
-            <button
-              type="button"
-              className="p-2 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-[#64748B] hover:text-[#182A29] relative"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#DC5252]"></span>
-            </button>
-
-            {/* User Session Capsule & Logout */}
-            <div className="flex items-center gap-3 pl-2 border-l border-[#E2E8F0]">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-bold text-[#182A29] leading-tight">
-                  {user?.full_name || user?.email?.split('@')[0] || 'Aarav Sharma'}
-                </span>
-                <span className="text-[10px] text-[#64748B] uppercase font-semibold">
-                  {user?.role || 'User'}
-                </span>
+            <div className="flex items-center gap-3">
+              {/* Language Switch */}
+              <div className="hidden sm:flex items-center glass-pill rounded-xl p-0.5 border border-white/60">
+                {(['EN', 'HI', 'MR'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setLanguage(lang)}
+                    className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                      language === lang ? 'bg-white text-[#182A29] shadow-sm' : 'text-[#64748B]'
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
               </div>
+
+              {/* Notification Bell */}
               <button
                 type="button"
-                onClick={handleLogout}
-                className="p-2 rounded-xl bg-[#F8FAF7] hover:bg-[#FFDAD6] text-[#64748B] hover:text-[#DC5252] border border-[#E2E8F0] transition-colors"
-                title="Sign Out"
+                className="p-2 rounded-xl glass-pill text-[#64748B] hover:text-[#182A29] relative transition-colors shadow-xs"
+                aria-label="View notifications"
               >
-                <LogOut className="w-4 h-4" />
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#DC5252]"></span>
               </button>
+
+              {/* User Session Capsule & Logout */}
+              <div className="flex items-center gap-3 pl-2 border-l border-slate-200/60">
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs font-bold text-[#182A29] leading-tight">
+                    {user?.full_name || user?.email?.split('@')[0] || 'Aarav Sharma'}
+                  </span>
+                  <span className="text-[10px] text-[#64748B] uppercase font-semibold">
+                    {user?.role || 'User'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-2 rounded-xl glass-pill hover:bg-[#FFDAD6] text-[#64748B] hover:text-[#DC5252] transition-colors shadow-xs"
+                  title="Sign Out"
+                  aria-label="Sign out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        </div>
 
         {/* MAIN DASHBOARD CONTENT */}
         <main className="flex-1 p-6 lg:p-10 space-y-8 max-w-7xl mx-auto w-full">
@@ -391,7 +395,7 @@ export const DashboardPage: React.FC = () => {
           {/* Primary Bento Grid: Live AQI Gauge + Forecast */}
           <section className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="air-quality">
             {/* Hero Gauge Card (7 Cols) */}
-            <div className="xl:col-span-7 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between">
+            <div className="xl:col-span-7 glass-card rounded-3xl p-6 lg:p-8 border border-white/80 shadow-xl flex flex-col justify-between">
               <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
                 <div>
                   <div className="flex items-center gap-2">
@@ -517,7 +521,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Window Oracle & Inversion Lifting (5 Cols) */}
-            <div className="xl:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between" id="home">
+            <div className="xl:col-span-5 glass-card rounded-3xl p-6 lg:p-8 border border-white/80 shadow-xl flex flex-col justify-between" id="home">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
@@ -574,7 +578,7 @@ export const DashboardPage: React.FC = () => {
           {/* Routine Checklist & Commute Navigator */}
           <section className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="routine">
             {/* Daily Routine Checklist (7 Cols) */}
-            <div className="xl:col-span-7 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between">
+            <div className="xl:col-span-7 glass-card rounded-3xl p-6 lg:p-8 border border-white/80 shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
                   <div>
@@ -648,7 +652,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* CleanRoute Commute Navigator (5 Cols) */}
-            <div className="xl:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between" id="routes">
+            <div className="xl:col-span-5 glass-card rounded-3xl p-6 lg:p-8 border border-white/80 shadow-xl flex flex-col justify-between" id="routes">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">

@@ -76,6 +76,8 @@ export const ForgotPasswordPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
+                id="forgot-email"
+                name="email"
                 label="Email Address"
                 type="email"
                 value={email}

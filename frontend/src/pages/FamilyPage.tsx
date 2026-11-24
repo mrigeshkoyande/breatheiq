@@ -128,8 +128,10 @@ export const FamilyPage: React.FC = () => {
             <h3 className="text-sm font-black text-[#182A29]">Add Family Member to AirTwin</h3>
             <div className="space-y-3 text-xs">
               <div>
-                <label className="text-[11px] font-bold text-[#64748B] block mb-1">Full Name</label>
+                <label htmlFor="member-fullname-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Full Name</label>
                 <input
+                  id="member-fullname-input"
+                  name="full_name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -140,8 +142,10 @@ export const FamilyPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-[#64748B] block mb-1">Age Category</label>
+                  <label htmlFor="member-age-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Age Category</label>
                   <select
+                    id="member-age-select"
+                    name="age_category"
                     value={ageCategory}
                     onChange={(e) => setAgeCategory(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
@@ -154,8 +158,10 @@ export const FamilyPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-[#64748B] block mb-1">Sensitivity</label>
+                  <label htmlFor="member-sensitivity-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Sensitivity</label>
                   <select
+                    id="member-sensitivity-select"
+                    name="sensitivity"
                     value={sensitivity}
                     onChange={(e) => setSensitivity(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"

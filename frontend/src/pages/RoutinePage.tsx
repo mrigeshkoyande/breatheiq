@@ -220,14 +220,20 @@ export const RoutinePage: React.FC = () => {
           onSubmit={handleAddTask}
           className="bg-white rounded-2xl border border-[#E2E8F0] p-4 flex flex-col sm:flex-row gap-3 items-center shadow-sm"
         >
+          <label htmlFor="routine-task-input" className="sr-only">New task title</label>
           <input
+            id="routine-task-input"
+            name="task_title"
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="Add new task (e.g. Check HEPA filter pre-mesh)..."
             className="flex-1 w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
           />
+          <label htmlFor="routine-task-slot-select" className="sr-only">Task time slot</label>
           <select
+            id="routine-task-slot-select"
+            name="task_slot"
             value={newTaskSlot}
             onChange={(e) => setNewTaskSlot(e.target.value)}
             className="text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full sm:w-auto"

@@ -174,8 +174,10 @@ export const OnboardingPage: React.FC = () => {
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#334155] block mb-1">City</label>
+                  <label htmlFor="onboarding-city-select" className="text-xs font-bold text-[#334155] block mb-1">City</label>
                   <select
+                    id="onboarding-city-select"
+                    name="onboarding_city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] focus:ring-2 focus:ring-[#0F766E]"
@@ -189,10 +191,12 @@ export const OnboardingPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#334155] block mb-1">
+                  <label htmlFor="onboarding-neighborhood-input" className="text-xs font-bold text-[#334155] block mb-1">
                     Neighborhood / Ward
                   </label>
                   <input
+                    id="onboarding-neighborhood-input"
+                    name="neighborhood"
                     type="text"
                     value={neighborhood}
                     onChange={(e) => setNeighborhood(e.target.value)}
@@ -253,33 +257,48 @@ export const OnboardingPage: React.FC = () => {
               <div className="border-t border-[#F1F5F9] pt-4 space-y-3">
                 <span className="text-xs font-bold text-[#182A29] block">Add another member:</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    value={newMemberName}
-                    onChange={(e) => setNewMemberName(e.target.value)}
-                    placeholder="Name"
-                    className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
-                  />
-                  <select
-                    value={newMemberAge}
-                    onChange={(e) => setNewMemberAge(e.target.value)}
-                    className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
-                  >
-                    <option value="infant">Infant (0-2y)</option>
-                    <option value="child">Child (3-12y)</option>
-                    <option value="adult">Adult (13-64y)</option>
-                    <option value="senior">Senior (65y+)</option>
-                  </select>
-                  <select
-                    value={newMemberSens}
-                    onChange={(e) => setNewMemberSens(e.target.value)}
-                    className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
-                  >
-                    <option value="none">No sensitivities</option>
-                    <option value="asthma">Asthma</option>
-                    <option value="bronchitis">Bronchitis</option>
-                    <option value="heart_condition">Cardiovascular</option>
-                  </select>
+                  <div>
+                    <label htmlFor="onboarding-member-name" className="sr-only">Member Name</label>
+                    <input
+                      id="onboarding-member-name"
+                      name="member_name"
+                      type="text"
+                      value={newMemberName}
+                      onChange={(e) => setNewMemberName(e.target.value)}
+                      placeholder="Name"
+                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="onboarding-member-age" className="sr-only">Age Category</label>
+                    <select
+                      id="onboarding-member-age"
+                      name="member_age"
+                      value={newMemberAge}
+                      onChange={(e) => setNewMemberAge(e.target.value)}
+                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
+                    >
+                      <option value="infant">Infant (0-2y)</option>
+                      <option value="child">Child (3-12y)</option>
+                      <option value="adult">Adult (13-64y)</option>
+                      <option value="senior">Senior (65y+)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="onboarding-member-sens" className="sr-only">Sensitivities</label>
+                    <select
+                      id="onboarding-member-sens"
+                      name="member_sens"
+                      value={newMemberSens}
+                      onChange={(e) => setNewMemberSens(e.target.value)}
+                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
+                    >
+                      <option value="none">No sensitivities</option>
+                      <option value="asthma">Asthma</option>
+                      <option value="bronchitis">Bronchitis</option>
+                      <option value="heart_condition">Cardiovascular</option>
+                    </select>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -307,10 +326,12 @@ export const OnboardingPage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <label className="font-bold text-[#334155]">Alert Threshold (NAQI):</label>
+                    <label htmlFor="onboarding-aqi-threshold" className="font-bold text-[#334155] cursor-pointer">Alert Threshold (NAQI):</label>
                     <span className="font-bold text-[#0F766E]">{aqiThreshold} NAQI</span>
                   </div>
                   <input
+                    id="onboarding-aqi-threshold"
+                    name="aqi_threshold"
                     type="range"
                     min="100"
                     max="350"
@@ -331,12 +352,17 @@ export const OnboardingPage: React.FC = () => {
                     <span className="text-xs font-bold text-[#182A29] block">Push & In-App Alerts</span>
                     <span className="text-[11px] text-[#64748B]">Notify on rapid PM2.5 spikes</span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={enablePush}
-                    onChange={(e) => setEnablePush(e.target.checked)}
-                    className="w-4 h-4 text-[#0F766E] rounded accent-[#0F766E]"
-                  />
+                  <label htmlFor="onboarding-enable-push" className="cursor-pointer">
+                    <span className="sr-only">Enable push and in-app alerts</span>
+                    <input
+                      id="onboarding-enable-push"
+                      name="enable_push"
+                      type="checkbox"
+                      checked={enablePush}
+                      onChange={(e) => setEnablePush(e.target.checked)}
+                      className="w-4 h-4 text-[#0F766E] rounded accent-[#0F766E]"
+                    />
+                  </label>
                 </div>
               </div>
             </div>

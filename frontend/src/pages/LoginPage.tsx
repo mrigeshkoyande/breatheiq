@@ -156,6 +156,8 @@ export const LoginPage: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
+                  id="login-email"
+                  name="email"
                   label="Email Address"
                   type="email"
                   value={email}
@@ -166,7 +168,7 @@ export const LoginPage: React.FC = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#3E4947]">
+                    <label htmlFor="login-password" className="text-xs font-semibold uppercase tracking-wider text-[#3E4947]">
                       Password
                     </label>
                     <Link
@@ -177,6 +179,8 @@ export const LoginPage: React.FC = () => {
                     </Link>
                   </div>
                   <Input
+                    id="login-password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

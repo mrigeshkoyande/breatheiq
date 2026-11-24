@@ -85,6 +85,8 @@ export const ResetPasswordPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
+                id="reset-new-password"
+                name="new_password"
                 label="New Password"
                 type="password"
                 value={newPassword}
@@ -94,6 +96,8 @@ export const ResetPasswordPage: React.FC = () => {
               />
 
               <Input
+                id="reset-confirm-password"
+                name="confirm_password"
                 label="Confirm Password"
                 type="password"
                 value={confirmPassword}

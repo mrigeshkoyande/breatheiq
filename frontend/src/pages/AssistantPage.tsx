@@ -155,8 +155,10 @@ export const AssistantPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 text-xs">
-            <label className="text-[#64748B] font-semibold hidden sm:inline">Active City:</label>
+            <label htmlFor="assistant-city-select" className="text-[#64748B] font-semibold hidden sm:inline">Active City:</label>
             <select
+              id="assistant-city-select"
+              name="assistant_city"
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
               className="bg-[#F8FAF7] border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-semibold text-[#182A29] focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
@@ -308,7 +310,12 @@ export const AssistantPage: React.FC = () => {
 
         {/* Query Input Box */}
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-2.5 flex items-center gap-2 shadow-sm">
+          <label htmlFor="assistant-query-input" className="sr-only">
+            Ask Atmospheric Assistant
+          </label>
           <input
+            id="assistant-query-input"
+            name="assistant_query"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
