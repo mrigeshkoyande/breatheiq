@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -80,9 +81,13 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        canonical_sqlite = f"sqlite+aiosqlite:///{(base_dir / 'breatheiq.db').as_posix()}"
         if not v:
-            return "sqlite+aiosqlite:///./breatheiq.db"
+            return canonical_sqlite
         v = str(v).strip()
+        if "sqlite" in v and "./breatheiq.db" in v:
+            return canonical_sqlite
         # Render / Heroku / Supabase provide postgres:// or postgresql:// without async dialect
         if v.startswith("postgres://"):
             return v.replace("postgres://", "postgresql+asyncpg://", 1)
