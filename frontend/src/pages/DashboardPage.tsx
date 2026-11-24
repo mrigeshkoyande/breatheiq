@@ -97,9 +97,9 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen text-[#182A29] antialiased flex flex-col font-sans relative bg-fixed bg-cover bg-center"
+      className="min-h-screen text-[#182A29] antialiased flex flex-col font-sans relative bg-[#F8FAF7]"
       style={{
-        backgroundImage: `linear-gradient(135deg, rgba(237, 250, 245, 0.95), rgba(248, 250, 247, 0.96), rgba(227, 248, 246, 0.95)), url('/mumbai-sealink-bg.webp')`,
+        backgroundImage: 'linear-gradient(135deg, #EDFAF5, #F8FAF7, #E3F8F6)',
       }}
     >
       {/* 0. TOP ANNOUNCEMENT BANNER */}

@@ -122,9 +122,9 @@ export const ExplorePage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen text-[#182A29] flex flex-col font-sans bg-fixed bg-cover bg-center"
+      className="min-h-screen text-[#182A29] flex flex-col font-sans bg-[#F8FAF7]"
       style={{
-        backgroundImage: `linear-gradient(135deg, rgba(237, 250, 245, 0.96), rgba(248, 250, 247, 0.97), rgba(227, 248, 246, 0.96)), url('/mumbai-sealink-bg.webp')`,
+        backgroundImage: 'linear-gradient(135deg, #EDFAF5, #F8FAF7, #E3F8F6)',
       }}
     >
       {/* Top Navigation */}

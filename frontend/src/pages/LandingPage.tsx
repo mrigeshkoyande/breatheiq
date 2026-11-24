@@ -91,34 +91,17 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans selection:bg-[#DDF5EC] selection:text-[#0F766E]">
-      {/* 0. ANNOUNCEMENT BAR */}
-      <section className="w-full bg-[#115E59] text-white px-4 lg:px-10 py-2 text-center shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-center flex-wrap gap-2 text-xs font-medium">
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#A8ECE5] text-[#266D68] text-[10px] uppercase font-bold tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
-            Winter Smog Alert
-          </span>
-          <span>Diurnal thermal inversion forecasting is now active across 42 Indian municipal corridors.</span>
-          <a
-            href="#what-if"
-            className="underline text-[#9CF2E8] hover:text-white transition-colors ml-1 inline-flex items-center gap-1 font-semibold"
-          >
-            Explore What-If Simulator <ArrowRight className="w-3 h-3 inline" />
-          </a>
-        </div>
-      </section>
-
       {/* HEADER / NAVIGATION */}
-      <header className="sticky top-0 left-0 right-0 z-50 bg-[#F8FAF7]/90 backdrop-blur-xl border-b border-[#E2E8F0]">
+      <header className="sticky top-0 left-0 right-0 z-50 bg-[#A3D0E8]/40 backdrop-blur-xl border-b border-white/20 shadow-xs">
         <div className="max-w-7xl mx-auto h-20 px-4 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center gap-2.5" title="BreatheIQ Home">
               <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-9 h-9 rounded-lg shadow-sm" />
               <div className="flex flex-col">
                 <span className="font-heading font-extrabold text-xl text-[#182A29] leading-none tracking-tight">
                   Breathe<span className="text-[#0F766E]">IQ</span>
                 </span>
-                <span className="text-[10px] font-bold text-[#64748B] tracking-wider uppercase leading-none mt-0.5">
+                <span className="text-[10px] font-bold text-[#475569] tracking-wider uppercase leading-none mt-0.5">
                   Urban Air Quality Assistant
                 </span>
               </div>
@@ -127,31 +110,31 @@ export const LandingPage: React.FC = () => {
             <nav className="hidden xl:flex items-center gap-1 pl-4">
               <a
                 href="#features"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
               >
                 Features
               </a>
               <a
                 href="#how-it-works"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
               >
                 How It Works
               </a>
               <a
                 href="#what-if"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
               >
                 What-If Simulator
               </a>
               <a
                 href="#transparency"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
               >
                 Data Provenance
               </a>
               <a
                 href="#faq"
-                className="px-3 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
               >
                 FAQ
               </a>
@@ -166,7 +149,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Language Switcher */}
-            <div className="flex items-center bg-[#E3F8F6] rounded-lg p-0.5 border border-[#BDC9C6]">
+            <div className="flex items-center bg-white/60 backdrop-blur-sm rounded-lg p-0.5 border border-white/70">
               {(['EN', 'HI', 'MR'] as const).map((lang) => (
                 <button
                   key={lang}
@@ -175,7 +158,7 @@ export const LandingPage: React.FC = () => {
                   className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
                     language === lang
                       ? 'bg-white text-[#182A29] shadow-sm'
-                      : 'text-[#64748B] hover:text-[#182A29]'
+                      : 'text-slate-600 hover:text-[#182A29]'
                   }`}
                 >
                   {lang}
@@ -195,7 +178,7 @@ export const LandingPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="hidden sm:inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#182A29] hover:bg-[#DDF2F0] transition-colors"
+                  className="hidden sm:inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-800 hover:text-[#0F766E] hover:bg-white/40 transition-colors"
                 >
                   Sign In
                 </Link>
@@ -212,52 +195,51 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & LIVE AIR CARD */}
-      <section className="relative w-full px-4 lg:px-8 py-16 lg:py-24 overflow-hidden bg-[#EDFAF5]">
+      <section className="relative w-full px-4 lg:px-8 pt-8 pb-16 lg:pt-12 lg:pb-24 overflow-hidden">
         {/* Mumbai Coastal Skyline & Bandra-Worli Sea Link photographic backdrop */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
           <img
             src="/mumbai-sealink-bg.webp"
             alt="Mumbai Bandra-Worli Sea Link Backdrop"
-            className="w-full h-full object-cover object-bottom opacity-20 filter saturate-125 mix-blend-multiply"
+            className="w-full h-full object-cover object-[center_65%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#EDFAF5] via-[#EDFAF5]/85 to-[#E6F7F2]/75"></div>
-          <div className="absolute -right-20 -top-16 w-[600px] h-[400px] bg-gradient-to-br from-[#A8ECE5]/30 to-transparent rounded-full filter blur-3xl opacity-60"></div>
-          <div className="absolute -left-12 top-10 w-[450px] h-[300px] bg-[#DDF5EC]/50 filter blur-3xl opacity-50"></div>
+          {/* Soft gradient overlay for text readability while preserving the vibrant sunset & bridge */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
         </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column: Headlines & Location Typeahead */}
           <div className="lg:col-span-6 flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full bg-[#DDF5EC] border border-[#A7E8C6] text-xs font-bold text-[#0F766E]">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 self-start px-3.5 py-1 rounded-full bg-white/75 backdrop-blur-md border border-white/80 text-xs font-bold text-[#0F766E] shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>Challenge 6 — Urban Air Quality Assistant</span>
             </div>
 
-            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-[#182A29] tracking-tight leading-[1.1]">
-              Breathe Smarter. <span className="text-[#0F766E]">Live Healthier.</span>
+            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-[#0F2926] tracking-tight leading-[1.08]">
+              Breathe Smarter. <span className="text-[#0F766E] block sm:inline">Live Healthier.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[#64748B] leading-relaxed max-w-xl">
+            <p className="text-base sm:text-lg text-white font-normal leading-relaxed max-w-xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               Turn confusing AQI numbers into hour-by-hour respiratory defense. Real-time CPCB telemetry,
               Window Oracle ventilation timing, and low-exposure CleanRoute navigation tailored for Indian families.
             </p>
 
             {/* Location Typeahead & Search */}
-            <div className="bg-white p-2.5 rounded-2xl shadow-elevated border border-[#E2E8F0] flex flex-col gap-2 max-w-lg">
-              <div className="flex items-center gap-2 px-3 py-1.5">
-                <Search className="w-4 h-4 text-[#0F766E]" />
+            <div className="bg-white/60 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/80 flex flex-col gap-2 max-w-lg">
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Search className="w-4 h-4 text-slate-700 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search city or monitoring station (e.g., Andheri, Delhi)..."
-                  className="w-full text-xs font-medium text-[#182A29] placeholder-[#64748B] outline-none bg-transparent"
+                  className="w-full text-xs font-semibold text-slate-900 placeholder-slate-600 outline-none bg-transparent"
                 />
               </div>
 
               {/* City Quick Chips */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#E2E8F0] px-1">
-                <span className="text-[10px] uppercase font-bold text-[#64748B]">Quick select:</span>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-white/50 px-1">
+                <span className="text-[10px] uppercase font-bold text-slate-700 tracking-wider">Quick select:</span>
                 {filteredCities.map((city) => (
                   <button
                     key={city.name}
@@ -266,10 +248,10 @@ export const LandingPage: React.FC = () => {
                       setSelectedCity(city);
                       setSearchQuery('');
                     }}
-                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                       selectedCity.name === city.name
                         ? 'bg-[#0F766E] text-white shadow-sm'
-                        : 'bg-[#F8FAF7] text-[#64748B] hover:bg-[#DDF5EC] hover:text-[#0F766E]'
+                        : 'bg-white/80 text-slate-800 hover:bg-white shadow-xs'
                     }`}
                   >
                     {city.name.split(',')[0]}
@@ -279,17 +261,17 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <Link
                 to="/signup"
-                className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] font-heading font-bold text-sm shadow-elevated transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] font-heading font-bold text-sm shadow-xl transition-all hover:-translate-y-0.5"
               >
                 Start Protecting Your Family
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center px-5 py-3 rounded-xl bg-white text-[#182A29] hover:bg-[#F8FAF7] border border-[#E2E8F0] font-heading font-bold text-sm shadow-sm transition-colors"
+                className="inline-flex items-center px-6 py-3.5 rounded-xl bg-white text-[#182A29] hover:bg-slate-50 border border-white/90 font-heading font-bold text-sm shadow-md transition-all hover:-translate-y-0.5"
               >
                 Explore Live Demo
               </Link>
@@ -297,27 +279,27 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Right Column: Live Ambient Air Telemetry Card */}
-          <div className="lg:col-span-6 flex flex-col items-center lg:items-end">
-            <div className="w-full max-w-lg bg-white rounded-3xl shadow-elevated border border-[#E2E8F0] p-6 lg:p-8 space-y-6">
+          <div className="lg:col-span-6 flex flex-col items-center lg:items-end relative">
+            <div className="w-full max-w-lg bg-white/85 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white/75 p-6 lg:p-7 space-y-5 relative z-10">
               {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
                 <div>
                   <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-[#0F766E]" />
-                    <span className="text-[11px] uppercase font-bold tracking-wider text-[#64748B]">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
                       Live Ambient Air Telemetry
                     </span>
                   </div>
-                  <h3 className="font-heading font-extrabold text-2xl text-[#182A29] mt-0.5">
+                  <h3 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 mt-0.5">
                     {selectedCity.name}
                   </h3>
-                  <span className="text-xs text-[#64748B] font-medium">{selectedCity.station}</span>
+                  <span className="text-xs text-slate-500 font-medium">{selectedCity.station}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase tracking-wider">
                     LIVE
                   </span>
-                  <span className="text-[10px] text-[#64748B]">Updated 4m ago</span>
+                  <span className="text-[10px] text-slate-500">Updated 4m ago</span>
                 </div>
               </div>
 
@@ -325,20 +307,20 @@ export const LandingPage: React.FC = () => {
               <div className="flex flex-wrap items-baseline justify-between gap-4">
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="font-heading font-extrabold text-6xl text-[#182A29] tabular-nums">
+                    <span className="font-heading font-extrabold text-6xl text-slate-900 tabular-nums leading-none">
                       {selectedCity.aqi}
                     </span>
-                    <span className="text-sm font-bold text-[#64748B] uppercase">CPCB NAQI</span>
+                    <span className="text-xs font-bold text-slate-500 uppercase">CPCB NAQI</span>
                   </div>
                   <div
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-2 ${
                       selectedCity.aqi > 300
-                        ? 'bg-[#FFDAD6] text-[#DC5252]'
+                        ? 'bg-[#FFDAD6] text-[#DC5252] border border-[#FFB4AB]'
                         : selectedCity.aqi > 200
-                        ? 'bg-[#FEF3C7] text-[#DC5252]'
+                        ? 'bg-[#FEF3C7] text-[#DC5252] border border-[#FDE68A]'
                         : selectedCity.aqi > 100
-                        ? 'bg-[#FEF3C7] text-[#B45309]'
-                        : 'bg-[#DDF5EC] text-[#0F766E]'
+                        ? 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]'
+                        : 'bg-[#DDF5EC] text-[#0F766E] border border-[#A7E8C6]'
                     }`}
                   >
                     <Info className="w-3.5 h-3.5" />
@@ -347,20 +329,20 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-right">
-                  <div className="bg-[#F8FAF7] p-2.5 rounded-xl border border-[#E2E8F0]">
-                    <span className="text-[10px] uppercase font-bold text-[#64748B] block">PM2.5</span>
-                    <span className="font-heading font-bold text-base text-[#182A29]">
+                  <div className="bg-white/70 p-2.5 rounded-xl border border-slate-200/70">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">PM2.5</span>
+                    <span className="font-heading font-bold text-base text-slate-900">
                       {selectedCity.pm25} µg/m³
                     </span>
                   </div>
-                  <div className="bg-[#F8FAF7] p-2.5 rounded-xl border border-[#E2E8F0]">
-                    <span className="text-[10px] uppercase font-bold text-[#64748B] block">PM10</span>
-                    <span className="font-heading font-bold text-base text-[#182A29]">
+                  <div className="bg-white/70 p-2.5 rounded-xl border border-slate-200/70">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">PM10</span>
+                    <span className="font-heading font-bold text-base text-slate-900">
                       {selectedCity.pm10} µg/m³
                     </span>
                   </div>
-                  <div className="bg-[#F8FAF7] p-2.5 rounded-xl border border-[#E2E8F0] col-span-2 text-left">
-                    <span className="text-[10px] uppercase font-bold text-[#64748B] block">Wind Vector</span>
+                  <div className="bg-white/70 p-2.5 rounded-xl border border-slate-200/70 col-span-2 text-left">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Wind Vector</span>
                     <span className="font-heading font-bold text-xs text-[#0F766E]">
                       {selectedCity.wind}
                     </span>
@@ -369,23 +351,23 @@ export const LandingPage: React.FC = () => {
               </div>
 
               {/* Sparkline Curve */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-2 font-medium">
+              <div className="pt-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-600 mb-2 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-1 bg-[#B45309] rounded-full inline-block"></span>
+                    <span className="w-3 h-0.5 bg-[#C2410C] rounded-full inline-block"></span>
                     Measured Inversion Curve
                   </span>
                   <span className="flex items-center gap-1.5 text-[#0F766E]">
-                    <span className="w-3 h-0.5 border-b-2 border-dashed border-[#0F766E] inline-block"></span>
+                    <span className="w-3.5 h-0.5 border-b-2 border-dashed border-[#0F766E] inline-block"></span>
                     6h Dispersion Forecast
                   </span>
                 </div>
-                <div className="h-16 w-full bg-[#E3F8F6] rounded-xl p-2 relative overflow-hidden border border-[#CCFBF1]">
+                <div className="h-16 w-full bg-[#E6F7F2]/80 rounded-xl p-2 relative overflow-hidden border border-[#A7E8C6]/50">
                   <svg className="w-full h-full" viewBox="0 0 400 48" preserveAspectRatio="none">
                     <path
                       d="M0 32 Q50 36, 100 24 T200 22"
                       fill="none"
-                      stroke="#B45309"
+                      stroke="#C2410C"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                     />
@@ -397,27 +379,34 @@ export const LandingPage: React.FC = () => {
                       strokeDasharray="4 4"
                       strokeLinecap="round"
                     />
-                    <circle cx="200" cy="22" r="4" fill="#B45309" />
+                    <circle cx="200" cy="22" r="4" fill="#C2410C" />
                   </svg>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-[#64748B] mt-1.5 font-medium px-1">
+                <div className="flex items-center justify-between text-[10px] text-slate-600 mt-1.5 font-medium px-1">
                   <span>06:00 AM (Peak Inversion)</span>
-                  <span className="font-bold text-[#B45309]">NOW</span>
+                  <span className="font-bold text-[#C2410C]">NOW</span>
                   <span>08:00 PM (Sea Breeze Drop)</span>
                 </div>
               </div>
 
               {/* Copilot verdict popover */}
-              <div className="p-3.5 rounded-2xl bg-[#DDF5EC] border border-[#A7E8C6] flex items-start gap-3">
+              <div className="p-3.5 rounded-2xl bg-[#DDF5EC]/95 border border-[#A7E8C6] flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" />
                 <div className="flex flex-col text-xs">
                   <span className="font-bold text-[#0F766E]">Window Oracle Ventilation Verdict:</span>
-                  <p className="text-[#182A29] mt-0.5 leading-relaxed">
+                  <p className="text-slate-800 mt-0.5 leading-relaxed font-normal">
                     Solar lifting clears ground-level particulates between <strong>1:30 PM – 4:00 PM</strong>.
                     Seal bedroom windows before evening coastal stagnation begins.
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Glowing 4-Point Star Ornament at bottom right */}
+            <div className="absolute -bottom-5 -right-5 pointer-events-none select-none text-white/90 drop-shadow-md z-20">
+              <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+              </svg>
             </div>
           </div>
         </div>
