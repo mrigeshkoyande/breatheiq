@@ -97,11 +97,13 @@ export const OnboardingPage: React.FC = () => {
       {/* Top Header */}
       <header className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
             <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
             <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Family AirTwin Setup</span>
+          </Link>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[#94A3B8]">/</span>
+            <span className="font-bold text-[#182A29]">Family AirTwin Setup</span>
           </div>
           <span className="text-xs font-bold text-[#0F766E]">Step {currentStep} of 3</span>
         </div>

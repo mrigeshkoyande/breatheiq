@@ -65,8 +65,8 @@ export const LoginPage: React.FC = () => {
                 CPCB Telemetry Synchronized
               </div>
 
-              <div className="flex items-center gap-3 mb-2">
-                <img src="/logo-mark.webp" alt="Logo" className="w-10 h-10 rounded-xl shadow-sm" />
+              <Link to="/" className="flex items-center gap-3 mb-2 group" title="BreatheIQ Home">
+                <img src="/logo-mark.webp" alt="Logo" className="w-10 h-10 rounded-xl shadow-sm group-hover:scale-105 transition-transform" />
                 <div>
                   <h2 className="font-heading font-bold text-xl text-[#182A29]">
                     Breathe<span className="text-[#0F766E]">IQ</span>
@@ -75,7 +75,7 @@ export const LoginPage: React.FC = () => {
                     Atmospheric Precision
                   </p>
                 </div>
-              </div>
+              </Link>
 
               <p className="text-[#0F766E] font-heading font-semibold text-base mt-2">
                 Breathe Smarter. Live Healthier.

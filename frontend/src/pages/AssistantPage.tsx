@@ -146,7 +146,7 @@ export const AssistantPage: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/app/dashboard" className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
               <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
               <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
             </Link>

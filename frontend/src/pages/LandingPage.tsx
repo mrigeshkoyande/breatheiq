@@ -211,33 +211,18 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      {/* 1. HERO SECTION WITH MUMBAI COASTAL SKYLINE & LIVE AIR CARD */}
-      <section className="relative w-full px-4 lg:px-8 py-16 lg:py-24 overflow-hidden bg-gradient-to-b from-[#E9FEFB] via-[#E3F8F6] to-[#F8FAF7]">
-        {/* Mumbai Coastal Skyline & Bandra-Worli Sea Link SVG background */}
+      {/* 1. HERO SECTION WITH MUMBAI BANDRA-WORLI SEA LINK BACKGROUND & LIVE AIR CARD */}
+      <section className="relative w-full px-4 lg:px-8 py-16 lg:py-24 overflow-hidden bg-[#EDFAF5]">
+        {/* Mumbai Coastal Skyline & Bandra-Worli Sea Link photographic backdrop */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+          <img
+            src="/mumbai-sealink-bg.webp"
+            alt="Mumbai Bandra-Worli Sea Link Backdrop"
+            className="w-full h-full object-cover object-bottom opacity-20 filter saturate-125 mix-blend-multiply"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#EDFAF5] via-[#EDFAF5]/85 to-[#E6F7F2]/75"></div>
           <div className="absolute -right-20 -top-16 w-[600px] h-[400px] bg-gradient-to-br from-[#A8ECE5]/30 to-transparent rounded-full filter blur-3xl opacity-60"></div>
           <div className="absolute -left-12 top-10 w-[450px] h-[300px] bg-[#DDF5EC]/50 filter blur-3xl opacity-50"></div>
-          <svg
-            className="absolute bottom-0 right-0 w-full lg:w-[60%] h-[320px] opacity-30"
-            fill="none"
-            viewBox="0 0 1000 420"
-            preserveAspectRatio="xMaxYMin meet"
-          >
-            <path
-              d="M0 380 C180 340, 360 410, 580 370 C760 340, 880 395, 1000 365 L1000 420 L0 420 Z"
-              fill="#0F766E"
-              opacity="0.08"
-            />
-            {/* Sea Link Main Pylon 1 */}
-            <polygon fill="#115E59" opacity="0.3" points="570,370 592,110 598,110 620,370 608,370 595,150 582,370" />
-            <line x1="595" y1="125" x2="480" y2="345" stroke="#0F766E" strokeWidth="1" opacity="0.4" />
-            <line x1="595" y1="145" x2="505" y2="345" stroke="#0F766E" strokeWidth="1" opacity="0.4" />
-            <line x1="595" y1="125" x2="710" y2="345" stroke="#0F766E" strokeWidth="1" opacity="0.4" />
-            {/* Sea Link Main Pylon 2 */}
-            <polygon fill="#115E59" opacity="0.25" points="770,370 788,140 794,140 812,370 802,370 791,175 780,370" />
-            <line x1="791" y1="150" x2="715" y2="345" stroke="#0F766E" strokeWidth="1" opacity="0.35" />
-            <line x1="791" y1="150" x2="865" y2="345" stroke="#0F766E" strokeWidth="1" opacity="0.35" />
-          </svg>
         </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">

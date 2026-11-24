@@ -121,7 +121,12 @@ export const ExplorePage: React.FC = () => {
   const activeForecastSlot = forecast[selectedHourIdx];
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
+    <div
+      className="min-h-screen text-[#182A29] flex flex-col font-sans bg-fixed bg-cover bg-center"
+      style={{
+        backgroundImage: `linear-gradient(135deg, rgba(237, 250, 245, 0.96), rgba(248, 250, 247, 0.97), rgba(227, 248, 246, 0.96)), url('/mumbai-sealink-bg.webp')`,
+      }}
+    >
       {/* Top Navigation */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">

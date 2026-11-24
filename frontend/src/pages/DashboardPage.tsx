@@ -96,12 +96,38 @@ export const DashboardPage: React.FC = () => {
   const completedCount = tasks.filter((t) => t.completed).length;
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] antialiased flex flex-col font-sans">
+    <div
+      className="min-h-screen text-[#182A29] antialiased flex flex-col font-sans relative bg-fixed bg-cover bg-center"
+      style={{
+        backgroundImage: `linear-gradient(135deg, rgba(237, 250, 245, 0.95), rgba(248, 250, 247, 0.96), rgba(227, 248, 246, 0.95)), url('/mumbai-sealink-bg.webp')`,
+      }}
+    >
+      {/* 0. TOP ANNOUNCEMENT BANNER */}
+      <div className="w-full bg-[#115E59] text-white px-4 lg:px-8 py-2 text-center shadow-sm z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-center flex-wrap gap-2 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#A8ECE5] text-[#266D68] text-[10px] uppercase font-bold tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
+            Winter Smog Alert
+          </span>
+          <span>Diurnal thermal inversion forecasting is now active across 42 Indian municipal corridors.</span>
+          <Link
+            to="/app/impact/what-if"
+            className="underline text-[#9CF2E8] hover:text-white transition-colors ml-1 inline-flex items-center gap-1 font-semibold"
+          >
+            Explore What-If Simulator &rarr;
+          </Link>
+        </div>
+      </div>
+
       {/* SIDEBAR NAVIGATION (DESKTOP) */}
-      <aside className="fixed left-0 top-0 h-screen w-72 bg-white z-50 hidden lg:flex flex-col border-r border-[#E2E8F0] shadow-sm overflow-y-auto">
-        {/* Brand */}
-        <div className="p-6 flex items-center gap-3 border-b border-[#E2E8F0]">
-          <img src="/logo-mark.webp" alt="Logo" className="w-8 h-8 rounded-lg" />
+      <aside className="fixed left-0 top-0 h-screen w-72 bg-white/95 backdrop-blur-md z-50 hidden lg:flex flex-col border-r border-[#E2E8F0] shadow-sm overflow-y-auto">
+        {/* Brand: Redirects to Home Page when clicked */}
+        <Link
+          to="/"
+          className="p-6 flex items-center gap-3 border-b border-[#E2E8F0] hover:bg-[#F8FAF7] transition-colors group cursor-pointer"
+          title="Back to Home Page"
+        >
+          <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
           <div className="flex flex-col">
             <span className="font-heading font-extrabold text-lg text-[#182A29] leading-tight">
               Breathe<span className="text-[#0F766E]">IQ</span>
@@ -110,7 +136,7 @@ export const DashboardPage: React.FC = () => {
               Atmospheric Intelligence
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation Categories */}
         <nav className="flex-1 px-4 py-6 space-y-6">
@@ -123,77 +149,77 @@ export const DashboardPage: React.FC = () => {
               <Activity className="w-4 h-4" />
               <span>Overview</span>
             </Link>
-            <a
-              href="#air-quality"
+            <Link
+              to="/app/air-quality"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Wind className="w-4 h-4" />
               <span>Air Quality</span>
-            </a>
-            <a
-              href="#analytics"
+            </Link>
+            <Link
+              to="/app/analytics"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <TrendingUp className="w-4 h-4" />
               <span>Analytics</span>
-            </a>
-            <a
-              href="#copilot"
+            </Link>
+            <Link
+              to="/app/assistant"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Sparkles className="w-4 h-4 text-[#0F766E]" />
               <span>AI Copilot</span>
-            </a>
+            </Link>
           </div>
 
           <div className="space-y-1">
             <p className="px-3 text-[10px] uppercase font-bold tracking-wider text-[#64748B]">Family & Living</p>
-            <a
-              href="#routine"
+            <Link
+              to="/app/routine"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Calendar className="w-4 h-4" />
               <span>Daily Routine</span>
-            </a>
-            <a
-              href="#home"
+            </Link>
+            <Link
+              to="/app/home"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Home className="w-4 h-4" />
               <span>Home & Window Oracle</span>
-            </a>
-            <a
-              href="#family"
+            </Link>
+            <Link
+              to="/app/family"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Users className="w-4 h-4" />
               <span>Family AirGuard</span>
-            </a>
-            <a
-              href="#routes"
+            </Link>
+            <Link
+              to="/app/routes"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Compass className="w-4 h-4" />
               <span>CleanRoute</span>
-            </a>
+            </Link>
           </div>
 
           <div className="space-y-1">
             <p className="px-3 text-[10px] uppercase font-bold tracking-wider text-[#64748B]">Civic & Community</p>
-            <a
-              href="#community"
+            <Link
+              to="/app/community"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Layers className="w-4 h-4" />
               <span>Citizen Air Watch</span>
-            </a>
-            <a
-              href="#achievements"
+            </Link>
+            <Link
+              to="/app/impact"
               className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#DDF2F0] hover:text-[#182A29] transition-colors"
             >
               <Award className="w-4 h-4" />
-              <span>Achievements</span>
-            </a>
+              <span>Sustainability Ledger</span>
+            </Link>
           </div>
         </nav>
 
@@ -211,14 +237,22 @@ export const DashboardPage: React.FC = () => {
 
       {/* TOP HEADER (OFFSET ON DESKTOP) */}
       <div className="lg:pl-72 flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 h-20 bg-white/90 backdrop-blur-xl border-b border-[#E2E8F0] px-6 lg:px-10 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-40 h-20 bg-white/90 backdrop-blur-xl border-b border-[#E2E8F0] px-4 lg:px-10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
+            {/* Mobile Logo Link (Redirects to Home) */}
+            <Link to="/" className="flex lg:hidden items-center gap-2 mr-2 group" title="Back to Home Page">
+              <img src="/logo-mark.webp" alt="BreatheIQ Logo" className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
+              <span className="font-extrabold text-base text-[#182A29]">
+                Breathe<span className="text-[#0F766E]">IQ</span>
+              </span>
+            </Link>
+
             {/* Location Pill Selector */}
             <div className="inline-flex items-center gap-2 bg-[#F8FAF7] px-3.5 py-2 rounded-2xl border border-[#E2E8F0]">
               <MapPin className="w-4 h-4 text-[#0F766E]" />
               <span className="text-xs font-bold text-[#182A29]">{activeLocation}</span>
               <span className="px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-[10px] font-bold">
-                AQI 148 · Moderate
+                AQI 168 · Moderate
               </span>
               <button
                 type="button"
@@ -357,117 +391,133 @@ export const DashboardPage: React.FC = () => {
           {/* Primary Bento Grid: Live AQI Gauge + Forecast */}
           <section className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="air-quality">
             {/* Hero Gauge Card (7 Cols) */}
-            <div className="xl:col-span-7 bg-white rounded-3xl p-6 lg:p-8 border border-[#E2E8F0] shadow-sm flex flex-col justify-between">
+            <div className="xl:col-span-7 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
-                      LIVE CAAQMS TELEMETRY
+                      LIVE AMBIENT AIR TELEMETRY
                     </span>
-                    <span className="text-[10px] text-[#64748B]">Station: Andheri West #04</span>
+                    <span className="text-[10px] text-[#64748B]">MPCB Station #18 (Andheri West)</span>
                   </div>
                   <h2 className="font-heading font-extrabold text-2xl text-[#182A29] mt-1">
-                    Ambient Air Quality Index
+                    Andheri West, Mumbai
                   </h2>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setExplainOpen(!explainOpen)}
-                  className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1"
-                >
-                  Explain this number
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E] text-[10px] font-bold uppercase tracking-wider">
+                    LIVE
+                  </span>
+                  <span className="text-[10px] text-[#64748B]">Updated 4m ago</span>
+                </div>
               </div>
 
               {/* Gauge & Micro-Pollutants */}
-              <div className="py-6 grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+              <div className="py-5 grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
                 <div className="sm:col-span-5 flex flex-col items-center justify-center text-center">
-                  <div className="relative w-40 h-40 flex items-center justify-center">
-                    <svg className="w-40 h-40 -rotate-90 transform" viewBox="0 0 160 160">
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="68"
-                        fill="transparent"
-                        stroke="#E2E8F0"
-                        strokeWidth="12"
-                      />
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="68"
-                        fill="transparent"
-                        stroke="#F2B705"
-                        strokeWidth="12"
-                        strokeDasharray="427.25"
-                        strokeDashoffset="300"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="font-heading font-extrabold text-5xl text-[#182A29] leading-none tabular-nums">
-                        148
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-heading font-extrabold text-6xl text-[#182A29] leading-none tabular-nums">
+                        168
                       </span>
-                      <span className="text-xs font-bold text-[#B45309] mt-1">MODERATE</span>
-                      <span className="text-[10px] text-[#64748B]">CPCB NAQI</span>
+                      <span className="text-xs font-bold text-[#64748B] uppercase">CPCB NAQI</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-2.5 bg-[#FEF3C7] text-[#B45309]">
+                      <Info className="w-3.5 h-3.5" />
+                      <span>MODERATE (CPCB / MPCB)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="sm:col-span-7 grid grid-cols-2 gap-3">
+                <div className="sm:col-span-7 grid grid-cols-2 gap-2.5">
                   <div className="p-3 rounded-2xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <span className="text-[10px] uppercase font-bold text-[#64748B] block">Dominant: PM2.5</span>
-                    <span className="font-heading font-bold text-lg text-[#182A29]">78 µg/m³</span>
+                    <span className="font-heading font-bold text-base text-[#182A29]">78 µg/m³</span>
                     <span className="text-[10px] text-[#DC5252] block mt-0.5">2.6x WHO Guideline</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <span className="text-[10px] uppercase font-bold text-[#64748B] block">PM10 Particulates</span>
-                    <span className="font-heading font-bold text-lg text-[#182A29]">142 µg/m³</span>
+                    <span className="font-heading font-bold text-base text-[#182A29]">142 µg/m³</span>
                     <span className="text-[10px] text-[#B45309] block mt-0.5">Within CPCB 24h limit</span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="text-[10px] uppercase font-bold text-[#64748B] block">NO2 Traffic Gas</span>
-                    <span className="font-heading font-bold text-lg text-[#182A29]">42 ppb</span>
-                    <span className="text-[10px] text-[#0F766E] block mt-0.5">Good dispersion</span>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="text-[10px] uppercase font-bold text-[#64748B] block">Marine Wind</span>
-                    <span className="font-heading font-bold text-lg text-[#0F766E]">WSW 11 km/h</span>
-                    <span className="text-[10px] text-[#0F766E] block mt-0.5">Offshore shift active</span>
+                  <div className="p-3 rounded-2xl bg-[#F8FAF7] border border-[#E2E8F0] col-span-2 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#64748B] block">Wind Vector</span>
+                      <span className="font-heading font-bold text-xs text-[#0F766E]">WSW 11 km/h (Marine)</span>
+                    </div>
+                    <span className="text-[10px] text-[#0F766E] font-semibold bg-[#E8F8F5] px-2 py-0.5 rounded-md">
+                      Offshore shift active
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {explainOpen && (
-                <div className="p-4 rounded-2xl bg-[#DDF5EC] border border-[#A7E8C6] text-xs text-[#182A29] leading-relaxed mb-4">
-                  <div className="flex items-center justify-between font-bold text-[#0F766E] mb-1">
-                    <span>How CPCB NAQI is calculated:</span>
-                    <button type="button" onClick={() => setExplainOpen(false)}>
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  The statutory composite index takes the highest sub-index among measured pollutants. In Andheri West,
-                  <strong>PM2.5 (78 µg/m³)</strong> drives the composite index to 148 (Moderate). Sensitive individuals
-                  should minimize prolonged heavy outdoor exertion.
+              {/* Measured Inversion Curve & 6h Dispersion Forecast */}
+              <div className="py-2 border-t border-[#F1F5F9]">
+                <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1.5 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-1 bg-[#B45309] rounded-full inline-block"></span>
+                    Measured Inversion Curve
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[#0F766E]">
+                    <span className="w-3 h-0.5 border-b-2 border-dashed border-[#0F766E] inline-block"></span>
+                    6h Dispersion Forecast
+                  </span>
                 </div>
-              )}
+                <div className="h-14 w-full bg-[#E3F8F6] rounded-xl p-2 relative overflow-hidden border border-[#CCFBF1]">
+                  <svg className="w-full h-full" viewBox="0 0 400 44" preserveAspectRatio="none">
+                    <path
+                      d="M0 30 Q50 34, 100 22 T200 20"
+                      fill="none"
+                      stroke="#B45309"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M200 20 Q260 12, 320 26 T400 34"
+                      fill="none"
+                      stroke="#0F766E"
+                      strokeWidth="2"
+                      strokeDasharray="4 4"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="200" cy="20" r="4" fill="#B45309" />
+                  </svg>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-[#64748B] mt-1 font-medium px-1">
+                  <span>06:00 AM (Peak Inversion)</span>
+                  <span className="font-bold text-[#B45309]">NOW</span>
+                  <span>08:00 PM (Sea Breeze Drop)</span>
+                </div>
+              </div>
+
+              {/* Window Oracle Ventilation Verdict Popover */}
+              <div className="mt-3 p-3.5 rounded-2xl bg-[#DDF5EC] border border-[#A7E8C6] flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" />
+                <div className="flex flex-col text-xs">
+                  <span className="font-bold text-[#0F766E]">Window Oracle Ventilation Verdict:</span>
+                  <p className="text-[#182A29] mt-0.5 leading-relaxed">
+                    Solar lifting clears ground-level particulates between 1:30 PM – 4:00 PM. Seal bedroom windows
+                    before evening coastal stagnation begins.
+                  </p>
+                </div>
+              </div>
 
               {/* Sparkline & Forecast Footer */}
-              <div className="pt-4 border-t border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
+              <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
                 <span className="flex items-center gap-1.5">
                   <Info className="w-4 h-4 text-[#0F766E]" />
-                  Window Oracle optimal ventilation: <strong>01:30 PM – 03:45 PM</strong>
+                  Window Oracle optimal window: <strong>01:30 PM – 04:00 PM</strong>
                 </span>
-                <Link to="/" className="text-xs font-bold text-[#0F766E] hover:underline">
+                <Link to="/app/analytics" className="text-xs font-bold text-[#0F766E] hover:underline">
                   View Full Meteorological Forecast &rarr;
                 </Link>
               </div>
             </div>
 
             {/* Window Oracle & Inversion Lifting (5 Cols) */}
-            <div className="xl:col-span-5 bg-white rounded-3xl p-6 lg:p-8 border border-[#E2E8F0] shadow-sm flex flex-col justify-between" id="home">
+            <div className="xl:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between" id="home">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
@@ -524,7 +574,7 @@ export const DashboardPage: React.FC = () => {
           {/* Routine Checklist & Commute Navigator */}
           <section className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="routine">
             {/* Daily Routine Checklist (7 Cols) */}
-            <div className="xl:col-span-7 bg-white rounded-3xl p-6 lg:p-8 border border-[#E2E8F0] shadow-sm flex flex-col justify-between">
+            <div className="xl:col-span-7 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
                   <div>
@@ -598,7 +648,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* CleanRoute Commute Navigator (5 Cols) */}
-            <div className="xl:col-span-5 bg-white rounded-3xl p-6 lg:p-8 border border-[#E2E8F0] shadow-sm flex flex-col justify-between" id="routes">
+            <div className="xl:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 lg:p-8 border border-[#CCECE4] shadow-sm flex flex-col justify-between" id="routes">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
@@ -648,7 +698,7 @@ export const DashboardPage: React.FC = () => {
               <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
                 <span className="text-xs text-[#64748B]">Saved 104 µg inhaled today</span>
                 <Link
-                  to="/"
+                  to="/app/routes"
                   className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1"
                 >
                   Map New Route &rarr;
