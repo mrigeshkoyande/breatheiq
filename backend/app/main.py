@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.seed import seed_database
-from app.api.v1.endpoints import auth, health
+from app.api.v1.endpoints import auth, health, air_quality, engines
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Routers
+# API Routers (Mounted under /api/v1 and aliased to /api for client compatibility)
 app.include_router(health.router)
-app.include_router(auth.router, prefix=settings.API_V1_STR)
+
+for prefix in ["/api/v1", "/api"]:
+    app.include_router(auth.router, prefix=prefix)
+    app.include_router(air_quality.router, prefix=prefix)
+    app.include_router(engines.router, prefix=prefix)

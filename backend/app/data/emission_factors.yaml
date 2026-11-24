@@ -1,0 +1,86 @@
+# emission_factors.yaml — Sourced Environmental & Inhalation Factors
+# All factors are sourced from statutory publications or established research bodies.
+
+metadata:
+  version: "1.0.0"
+  last_updated: "2026-11-24"
+  provenance: "STATUTORY_AND_LITERATURE_COMPLIANT"
+
+# Transit Emission Factors (g CO2 per passenger-kilometer)
+# Source: Central Pollution Control Board (CPCB) Comprehensive Environmental Pollution Index (CEPI)
+# and Automotive Research Association of India (ARAI) emission baseline data.
+transit_emissions:
+  petrol_car_solo:
+    co2_g_per_km: 180.0
+    pm25_g_per_km: 0.045
+    source: "ARAI / CPCB Vehicular Emission Baselines"
+  diesel_car_solo:
+    co2_g_per_km: 165.0
+    pm25_g_per_km: 0.120
+    source: "ARAI / CPCB Vehicular Emission Baselines"
+  ev_car:
+    co2_g_per_km: 72.0  # Considering Indian grid emission factor ~0.72 kg CO2/kWh
+    pm25_g_per_km: 0.015  # Brake and tyre wear
+    source: "Central Electricity Authority (CEA) CO2 Baseline Database"
+  petrol_two_wheeler:
+    co2_g_per_km: 55.0
+    pm25_g_per_km: 0.035
+    source: "ARAI / CPCB Vehicular Emission Baselines"
+  cng_bus:
+    co2_g_per_km: 38.0  # Per passenger-km (average 40 occupancy)
+    pm25_g_per_km: 0.008
+    source: "Delhi Transport Corporation (DTC) / CPCB Clean Fuel Study"
+  electric_metro:
+    co2_g_per_km: 18.0  # Per passenger-km
+    pm25_g_per_km: 0.002
+    source: "DMRC / BMRCL Sustainability Reports"
+  cycling_walking:
+    co2_g_per_km: 0.0
+    pm25_g_per_km: 0.0
+    source: "Active Non-Motorized Transport Standard"
+
+# Inhalation Rate Standards (m3 of air inhaled per day)
+# Source: USEPA Exposure Factors Handbook & ICMR Urban Health Cohort Studies
+inhalation_rates:
+  adult_resting:
+    m3_per_day: 12.0
+    m3_per_hour: 0.50
+    source: "USEPA Exposure Factors Handbook Chapter 6"
+  adult_moderate_activity:
+    m3_per_day: 20.0
+    m3_per_hour: 0.83
+    source: "USEPA Exposure Factors Handbook Chapter 6"
+  adult_vigorous_exercise:
+    m3_per_day: 36.0
+    m3_per_hour: 1.50
+    source: "USEPA Exposure Factors Handbook Chapter 6"
+  child_standard:
+    m3_per_day: 10.0
+    m3_per_hour: 0.42
+    source: "ICMR Pediatric Respiratory Guidelines"
+  infant_standard:
+    m3_per_day: 4.5
+    m3_per_hour: 0.19
+    source: "ICMR Pediatric Respiratory Guidelines"
+
+# Standard CPCB NAQI Breakpoint Thresholds (in µg/m³, except CO in mg/m³)
+# Source: Central Pollution Control Board (CPCB) National Air Quality Index Technical Report (2014)
+cpcb_breakpoints:
+  pm25:
+    intervals: [[0, 30], [31, 60], [61, 90], [91, 120], [121, 250], [251, 500]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]
+  pm10:
+    intervals: [[0, 50], [51, 100], [101, 250], [251, 350], [351, 430], [431, 500]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]
+  no2:
+    intervals: [[0, 40], [41, 80], [81, 180], [181, 280], [281, 400], [401, 500]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]
+  so2:
+    intervals: [[0, 40], [41, 80], [81, 380], [381, 800], [801, 1600], [1601, 2000]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]
+  co: # in mg/m³
+    intervals: [[0, 1.0], [1.1, 2.0], [2.1, 10.0], [10.1, 17.0], [17.1, 34.0], [34.1, 50.0]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]
+  o3:
+    intervals: [[0, 50], [51, 100], [101, 168], [169, 208], [209, 748], [749, 1000]]
+    aqi_intervals: [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]]

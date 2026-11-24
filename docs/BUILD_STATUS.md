@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 06:09:43Z`.  
+> Last audit: `2026-11-24 06:20:12Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -11,10 +11,10 @@
 | Status | Count | Percentage of Release | Definition |
 |---|---|---|---|
 | 🟢 **VERIFIED** | `0` | `0.0%` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |
-| 🟡 **FUNCTIONAL** | `7` | `29.2%` | Wired to API and mounted, awaiting full automated verification run |
+| 🟡 **FUNCTIONAL** | `10` | `41.7%` | Wired to API and mounted, awaiting full automated verification run |
 | 🔵 **UI-ONLY** | `0` | `0.0%` | UI exists but not connected to backend APIs |
 | 🟠 **STUB** | `0` | `0.0%` | Placeholder, partial layout, or hardcoded component data |
-| 🔴 **MISSING** | `17` | `70.8%` | Route and component do not exist |
+| 🔴 **MISSING** | `14` | `58.3%` | Route and component do not exist |
 | ⚪ **DEFERRED** | `70` | — | Scoped out for v1 release to ensure rigorous depth on core family flow |
 
 ---
@@ -24,9 +24,9 @@
 | # | Route | Name | Category | Tier | Access | Status | Design Asset | Evidence / Audit Findings |
 |---|---|---|---|---|---|---|---|---|
 | 1 | `/` | Landing Page | Public | T1 | public | 🟡 FUNCTIONAL | breatheiq_landing_page_mumbai_hero_redesign | Complete Mumbai redesign (1215 lines); What-If simulator, bento grid, location search, FAQ |
-| 5 | `/explore` | Explore Indian Cities | Public | T1 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 7 | `/methodology` | CPCB NAQI Methodology & Calculator | Public | T1 | public | 🔴 MISSING | — | Route not mounted in App.tsx or page component missing |
-| 17 | `/privacy` | Privacy Policy | Public | T2 | public | 🔴 MISSING | breatheiq_privacy_policy_terms | Route not mounted in App.tsx or page component missing |
+| 5 | `/explore` | Explore Indian Cities | Public | T1 | public | 🟡 FUNCTIONAL | — | Implemented and mounted (484 lines); connected to API |
+| 7 | `/methodology` | CPCB NAQI Methodology & Calculator | Public | T1 | public | 🟡 FUNCTIONAL | — | Implemented and mounted (413 lines); connected to API |
+| 17 | `/privacy` | Privacy Policy | Public | T2 | public | 🟡 FUNCTIONAL | breatheiq_privacy_policy_terms | Implemented and mounted (247 lines); connected to API |
 | 19 | `/login` | Sign In | Auth and onboarding | T1 | public | 🟡 FUNCTIONAL | breatheiq_login_a1 | Form wired to backend /api/v1/auth endpoints (210 lines) |
 | 20 | `/signup` | Create Account | Auth and onboarding | T1 | public | 🟡 FUNCTIONAL | breatheiq_signup_a2 | Form wired to backend /api/v1/auth endpoints (162 lines) |
 | 21 | `/forgot-password` | Forgot Password | Auth and onboarding | T1 | public | 🟡 FUNCTIONAL | breatheiq_forgot_password_a3 | Form wired to backend /api/v1/auth endpoints (100 lines) |

@@ -2,6 +2,9 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LandingPage } from './pages/LandingPage';
+import { ExplorePage } from './pages/ExplorePage';
+import { MethodologyPage } from './pages/MethodologyPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -41,6 +44,9 @@ export const App: React.FC = () => {
         <Suspense fallback={<div className="min-h-screen bg-[#F8FAF7]" />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/methodology" element={<MethodologyPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
