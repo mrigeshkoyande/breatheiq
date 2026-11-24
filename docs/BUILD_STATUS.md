@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-24 08:49:18Z`.  
+> Last audit: `2026-11-24 09:47:57Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -45,7 +45,7 @@
 | 59 | `/app/settings` | User Settings & Accessibility | Core app | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (231 lines) |
 | 62 | `/app/community` | Community Air Pulse | Community | T2 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (304 lines) |
 | 78 | `/admin` | Admin Command Center | Admin | T2 | admin | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (421 lines) |
-| 92 | `/404` | Not Found (404) | System | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Accessible 404 view (104 lines); emergency air hotline, search fallback, quick nav |
+| 92 | `/404` | Not Found (404) | System | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Accessible 404 view (100 lines); emergency air hotline, search fallback, quick nav |
 | 94 | `/onboarding` | Personalized Setup Wizard | Auth | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (411 lines) |
 
 ---
