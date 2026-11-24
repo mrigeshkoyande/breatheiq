@@ -9,149 +9,84 @@
   <em>Hackathon Challenge 6: GenAI Urban Air Quality Assistant for Families & Communities Facing Winter Smog</em>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11%2B-blue?logo=python" alt="Python 3.11+" />
-  <img src="https://img.shields.io/badge/React-18.3-61DAFB?logo=react" alt="React 18.3" />
-  <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Auth-JWT%20Argon2id-critical" alt="JWT Only" />
-  <img src="https://img.shields.io/badge/Tracked%20Repo%20Size-1.05%20MB-success" alt="Repo Size" />
-  <img src="https://img.shields.io/badge/Release%20Scope-24%20Verified%20Routes-2F9E62" alt="Ledger Status" />
-</p>
+---
+
+## 🎯 Challenge Alignment Matrix
+
+| Challenge Requirement | How BreatheIQ Solves It | Where to Inspect |
+|---|---|---|
+| **1. Low-Emission Daily Routines** | Dynamic routine planner that reschedules outdoor errands around peak morning and twilight pollution spikes. | Route `/app/routine`, Engine `app/engines/ventilation.py` |
+| **2. Indoor Air Quality Hacks** | Sourced aeration guidance via Window Oracle and room-by-room CADR sizing calculators for purifiers and DIY filters. | Route `/app/home`, Engine `app/engines/purifier.py` |
+| **3. Sustainable Alternatives** | CleanRoute multimodal commute comparison comparing inhaled particulate intake and transit emissions. | Route `/app/routes`, Engine `app/engines/impact.py` |
+| **4. Direct Impact Explanation** | Personal impact ledger quantifying avoided particulate intake and emissions using sourced factors. | Route `/app/impact` & `/app/impact/what-if` |
+| **5. Family & Vulnerability Guidance** | AirTwin profiling adjusting daily exposure advice for infants, children, seniors, and asthmatic family members. | Route `/app/family`, Dependency `compute_vulnerability_score` |
+| **6. Community Smog Watch** | Citizen air hazard reporting feed with moderation queue for local dust, smoke, and trash burning incidents. | Route `/app/community` & `/admin` |
 
 ---
 
-## 📌 Single Source of Truth & Route Ledger
+## 📖 Executive Summary
 
-Per the evidence rules in [`AGENTS.md`](AGENTS.md), this project maintains an automated route ledger at [`docs/BUILD_STATUS.md`](docs/BUILD_STATUS.md). All 24 core routes in the release scope have been implemented, connected to live backend APIs, and empirically verified through Playwright across 3 device viewports (390px Mobile, 768px Tablet, 1440px Desktop).
-
----
-
-## 📖 Executive Summary & Mission
-
-**BreatheIQ** is an urban air quality defense platform engineered specifically for families and communities navigating severe seasonal winter smog across Indian metropolitan corridors (Delhi-NCR, Mumbai, Bengaluru, Kolkata, Pune).
-
-Standard air quality apps present passive, aggregate index numbers that frequently create anxiety without offering practical guidance. BreatheIQ transforms ambient particulate data into actionable hourly respiratory protection: identifying optimal natural ventilation windows, calculating room-specific air filtration needs, comparing transit route exposure, and generating adaptive daily routines.
-
-### Core Philosophy
-
-$$\textbf{DETECT} \longrightarrow \textbf{UNDERSTAND} \longrightarrow \textbf{PROTECT} \longrightarrow \textbf{OPTIMIZE} \longrightarrow \textbf{IMPROVE}$$
-
-1. **DETECT**: Ingests environmental telemetry with mandatory provenance badging (`LIVE`, `MODELED`, `FORECAST`, `ESTIMATED`, `USER-REPORTED`, `DEMO`). Never blends simulated and real telemetry silently.
-2. **UNDERSTAND**: Calculates individual sub-indices for PM2.5, PM10, NO2, SO2, CO, and O3 strictly following Central Pollution Control Board (CPCB) National Air Quality Index (NAQI) statutory breakpoints.
-3. **PROTECT**: Recommends room-by-room aeration timings through the **Window Oracle** (based on diurnal boundary layer expansion and particulate dispersion), Clean Air Delivery Rate (CADR) purifier requirements, and household vulnerability profiling (AirTwin).
-4. **OPTIMIZE**: Evaluates route exposure differentials (**CleanRoute**) and dynamically shifts outdoor activities away from stagnant morning and evening thermal inversion periods.
-5. **IMPROVE**: Facilitates community air reports (**Air Watch**), local hazard alerts, and estimated sustainability impact tracking.
+BreatheIQ is an urban air quality assistant built for families navigating severe seasonal winter smog across Indian metropolitan corridors. Standard weather applications display aggregate index values that create anxiety without actionable next steps. BreatheIQ translates particulate readings into specific hourly respiratory decisions: identifying natural ventilation windows, calculating room filtration requirements, comparing commute exposures, and scheduling daily tasks. Guidance reflects public advisories with explicit provenance badges on every data card.
 
 ---
 
-## 🏛️ System Architecture
+## 🛡️ Telemetry Provenance & Scientific Integrity
 
-```mermaid
-graph TD
-    subgraph Frontend["Frontend Client (React 18 + TypeScript + Vite + Tailwind CSS)"]
-        NAV["Floating Glass Island Navigation"]
-        PAGES["24 Core Route Views (Responsive: 390 / 768 / 1440px)"]
-        AUTH_STATE["Auth Context (In-Memory Access Token + Silent Refresh)"]
-        API_CLIENT["Unified API Client (/api/v1 Canonical Prefix)"]
-        REACT_QUERY["TanStack Query (Client-Side Caching & Invalidation)"]
-    end
+BreatheIQ displays an explicit provenance badge and timestamp on every data card:
 
-    subgraph Backend["Backend Application (FastAPI + Python 3.11+)"]
-        API_ROUTERS["Canonical Versioned Routers (/api/v1/*)"]
-        AUTH_ENGINE["Auth Service (Argon2id + Rotating HttpOnly Refresh Cookies)"]
-        ORCHESTRATOR["Air Data Service (In-Memory TTL Cache Layer)"]
-        DETERMINISTIC["Deterministic Calculation Engines (No LLM in Critical Math)"]
-        AI_COPILOT["Grounded Copilot (Gemini API + Code Safety Validator)"]
-    end
-
-    subgraph Engines["Deterministic Engines"]
-        ENG_NAQI["NAQI Engine (CPCB Breakpoints & Validity Rules)"]
-        ENG_VENT["Window Oracle (Boundary Layer & Aeration Scoring)"]
-        ENG_PURIFIER["Purifier Engine (CADR & Room Decay Sizing)"]
-        ENG_IMPACT["Impact Engine (Sourced Transit & Exposure Baselines)"]
-    end
-
-    subgraph Sources["Telemetry & Weather Providers"]
-        OPENMETEO_AQ["Open-Meteo Air Quality (MODELED / FORECAST)"]
-        OPENMETEO_WX["Open-Meteo Forecast (Wind, Humidity, Boundary Layer)"]
-        OPENAQ_STATION["OpenAQ Station Adapter (Optional LIVE Station Telemetry)"]
-        OFFLINE_DEMO["Deterministic Demo Provider (5 Indian Urban Corridors)"]
-    end
-
-    subgraph Persistence["Storage & State"]
-        DATABASE[("Database (PostgreSQL / SQLite Fallback)")]
-        AUDIT_STORE[("Security Audit Logs & AI Trace Ledger")]
-    end
-
-    Frontend -->|REST API + Bearer Token| API_ROUTERS
-    API_ROUTERS --> AUTH_ENGINE
-    API_ROUTERS --> DETERMINISTIC
-    API_ROUTERS --> AI_COPILOT
-    DETERMINISTIC --> ENG_NAQI
-    DETERMINISTIC --> ENG_VENT
-    DETERMINISTIC --> ENG_PURIFIER
-    DETERMINISTIC --> ENG_IMPACT
-    API_ROUTERS --> ORCHESTRATOR
-    ORCHESTRATOR --> OPENMETEO_AQ
-    ORCHESTRATOR --> OPENMETEO_WX
-    ORCHESTRATOR --> OPENAQ_STATION
-    ORCHESTRATOR --> OFFLINE_DEMO
-    API_ROUTERS --> DATABASE
-    AI_COPILOT --> AUDIT_STORE
-```
-
----
-
-## 🛡️ Truth, Provenance & Scientific Integrity
-
-BreatheIQ follows strict guidelines regarding environmental and health claims:
-
-| Data Type | Active Source | Labeling / Provenance Badge | Description |
-|---|---|---|---|
-| **Station Readings** | OpenAQ API (when key configured) | `LIVE` | Physical ambient monitoring station telemetry with location name and timestamp. |
-| **Regional Dispersion** | Open-Meteo Atmospheric API | `MODELED` | Modeled regional particulate grids based on atmospheric chemistry reanalysis. |
-| **Hourly Outlook** | Open-Meteo Forecast API | `FORECAST` | Multi-hour predictive models for particulate concentrations and weather vectors. |
-| **Ventilation Windows** | Window Oracle Engine | `ESTIMATED` | Algorithmic suitability scores calculated from forecast variables and boundary layer dynamics. |
-| **Inhalation Exposure** | Personal Inhalation Model | `ESTIMATED` | Estimated particulate intake ranges based on breathing rates (USEPA/ICMR) and duration. |
-| **Offline Corridors** | Demo Provider | `DEMO` | Deterministic offline profiles representing typical diurnal winter smog cycles. |
+| Provenance Badge | Underlying Source | Description |
+|---|---|---|
+| `LIVE` | OpenAQ Station Adapter | Ground observation station telemetry with station name and timestamp. |
+| `MODELED` | Open-Meteo Atmospheric Grid | Modeled particulate concentration grid derived from atmospheric chemistry reanalysis. |
+| `FORECAST` | Open-Meteo Forecast Models | Multi-hour predictive models for PM2.5, PM10, wind vectors, and relative humidity. |
+| `ESTIMATED` | Deterministic Calculation Engines | Window Oracle ventilation scores, CADR filtration sizing, and inhalation exposure estimates. |
+| `USER-REPORTED` | Citizen Air Watch | Community incident reports submitted by residents, marked UNVERIFIED until reviewed. |
+| `DEMO` | Offline Seed Data | Deterministic offline profiles representing typical diurnal winter smog cycles. |
 
 > [!NOTE]
-> **Health Guidance Boundary**: All recommendations reflect public advisories published by the Central Pollution Control Board (CPCB) and World Health Organization (WHO). BreatheIQ provides operational guidance for daily planning and does not deliver medical diagnoses or clinical prescriptions.
+> **Advisory Boundary**: Guidance reflects public health advisories published by the Central Pollution Control Board (CPCB) and World Health Organization (WHO). Guidance is provided for daily planning and is not medical advice.
 
 ---
 
-## 📊 Verified Release Scope (24 Routes)
+## 🤖 AI Copilot & Deterministic Safety
 
-The application focuses on 24 functional routes verified against tests and audits. Remaining non-core routes are documented as deferred in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+BreatheIQ integrates Gemini 2.5 Flash server-side for atmospheric natural language guidance:
+- **One Call Per Turn**: Prompt contains user profile and retrieved air telemetry.
+- **Code-Based Evidence Validator**: Model responses are inspected by code to verify numbers cite retrieved data, include source attribution, and maintain advisory boundaries.
+- **Fallback Mode**: If external AI APIs are unreachable, BreatheIQ falls back to deterministic rule-based guidance labeled `Template guidance — not AI generated`. The validator reduces errors; it does not eliminate all model hallucinations.
 
-| # | Route | Screen Name | Access Tier | Functional Highlights |
+---
+
+## 📊 Verified 24-Route Release Scope
+
+The application focuses on 24 functional routes verified against automated tests and audits (`docs/BUILD_STATUS.md`):
+
+| # | Route | Screen Name | Access Tier | Description |
 |---|---|---|---|---|
-| 1 | `/` | Landing Page | Public | Adjustable hero grid (Balanced, Panoramic, Photo Focus), city search, What-If teaser, FAQ. |
-| 2 | `/explore` | City Telemetry Explorer | Public | Multi-corridor particulate comparison, diurnal graphs, sub-index breakdowns. |
-| 3 | `/methodology` | Scientific Methodology | Public | Interactive CPCB NAQI formula explorer, breakpoint tables, health tier explanations. |
-| 4 | `/privacy` | Privacy & Data Sovereignty | Public | Local data retention details, telemetry rights, clear explanation of user state. |
-| 5 | `/login` | User Sign In | Public | Argon2id verification, single-click demo quick-fill buttons, rotating refresh cookie. |
-| 6 | `/signup` | Account Registration | Public | Client-side and server-side Zod/Pydantic validation, password strength scoring. |
+| 1 | `/` | Landing Page | Public | Clean air overview, hero section, city selector, What-If preview. |
+| 2 | `/explore` | Telemetry Explorer | Public | Multi-corridor particulate comparison, diurnal graphs, sub-index breakdowns. |
+| 3 | `/methodology` | Scientific Methodology | Public | CPCB NAQI formula details, breakpoint tables, health tier explanations. |
+| 4 | `/privacy` | Privacy & Data Sovereignty | Public | Data retention policies, user rights, and session storage details. |
+| 5 | `/login` | User Sign In | Public | Argon2id verification, demo quick-fill buttons, rotating refresh cookie. |
+| 6 | `/signup` | Account Registration | Public | Client and server validation with password strength scoring. |
 | 7 | `/forgot-password`| Password Recovery | Public | Rate-limited password recovery flow with signed single-use reset tokens. |
 | 8 | `/reset-password` | Password Reset | Public | Token verification and cryptographic password update. |
-| 9 | `/onboarding` | Household Setup Wizard | Authenticated | 3-step profile configuration: location corridor, vulnerability factors, lifestyle. |
-| 10 | `/app/dashboard` | Main Command Center | Authenticated | Live corridor card, Window Oracle verdict, adaptive routine overview, indoor comparison. |
+| 9 | `/onboarding` | Household Setup Wizard | Authenticated | 3-step setup: location corridor, vulnerability factors, lifestyle. |
+| 10 | `/app/dashboard` | Main Command Center | Authenticated | Corridor card, Window Oracle verdict, adaptive routine overview. |
 | 11 | `/app/air-quality` | Atmospheric Detail View | Authenticated | Multi-pollutant gauges, weather vector graphs, mixing height indicators. |
-| 12 | `/app/analytics` | Diurnal Trends & Inversion | Authenticated | Historical 24h concentration curves versus modeled thermal boundary layer height. |
+| 12 | `/app/analytics` | Diurnal Trends & Inversion | Authenticated | Historical 24h concentration curves and diurnal boundary dynamics. |
 | 13 | `/app/assistant` | AI Atmospheric Copilot | Authenticated | Grounded Gemini Copilot, prompt-injection defense, code-based safety validation. |
-| 14 | `/app/routine` | Adaptive Smog Routine | Authenticated | Dynamic routine scheduler shifting activities to minimize peak twilight exposure. |
+| 14 | `/app/routine` | Adaptive Smog Routine | Authenticated | Routine scheduler shifting activities to minimize twilight exposure. |
 | 15 | `/app/home` | Indoor Air & Ventilation | Authenticated | Room CADR purifier sizing calculator, DIY filtration guidance, aeration slots. |
-| 16 | `/app/family` | Family Air Guardians | Authenticated | Individual vulnerability scoring (infants, elderly, respiratory conditions). |
-| 17 | `/app/routes` | CleanRoute Commute Guide | Authenticated | Transit exposure comparison (Metro vs Car vs Bus) and avoided particulate estimates. |
-| 18 | `/app/impact` | Personal Impact Ledger | Authenticated | Cumulative estimated particulate dosage avoided and transit CO2 mitigation. |
+| 16 | `/app/family` | Family Air Guardians | Authenticated | Vulnerability scoring (infants, children, seniors, respiratory conditions). |
+| 17 | `/app/routes` | CleanRoute Commute Guide | Authenticated | Transit exposure comparison (Metro vs Car vs Bus) and avoided intake estimates. |
+| 18 | `/app/impact` | Personal Impact Ledger | Authenticated | Estimated particulate dosage avoided and transit CO2 mitigation. |
 | 19 | `/app/impact/what-if`| Scenario Impact Builder | Authenticated | Winter season cumulative emission projections based on lifestyle adjustments. |
-| 20 | `/app/notifications`| SmogShield Notification Hub| Authenticated | Risk evaluation rules, threshold alert preferences, local smog alerts. |
-| 21 | `/app/settings` | Settings & Preferences | Authenticated | High-contrast display, reduced motion support, telemetry export, and account controls. |
+| 20 | `/app/notifications`| Notification Hub | Authenticated | Risk evaluation rules, threshold alert preferences, local smog alerts. |
+| 21 | `/app/settings` | Settings & Preferences | Authenticated | Theme display, language switch, telemetry export, and account controls. |
 | 22 | `/app/community` | Community Air Pulse | Authenticated | Citizen hazard incident submission, neighborhood reports, peer verification. |
 | 23 | `/admin` | Administrative Dashboard | Admin | Moderation approval queue, AI trace explorer, and security audit log. |
-| 24 | `/404` | Not Found Recovery | Public | Clean recovery navigation, topic search, and direct return to dashboard. |
+| 24 | `/404` | Not Found Recovery | Public | Recovery navigation, topic search, and direct return to dashboard. |
 
 ---
 
@@ -161,114 +96,83 @@ The application focuses on 24 functional routes verified against tests and audit
 - **Python 3.11+**
 - **Node.js 20+** and **npm**
 
-### 1. Backend Setup
+### 1. Unified Quality Gate (Run All Checks)
 ```bash
-# Navigate to backend directory
-cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start FastAPI development server (binds to port 8000)
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python scripts/check_all.py
 ```
-The backend initializes with an automated SQLite database fallback in demo mode when `DATABASE_URL` is omitted.
 
-### 2. Frontend Setup
+### 2. Backend Setup
 ```bash
-# In a separate terminal, navigate to frontend directory
-cd frontend
+# Install backend dependencies
+pip install -r backend/requirements.txt
 
-# Install dependencies
-npm install
+# Run backend development server (binds to 8000)
+python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload
+```
 
-# Start Vite development server (binds to port 5173)
-npm run dev
+### 3. Frontend Setup
+```bash
+# Install dependencies and build
+npm --prefix frontend install
+npm --prefix frontend run dev
 ```
 Open **`http://localhost:5173`** in your browser.
 
-### 3. Demo Credentials
-When running with `DEMO_MODE=true` (configured by default in `.env.example`), single-click demo credentials appear on the login screen:
+### 4. Demo Credentials (in Development & Demo Mode)
 - **Standard User:** `user@breatheiq.org` / `Password123!`
-- **Moderator:** `moderator@breatheiq.org` / `Moderator123!`
-- **Administrator:** `admin@breatheiq.org` / `Admin123!`
+- **Moderator:** `moderator@breatheiq.org` / `Password123!`
+- **Administrator:** `admin@breatheiq.org` / `Password123!`
 
 ---
 
-## 🧪 Testing & Verification Matrix
+## 🔧 Environment Variables Reference
 
-Run the automated verification suite:
+| Variable Name | Scope | Required | Accepted Formats / Example | Purpose |
+|---|---|---|---|---|
+| `ENVIRONMENT` | Backend | No (default `development`) | `development`, `demo`, `production` | Governs demo accounts, seed execution, and cookie security |
+| `ALLOWED_ORIGINS` | Backend | No | `["https://app.vercel.app"]` or `https://app.vercel.app` or comma-separated | CORS origins; empty for single-origin deployments |
+| `JWT_SECRET_KEY` | Backend | Yes in production | 32+ character random string | Secret for signing JWT access and refresh tokens |
+| `DATABASE_URL` | Backend | No | `postgresql+asyncpg://...` or `sqlite+aiosqlite:///...` | Database connection string; falls back to internal SQLite |
+| `GEMINI_API_KEY` | Backend | No | Google AI Studio key | Server-side Gemini 2.5 Flash assistant |
+| `OPENAQ_API_KEY` | Backend | No | OpenAQ v3 API key | Ground monitoring station observations |
+| `VITE_API_BASE_URL`| Frontend | No | `/api/v1` (default) or `https://.../api/v1` | Base URL for API requests |
 
-```bash
-# 1. Backend Unit & Integration Tests (55 tests)
-cd backend
-python -m pytest -v
+---
 
-# 2. Frontend Unit Tests (25 tests)
-cd frontend
-npm test
+## 🧪 Real Verification Metrics
 
-# 3. Playwright Multi-Viewport Smoke Suite (72 runs across 3 viewports)
-cd frontend
-npx playwright test
-
-# 4. Anti-Stub, Truth Claims & Repository Diet Audits
-cd ..
-python scripts/check_claims.py
-python scripts/audit_stubs.py
-python scripts/build_status.py
-python scripts/check_repo_size.py
-```
-
-### Current Test & Metric Summary
-
-| Verification Target | Tool / Command | Real Count / Status | Notes |
+| Verification Gate | Command | Latest Real Result | Notes |
 |---|---|---|---|
-| **Backend Test Suite** | `pytest` | **55 passed** in 7.2s | Covers auth, NAQI math, Window Oracle, CADR sizing, copilot safety. |
-| **Frontend Test Suite** | `vitest` | **25 passed** in 1.1s | Unit tests for API handlers and calculation utilities. |
-| **Viewport Smoke Matrix** | `playwright` | **72 passed** (24 × 3) | Verified at 390px, 768px, and 1440px viewports with 0 console errors. |
-| **Codebase Stubs Audit** | `audit_stubs.py` | **0 stubs detected** | Verified clean across all routes and API endpoints. |
-| **Truth & Evidence Claims** | `check_claims.py` | **0 violations** | Audited against unproven marketing buzzwords across 54 files. |
-| **Tracked Repository Size** | `check_repo_size.py`| **1.05 MB** (< 1.5 MB limit) | Excludes node_modules, build outputs, and raw design assets. |
-| **Git Object Store Size** | `git count-objects` | **0.87 MB** (< 2.0 MB limit) | Compact git pack and loose object footprint. |
+| **Master Quality Gate** | `python scripts/check_all.py` | **8/8 GATES PASSED** | Executes claims, stubs, repo size, build, bundle, vitest, pytest, ledger. |
+| **Backend Pytest** | `pytest backend/tests` | **75 passed** in 3.6s | Covers auth, rotation, NAQI, Window Oracle, CADR, isolation, RBAC. |
+| **Frontend Vitest** | `npm --prefix frontend test` | **25 passed** in 0.8s | Unit tests for API client and calculation utilities. |
+| **Live Smoke Test** | `python scripts/smoke_live.py` | **32/32 passed** (0 failures)| Tests health, readyz, deep links, JSON 404, headers, cookies, 24 routes. |
+| **Truth & Claims Audit** | `python scripts/check_claims.py`| **0 violations** (60 files) | Verifies absence of unproven marketing and health guarantees. |
+| **Stub & Anti-Placeholder**| `python scripts/audit_stubs.py` | **0 stubs detected** | Verifies zero empty handlers or placeholder text. |
+| **Frontend Bundle Size** | `python scripts/measure_bundle.py`| **112.71 KB** JS / **8.81 KB** CSS | Within performance budget (< 200 KB JS, < 50 KB CSS). |
+| **Tracked Repository Size**| `python scripts/check_repo_size.py`| **1.138 MB** (< 1.5 MB budget)| Git store: 1.040 MB (< 2.0 MB budget). |
 
 ---
 
-## 🚀 Deployment Architecture (Render & Docker)
+## 🚀 Deployment Overview (Render & Vercel)
 
-BreatheIQ is designed for deployment as a single-origin service on container platforms like **Render**, mounting the built React SPA directly from FastAPI. This eliminates cross-origin cookie restrictions and maintains strict `SameSite=Strict` security.
-
-### Docker Multi-Stage Build
-- **Stage 1 (Frontend Builder):** Node.js 20 builds the React Vite application (`npm ci && npm run build`), outputting optimized static assets into `frontend/dist`.
-- **Stage 2 (Production Runtime):** Python 3.11-slim runs the FastAPI application via `uvicorn`, mounting `frontend/dist` for static file and SPA fallback routing.
-
-### Render Configuration (`render.yaml`)
-A single web service configuration targeting the Render platform is included at the repository root.
-- **Health Check Path:** `/healthz`
-- **Port:** Bind to `0.0.0.0:${PORT:-10000}`
-- **Database:** PostgreSQL or temporary SQLite fallback
+- **Canonical Deployment (Render):** Multi-stage `Dockerfile` running both the FastAPI backend and serving compiled frontend assets on the same origin (`0.0.0.0:${PORT:-10000}`). Eliminates CORS overhead and cross-site cookie restrictions. See [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md).
+- **Secondary Deployment (Vercel Frontend):** Documented in [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md) with SPA rewrite configuration and CORS origin setup.
+- **Free-Tier Limits:** Free tier services on Render spin down after 15 minutes of inactivity (taking approximately 50-60 seconds to wake) and free databases expire after 30 days. Background schedulers run while the instance is awake.
 
 ---
 
-## 🔒 Security Architecture
+## ⚠️ Known Limitations
 
-1. **Authentication:**
-   - Short-lived JSON Web Tokens (~15 minutes) retained in memory only.
-   - Long-lived refresh tokens stored as hashed database records with token-family reuse detection.
-   - Refresh tokens transmitted strictly inside `HttpOnly; SameSite=Strict; Secure` cookies.
-2. **Password Security:**
-   - Password hashing implemented via Argon2id (`argon2-cffi`) with secure memory and iteration parameters.
-3. **API Authorization:**
-   - Role-based access control (`user`, `moderator`, `admin`) enforced directly at the route dependency layer with live database validation.
-4. **Prompt Injection & AI Safety:**
-   - Incoming Copilot prompts pass through a pre-execution regex and structural safety filter.
-   - Outgoing model responses pass through a deterministic code validator enforcing medical disclaimers and source attribution.
+1. **Air Data Coverage:** Real-time physical monitoring coverage depends on OpenAQ ground station availability in specific urban sectors; modeled estimates and satellite forecasts bridge coverage gaps with explicit labeling.
+2. **Cold Starts on Free Cloud Hosting:** On free container plans, initial cold-start requests may take up to a minute while the service spins up from idle.
+3. **Medical Disclaimer:** Recommendations are based on CPCB and WHO public advisories; users with acute medical conditions should follow physician instructions.
 
 ---
 
 ## ⚖️ License & Attribution
 
-BreatheIQ is licensed under the terms of the MIT License.
+BreatheIQ is licensed under the MIT License.
 
 ### Statutory & Data Attributions
 - **CPCB NAQI Standards:** Statutory National Air Quality Index breakpoints and sub-index equations published by the **Central Pollution Control Board, Ministry of Environment, Forest and Climate Change, Government of India**.

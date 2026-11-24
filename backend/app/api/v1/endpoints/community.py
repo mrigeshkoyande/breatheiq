@@ -5,7 +5,7 @@ Air Watch Community Pollution Reports & Civic Verification Endpoints.
 
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +16,7 @@ from app.models.app_data import CommunityReport
 router = APIRouter(prefix="/community", tags=["Community Air Watch"])
 
 class ReportCreateSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     report_type: str = Field(..., example="construction_dust")  # stubble_burning, construction_dust, garbage_burning, industrial_plume, traffic_congestion
     severity: str = Field("moderate", example="severe")  # moderate, severe, hazardous
     location_name: str = Field(..., example="SV Road & Linking Road Junction, Andheri")

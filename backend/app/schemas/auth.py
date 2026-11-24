@@ -1,12 +1,15 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-class SignupRequest(BaseModel):
+class BaseAuthSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+class SignupRequest(BaseAuthSchema):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     full_name: Optional[str] = None
 
-class LoginRequest(BaseModel):
+class LoginRequest(BaseAuthSchema):
     email: EmailStr
     password: str
 
@@ -18,8 +21,7 @@ class UserResponse(BaseModel):
     is_active: bool
     is_verified: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -36,16 +38,15 @@ class SessionResponse(BaseModel):
     expires_at: str
     is_revoked: bool
 
-class ForgotPasswordRequest(BaseModel):
+class ForgotPasswordRequest(BaseAuthSchema):
     email: EmailStr
 
-class ResetPasswordRequest(BaseModel):
+class ResetPasswordRequest(BaseAuthSchema):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
 
-class VerifyEmailRequest(BaseModel):
+class VerifyEmailRequest(BaseAuthSchema):
     token: str
 
 class MessageResponse(BaseModel):
     message: str
-    details: Optional[str] = None

@@ -13,3 +13,11 @@
 | 2026-11-24T21:46:00Z | `docs/DEPLOY_VERCEL.md` | Created comprehensive Vercel deployment guide documenting Setup A vs B, SPA rewrites, and environment variable rules | P0: 5.2 Vercel deployment repair |
 | 2026-11-24T21:47:00Z | `docs/DEPLOY_RENDER.md` | Updated Render deployment guide with manual workarounds, platform facts, and troubleshooting matrix | P0: 5.1 & 5.3 Render deployment repair |
 | 2026-11-24T21:47:00Z | `docs/DECISIONS.md` | Recorded ADR 002 (Canonical Single-Origin) and ADR 003 (ALLOWED_ORIGINS & Hardening) | Section 2 & 5: Architectural decision records |
+| 2026-11-24T22:04:00Z | `backend/app/core/security.py` | Configured Argon2id with OWASP recommendations (m=64MB, t=2, p=1) | 7.2 Security |
+| 2026-11-24T22:04:00Z | `backend/app/schemas/auth.py` | Configured extra='forbid' on authentication request schemas | 7.2 Security & 6 Service Matrix |
+| 2026-11-24T22:04:00Z | `backend/app/api/v1/endpoints/user_flow.py` | Configured extra='forbid' on user flow request schemas | 7.2 Security & 6 Service Matrix |
+| 2026-11-24T22:04:00Z | `backend/app/api/v1/endpoints/community.py` | Configured extra='forbid' on community report creation schema | 7.2 Security & 6 Service Matrix |
+| 2026-11-24T22:04:00Z | `backend/tests/test_isolation_and_rbac.py` | Added test suite covering user data isolation, route auth enumeration, and extra forbidden fields | 7.2 & 7.5 Testing |
+| 2026-11-24T22:04:00Z | `docs/SERVICE_MATRIX.md` | Created detailed 14-service matrix with verification evidence across all 10 checks | Section 6: Service Matrix |
+| 2026-11-24T22:05:00Z | `scripts/measure_bundle.py` | Created script to measure frontend build assets and assert gzip size budgets | 7.4 Efficiency |
+| 2026-11-24T22:05:00Z | `scripts/check_all.py` | Created unified master quality gate script executing all 8 verification suites | 7.3 Code Quality |

@@ -124,7 +124,7 @@ Establish a **Single Render Docker Web Service** as the canonical production dep
 3. Vercel remains fully supported as a secondary/decoupled frontend host via `docs/DEPLOY_VERCEL.md` with explicit CORS origin configuration and SPA rewrites.
 
 ### Consequences
-- **Positive:** Guaranteed cookie delivery on all browsers without third-party cookie degradation.
+- **Positive:** Consistent cookie delivery on all browsers without third-party cookie degradation.
 - **Positive:** Single URL for users and judges to access the complete application.
 - **Positive:** Simplified environment variable management (no public API URL required in frontend builds).
 

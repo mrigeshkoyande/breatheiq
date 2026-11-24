@@ -9,7 +9,7 @@ This guide documents the configuration and troubleshooting steps for deploying t
 In this repository:
 - The React application resides in the `frontend/` directory.
 - `frontend/package.json` contains dependencies and build scripts (`vite`, `tsc && vite build`).
-- The repository root also contains a `vercel.json` configured with `--prefix frontend` to guarantee builds succeed whether the project root in Vercel is set to `.` (repo root) or `frontend`.
+- The repository root also contains a `vercel.json` configured with `--prefix frontend` to ensure builds succeed whether the project root in Vercel is set to `.` (repo root) or `frontend`.
 
 ---
 

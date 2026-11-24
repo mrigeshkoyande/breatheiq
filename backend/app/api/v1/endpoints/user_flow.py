@@ -7,7 +7,7 @@ Onboarding, Households, Members, Rooms, Indoor Readings, Routine Tasks, CleanRou
 from datetime import datetime, timezone, date, timedelta
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,19 +41,22 @@ def compute_vulnerability_score(age_category: str, sensitivity: str) -> int:
     return min(100, max(5, base + sens_mod))
 
 # ----------------- Schemas -----------------
-class HouseholdSchema(BaseModel):
+class BaseUserFlowSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+class HouseholdSchema(BaseUserFlowSchema):
     name: str = "My Home"
     city: str = "Mumbai"
     neighborhood: str = "Andheri West"
     latitude: float = 19.0760
     longitude: float = 72.8777
 
-class MemberCreateSchema(BaseModel):
+class MemberCreateSchema(BaseUserFlowSchema):
     name: str = Field(..., min_length=1, max_length=100)
     age_category: str = Field("adult", example="child")
     sensitivity: str = Field("none", example="asthma")
 
-class RoomCreateSchema(BaseModel):
+class RoomCreateSchema(BaseUserFlowSchema):
     name: str = Field(..., min_length=1, max_length=100)
     length_m: float = Field(4.5, gt=0)
     width_m: float = Field(3.8, gt=0)
@@ -61,27 +64,27 @@ class RoomCreateSchema(BaseModel):
     has_purifier: bool = False
     purifier_cadr: float = 0.0
 
-class ReadingCreateSchema(BaseModel):
+class ReadingCreateSchema(BaseUserFlowSchema):
     pm25: float = Field(..., ge=0)
     co2: Optional[float] = 650.0
     temperature_c: Optional[float] = 25.0
     humidity_pct: Optional[float] = 55.0
     source: str = "Manual"
 
-class TaskCreateSchema(BaseModel):
+class TaskCreateSchema(BaseUserFlowSchema):
     member_id: Optional[int] = None
     time_slot: str = "morning"  # morning, afternoon, evening
     title: str = Field(..., min_length=2)
     description: Optional[str] = ""
     category: str = "routine"
 
-class CleanRouteRequest(BaseModel):
+class CleanRouteRequest(BaseUserFlowSchema):
     origin: str = Field(..., example="Andheri West Station")
     destination: str = Field(..., example="Bandra Kurla Complex (BKC)")
     distance_km: float = Field(14.5, gt=0)
     departure_hour: int = Field(9, ge=0, le=23)
 
-class AlertRuleCreateSchema(BaseModel):
+class AlertRuleCreateSchema(BaseUserFlowSchema):
     aqi_threshold: int = Field(200, ge=50, le=500)
     target_member: str = "All Members"
     quiet_hours_start: str = "22:00"
