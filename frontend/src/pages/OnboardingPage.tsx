@@ -155,11 +155,10 @@ export const OnboardingPage: React.FC = () => {
                     type="button"
                     aria-pressed={city === c}
                     onClick={() => setCity(c)}
-                    className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
-                      city === c
-                        ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
-                        : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
-                    }`}
+                    className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${city === c
+                      ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
+                      : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
+                      }`}
                   >
                     {c}
                   </button>

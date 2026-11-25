@@ -33,9 +33,9 @@ Branch: refactor/eval-100 (merged to main)
 |---|---|---|---|
 | Master Quality Gate | `python scripts/check_all.py` | 8/8 gates passed | PASS |
 | Backend Lint & Strict Mypy | `ruff check backend/app` & `mypy -p app` | 0 lint / 0 type issues across 36 source files | PASS |
-| Backend Pytest + Branch Coverage | `pytest tests --cov=app --cov-branch` | 94 passed, 0 failed in 11.85s (76% total branch+line) | PASS |
+| Backend Pytest + Branch Coverage | `pytest tests --cov=app --cov-branch` | 99 passed, 0 failed in 9.37s (81% total branch+line) | PASS |
 | Frontend ESLint + Strict Typecheck | `npm --prefix frontend run lint` & `typecheck` | 0 lint warnings/errors, 0 TS errors | PASS |
-| Frontend Unit Tests + Coverage | `npm --prefix frontend run test:coverage` | 33 passed across 3 files in 3.36s | PASS |
+| Frontend Unit Tests + Coverage | `npm --prefix frontend run test:coverage` | 34 passed across 3 files in 4.02s | PASS |
 | Playwright 3-Viewport + Axe WCAG 2.2 AA | `npx playwright test` (in `frontend/`) | 29 passed across 390/768/1440px, 0 console errors | PASS |
 | Live Deployment Smoke Test | `python scripts/smoke_live.py http://127.0.0.1:10000` | 32 passed, 0 failed | PASS |
 | Dependency Security Audits | `pip-audit` & `npm --prefix frontend audit` | 0 known vulnerabilities found | PASS |
@@ -50,8 +50,8 @@ Branch: refactor/eval-100 (merged to main)
 |---|---|---|---|
 | Initial Entry JS Bundle (`index-*.js`) | 55.13 KB (gzipped) | <= 200.0 KB | PASS |
 | Consolidated CSS Bundle (`index-*.css`)| 5.93 KB (gzipped) | <= 50.0 KB | PASS |
-| Tracked Repository File Size | 1.125 MB (150 files) | <= 1.5 MB | PASS |
-| Git Object Storage (`git count-objects -vH`)| 1.10 MiB | <= 2.0 MB | PASS |
+| Tracked Repository File Size | 1.224 MB (176 files) | <= 1.5 MB | PASS |
+| Git Object Storage (`git count-objects -vH`)| 1.370 MB | <= 2.0 MB | PASS |
 
 ---
 

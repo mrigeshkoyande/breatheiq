@@ -145,9 +145,9 @@ Open **`http://localhost:5173`** in your browser.
 |---|---|---|---|
 | **Master Quality Gate** | `python scripts/check_all.py` | **8/8 GATES PASSED** | Executes claims, stubs, repo size, build, bundle, vitest, pytest, ledger. |
 | **Backend Lint & Strict Types** | `ruff check backend/app && mypy -p app` | **0 lint / 0 type issues** (36 files) | Enforced via `pyproject.toml` (`ruff` + strict `mypy` with `pydantic.mypy`). |
-| **Backend Pytest + Branch Cov** | `pytest tests --cov=app --cov-branch` | **94 passed** in 11.85s | Covers auth, rotation, NAQI, Window Oracle, CADR, isolation, RBAC (76% branch+line; core engines 91%–96%). |
+| **Backend Pytest + Branch Cov** | `pytest tests --cov=app --cov-branch` | **99 passed** in 9.37s | Covers auth, rotation, NAQI, Window Oracle, CADR, isolation, RBAC (81% branch+line; core engines 91%–96%). |
 | **Frontend Lint & Strict TS** | `npm --prefix frontend run lint && npm --prefix frontend run typecheck` | **0 errors, 0 warnings** | ESLint flat config + `eslint-plugin-jsx-a11y` + `tsc --noEmit` strict mode. |
-| **Frontend Vitest + Coverage** | `npm --prefix frontend run test:coverage` | **33 passed** (3 files) | Unit tests for API client, calculation helpers, and shared UI primitives. |
+| **Frontend Vitest + Coverage** | `npm --prefix frontend run test:coverage` | **34 passed** (3 files) | Unit tests for API client, calculation helpers, and shared UI primitives. |
 | **Playwright E2E + Axe A11y** | `npx playwright test` (in `frontend/`) | **29 passed** (`390px`/`768px`/`1440px`) | 24 release routes at 3 viewports + routine persistence + `@axe-core/playwright` WCAG 2.2 AA scan. |
 | **Live Smoke Test** | `python scripts/smoke_live.py` | **32/32 passed** (0 failures)| Tests health, readyz, deep links, JSON 404, headers, cookies, 24 routes. |
 | **Dependency Security Audits** | `pip-audit -r backend/requirements.txt` & `npm audit` | **0 vulnerabilities found** | Verified across backend Python and frontend npm dependencies. |
@@ -155,7 +155,7 @@ Open **`http://localhost:5173`** in your browser.
 | **Stub & Anti-Placeholder** | `python scripts/audit_stubs.py` | **0 stubs detected** | Verifies absence of empty handlers or placeholder text. |
 | **Route Ledger Audit** | `python scripts/build_status.py` | **24/24 verified** (70 deferred) | Verifies mounted routes, line counts, and 3-viewport screenshots. |
 | **Frontend Bundle Size** | `python scripts/measure_bundle.py` | **55.13 KB** JS / **5.93 KB** CSS (gzip) | Within performance budget (`<= 200 KB` JS, `<= 50 KB` CSS). |
-| **Tracked Repository Size** | `python scripts/check_repo_size.py` | **1.125 MB** (< 1.5 MB budget)| Git store: `1.10 MiB` (`<= 2.0 MB` budget). |
+| **Tracked Repository Size** | `python scripts/check_repo_size.py` | **1.224 MB** (< 1.5 MB budget)| Git store: `1.370 MB` (`<= 2.0 MB` budget). |
 
 ---
 

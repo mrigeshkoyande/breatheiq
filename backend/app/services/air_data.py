@@ -13,10 +13,11 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import BaseModel, ConfigDict
+from typing_extensions import TypedDict
 
 from app.core.config import settings
 from app.engines.naqi import NAQIResult, calculate_cpcb_naqi

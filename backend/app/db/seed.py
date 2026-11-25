@@ -5,10 +5,10 @@ import logging
 import sys
 from datetime import date, timedelta
 from pathlib import Path
-from typing import TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing_extensions import TypedDict
 
 # Ensure backend root is in sys.path when executed directly as a script
 _BACKEND_DIR = str(Path(__file__).resolve().parent.parent.parent)

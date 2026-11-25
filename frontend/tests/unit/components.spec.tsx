@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AqiBadge } from '../../src/components/ui/AqiBadge';
 import { Badge } from '../../src/components/ui/Badge';
+import { PublicHeader } from '../../src/components/layout/PublicHeader';
+import { Button } from '../../src/components/ui/Button';
 import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
 import { Input } from '../../src/components/ui/Input';
+import { ErrorBanner, LoadingSkeleton } from '../../src/components/ui/StatusBanner';
 import { AuthProvider } from '../../src/context/AuthContext';
 import { LanguageProvider } from '../../src/i18n/translations';
 import { LoginPage } from '../../src/pages/LoginPage';
@@ -225,5 +228,32 @@ describe('Accessible UI Primitives & Pages', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'परिवार वायु गुणवत्ता कमांड सेंटर' })
     ).toBeTruthy();
+  });
+
+  it('renders ErrorBanner retry, LoadingSkeleton, PublicHeader mobile drawer, and danger Button', () => {
+    const onRetry = vi.fn();
+    render(
+      <div>
+        <ErrorBanner message="Failed telemetry fetch" onRetry={onRetry} />
+        <LoadingSkeleton lines={2} />
+        <Button variant="danger">Delete</Button>
+      </div>
+    );
+    expect(screen.getByRole('alert')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete' }).className).toContain('bg-[#B91C1C]');
+
+    cleanup();
+    render(
+      <MemoryRouter>
+        <PublicHeader />
+      </MemoryRouter>
+    );
+    const toggle = screen.getByRole('button', { name: 'Open navigation menu' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
   });
 });

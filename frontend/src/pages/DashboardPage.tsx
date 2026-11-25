@@ -141,11 +141,10 @@ export const DashboardPage: React.FC = () => {
                   type="button"
                   aria-pressed={activeCity.toLowerCase() === cityName.toLowerCase()}
                   onClick={() => void handleCitySelect(cityName)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
-                    activeCity.toLowerCase() === cityName.toLowerCase()
-                      ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                      : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${activeCity.toLowerCase() === cityName.toLowerCase()
+                    ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                    : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
+                    }`}
                 >
                   {cityName}
                 </button>
@@ -294,11 +293,10 @@ export const DashboardPage: React.FC = () => {
                 {routePreviewMutation.data.routes.map((route) => (
                   <div
                     key={route.id}
-                    className={`p-3 rounded-xl border text-xs ${
-                      route.recommended
-                        ? 'bg-[#EBF7F0] border-[#A3E5BA]'
-                        : 'bg-[#F8FAF7] border-[#E2E8F0]'
-                    }`}
+                    className={`p-3 rounded-xl border text-xs ${route.recommended
+                      ? 'bg-[#EBF7F0] border-[#A3E5BA]'
+                      : 'bg-[#F8FAF7] border-[#E2E8F0]'
+                      }`}
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>{route.name}</span>

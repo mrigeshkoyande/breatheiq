@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-25 14:38:48Z`.  
+> Last audit: `2026-11-25 15:06:43Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -28,10 +28,10 @@
 | 7 | `/methodology` | CPCB NAQI Methodology & Calculator | Public | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (168 lines) |
 | 17 | `/privacy` | Privacy Policy | Public | T2 | public | 🟢 VERIFIED | breatheiq_privacy_policy_terms | Verified across 3 viewports; Connected to backend API (110 lines) |
 | 19 | `/login` | Sign In | Auth and onboarding | T1 | public | 🟢 VERIFIED | breatheiq_login_a1 | Verified across 3 viewports; Form wired to backend /api/v1/auth endpoints (199 lines) |
-| 20 | `/signup` | Create Account | Auth and onboarding | T1 | public | 🟢 VERIFIED | breatheiq_signup_a2 | Verified across 3 viewports; Form wired to backend /api/v1/auth endpoints (182 lines) |
+| 20 | `/signup` | Create Account | Auth and onboarding | T1 | public | 🟢 VERIFIED | breatheiq_signup_a2 | Verified across 3 viewports; Form wired to backend /api/v1/auth endpoints (181 lines) |
 | 21 | `/forgot-password` | Forgot Password | Auth and onboarding | T1 | public | 🟢 VERIFIED | breatheiq_forgot_password_a3 | Verified across 3 viewports; Form wired to backend /api/v1/auth endpoints (100 lines) |
 | 22 | `/reset-password` | Reset Password | Auth and onboarding | T1 | public | 🟢 VERIFIED | breatheiq_reset_password_a4 | Verified across 3 viewports; Form wired to backend /api/v1/auth endpoints (123 lines) |
-| 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟢 VERIFIED | breatheiq_main_dashboard_andheri_west_mumbai | Verified across 3 viewports (390/768/1440px); Modular Andheri West dashboard (329 page + 214 component lines); interactive routine, Window Oracle, AQI dial |
+| 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟢 VERIFIED | breatheiq_main_dashboard_andheri_west_mumbai | Verified across 3 viewports (390/768/1440px); Modular Andheri West dashboard (327 page + 214 component lines); interactive routine, Window Oracle, AQI dial |
 | 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🟢 VERIFIED | breatheiq_atmospheric_command_center | Verified across 3 viewports; Connected to backend API (166 lines) |
 | 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🟢 VERIFIED | breatheiq_air_quality_inversion_analytics | Verified across 3 viewports; Connected to backend API (101 lines) |
 | 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🟢 VERIFIED | breatheiq_ai_atmospheric_assistant | Verified across 3 viewports; Connected to backend API (232 lines) |
@@ -46,7 +46,7 @@
 | 62 | `/app/community` | Community Air Pulse | Community | T2 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (206 lines) |
 | 78 | `/admin` | Admin Command Center | Admin | T2 | admin | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (259 lines) |
 | 92 | `/404` | Not Found (404) | System | T1 | public | 🟢 VERIFIED | — | Verified across 3 viewports; Accessible 404 view (82 lines); emergency air hotline, search fallback, quick nav |
-| 94 | `/onboarding` | Personalized Setup Wizard | Auth | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (341 lines) |
+| 94 | `/onboarding` | Personalized Setup Wizard | Auth | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (340 lines) |
 
 ---
 
