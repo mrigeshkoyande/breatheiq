@@ -1,338 +1,232 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Send,
-  Bot,
-  User,
-  ShieldCheck,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bot, Send, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
-
-interface EvidenceContext {
-  city?: string;
-  aqi?: number;
-  category?: string;
-  dominant_pollutant?: string;
-  pm25?: number;
-  pm10?: number;
-  best_window_start?: string;
-  best_window_end?: string;
-  current_action?: string;
-  source?: string;
-}
+import { CopilotChatResponse, ProvenanceSource } from '../types/api';
+import { AppShell } from '../components/layout/AppShell';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner } from '../components/ui/StatusBanner';
 
 interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
+  sourceBadge?: ProvenanceSource;
+  flags?: string[];
+  why?: string;
   timestamp: string;
-  sourceBadge?: string;
-  evidenceContext?: EvidenceContext;
-  whyThisAdvice?: string;
-  limitations?: string;
-  validatorFlags?: string[];
-  suggestedPrompts?: string[];
-  isFallback?: boolean;
 }
 
 export const AssistantPage: React.FC = () => {
-  const { user } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [selectedCity, setSelectedCity] = useState('Mumbai');
-  const [loading, setLoading] = useState(false);
-  const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { data: household } = useHousehold();
+  const city = household?.city || 'Mumbai';
 
-  // Initial welcome greeting
-  useEffect(() => {
-    setMessages([
-      {
-        id: 'msg-init',
-        sender: 'assistant',
-        text: `Hello ${user?.full_name ? user.full_name.split(' ')[0] : 'there'}! I am your BreatheIQ Atmospheric Assistant. I synthesize official CAAQMS ground sensor telemetry and diurnal boundary layer physics to give you actionable low-emission guidance. How can I assist your family today?`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sourceBadge: 'MODELED',
-        suggestedPrompts: [
-          'When is the safest time to open windows today?',
-          'Should I go for my morning walk tomorrow?',
-          'What CADR purifier size do I need for my bedroom?',
-          'Which transit route has the lowest pollution exposure?',
-        ],
-        whyThisAdvice: 'Personalized greeting based on your registered location and current atmospheric models.',
-        limitations: 'Public health guidance only — not clinical medical advice.',
-      },
-    ]);
-  }, [user]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
+    {
+      id: 'welcome',
+      sender: 'assistant',
+      text: `Hello! I am your BreatheIQ Atmospheric Copilot for ${city}. Ask about safe ventilation timing, CADR purifier sizing, commute options, or family precautions.`,
+      sourceBadge: 'MODELED',
+      timestamp: 'Now',
+    },
+  ]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([
+    'When is the safest window to ventilate today?',
+    'What CADR purifier fits a 20 sq m bedroom?',
+    'Should I reschedule my morning outdoor run?',
+  ]);
+  const msgCounterRef = useRef(0);
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    endRef.current?.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
+  }, [messages]);
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = (textToSend || inputText).trim();
-    if (!query || loading) return;
+  const nextId = (prefix: string) => {
+    msgCounterRef.current += 1;
+    return `${prefix}-${msgCounterRef.current}`;
+  };
 
+  const sendMessage = async (textToSend?: string) => {
+    const query = (textToSend ?? input).trim();
+    if (!query || sending) return;
+
+    setErrorMsg('');
+    if (!textToSend) setInput('');
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: nextId('u'),
       sender: 'user',
       text: query,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: nowTime,
     };
-
     setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputText('');
-    setLoading(true);
+    setSending(true);
 
     try {
-      const response = await apiRequest<{
-        reply: string;
-        intent: string;
-        source_badge: string;
-        evidence_context: EvidenceContext;
-        why_this_advice: string;
-        limitations: string;
-        validator_flags: string[];
-        suggested_prompts: string[];
-        is_fallback: boolean;
-      }>('/assistant/chat', {
+      const res = await apiRequest<CopilotChatResponse>('/assistant/chat', {
         method: 'POST',
         body: JSON.stringify({
           message: query,
-          city: selectedCity,
+          city,
+          lat: household?.latitude ?? 19.076,
+          lon: household?.longitude ?? 72.8777,
         }),
       });
+      const validBadges: ProvenanceSource[] = [
+        'LIVE',
+        'MODELED',
+        'FORECAST',
+        'ESTIMATED',
+        'USER-REPORTED',
+        'DEMO',
+      ];
+      const badge: ProvenanceSource = validBadges.includes(res.source_badge as ProvenanceSource)
+        ? (res.source_badge as ProvenanceSource)
+        : 'MODELED';
 
-      const assistantMsg: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        sender: 'assistant',
-        text: response.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sourceBadge: response.source_badge,
-        evidenceContext: response.evidence_context,
-        whyThisAdvice: response.why_this_advice,
-        limitations: response.limitations,
-        validatorFlags: response.validator_flags,
-        suggestedPrompts: response.suggested_prompts,
-        isFallback: response.is_fallback,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch {
-      const errorMsg: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: 'assistant',
-        text: 'I am experiencing a momentary network disconnect while querying atmospheric feeds. Please try again in a few moments.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sourceBadge: 'OFFLINE_FALLBACK',
-        whyThisAdvice: 'Network or rate-limit retry state.',
-        limitations: 'Public health guidance only — not clinical medical advice.',
-        isFallback: true,
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextId('a'),
+          sender: 'assistant',
+          text: res.reply,
+          sourceBadge: badge,
+          flags: res.validator_flags,
+          why: res.why_this_advice,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+      if (res.suggested_prompts.length > 0) {
+        setSuggestions(res.suggested_prompts);
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Unable to reach Copilot service.');
     } finally {
-      setLoading(false);
+      setSending(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      {/* App Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Atmospheric Assistant</span>
+    <AppShell title="AI Atmospheric Copilot">
+      <div className="max-w-4xl mx-auto px-4 lg:px-8 py-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+              <Bot className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Grounded Atmospheric Copilot
+            </h1>
+            <p className="text-xs text-[#475569]">
+              Safety-validated responses citing retrieved {city} telemetry · Public health guidance only.
+            </p>
           </div>
-
-          <div className="flex items-center gap-3 text-xs">
-            <label htmlFor="assistant-city-select" className="text-[#64748B] font-semibold hidden sm:inline">Active City:</label>
-            <select
-              id="assistant-city-select"
-              name="assistant_city"
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="bg-[#F8FAF7] border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-semibold text-[#182A29] focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
-            >
-              <option value="Mumbai">Mumbai</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Bengaluru">Bengaluru</option>
-              <option value="Kolkata">Kolkata</option>
-              <option value="Pune">Pune</option>
-            </select>
-            <Link
-              to="/app/dashboard"
-              className="px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9] transition"
-            >
-              Dashboard
-            </Link>
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] bg-[#DDF5EC] px-3 py-1 rounded-full">
+            <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+            Evidence Validator Active
           </div>
         </div>
-      </header>
 
-      {/* Main Chat Frame */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 lg:p-6 flex flex-col space-y-4">
-        {/* Chat History Box */}
-        <div className="flex-1 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[70vh]">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex gap-3.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {msg.sender === 'assistant' && (
-                <div className="w-8 h-8 rounded-xl bg-[#0F766E] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                  <Bot className="w-4 h-4" />
-                </div>
-              )}
+        {errorMsg && <ErrorBanner message={errorMsg} />}
 
-              <div
-                className={`max-w-[85%] sm:max-w-lg rounded-2xl p-4 space-y-3 ${
-                  msg.sender === 'user'
-                    ? 'bg-[#0F766E] text-white rounded-tr-xs'
-                    : 'bg-[#F8FAF7] border border-[#E2E8F0] rounded-tl-xs text-[#182A29]'
-                }`}
-              >
-                {/* Header Strip with Provenance Badge */}
-                {msg.sender === 'assistant' && msg.sourceBadge && (
-                  <div className="flex items-center gap-2 flex-wrap text-[10px] font-bold">
-                    <span
-                      className={`px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        msg.sourceBadge === 'LIVE'
-                          ? 'bg-[#DCFCE7] text-[#15803D]'
-                          : msg.sourceBadge === 'MODELED'
-                          ? 'bg-[#E0F2FE] text-[#0369A1]'
-                          : 'bg-[#FEF3C7] text-[#B45309]'
-                      }`}
-                    >
-                      {msg.sourceBadge} DATA
-                    </span>
-                    {msg.isFallback && (
-                      <span className="bg-[#F1F5F9] text-[#64748B] px-2 py-0.5 rounded-full uppercase">
-                        Template Fallback
-                      </span>
-                    )}
-                    <span className="text-[#94A3B8] font-normal">{msg.timestamp}</span>
-                  </div>
-                )}
-
-                {/* Message Body Text */}
-                <div className="text-xs leading-relaxed whitespace-pre-line">{msg.text}</div>
-
-                {/* Why This Advice Expandable Panel */}
-                {msg.sender === 'assistant' && msg.whyThisAdvice && (
-                  <div className="border-t border-[#E2E8F0] pt-2.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedWhyId(expandedWhyId === msg.id ? null : msg.id)
-                      }
-                      className="text-[11px] font-bold text-[#0F766E] flex items-center gap-1 hover:underline"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Why this advice?</span>
-                      {expandedWhyId === msg.id ? (
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-
-                    {expandedWhyId === msg.id && (
-                      <div className="mt-2 p-3 bg-white rounded-xl border border-[#E2E8F0] text-[11px] text-[#475569] space-y-2">
-                        <p>{msg.whyThisAdvice}</p>
-                        {msg.evidenceContext && (
-                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#F1F5F9] font-mono text-[10px]">
-                            <span>City: {msg.evidenceContext.city}</span>
-                            <span>NAQI: {msg.evidenceContext.aqi}</span>
-                            <span>PM2.5: {msg.evidenceContext.pm25} µg/m³</span>
-                            <span>Action: {msg.evidenceContext.current_action}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Limitations & Legal Disclaimer */}
-                {msg.sender === 'assistant' && msg.limitations && (
-                  <div className="text-[10px] text-[#94A3B8] flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-[#0F766E]" />
-                    <span>{msg.limitations}</span>
-                  </div>
-                )}
-
-                {/* Follow-up Suggested Prompts */}
-                {msg.sender === 'assistant' && msg.suggestedPrompts && (
-                  <div className="pt-2 flex flex-wrap gap-1.5">
-                    {msg.suggestedPrompts.map((p, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSendMessage(p)}
-                        className="text-[10px] font-semibold bg-white border border-[#CBD5E1] text-[#334155] px-2.5 py-1 rounded-full hover:border-[#0F766E] hover:text-[#0F766E] transition text-left"
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {msg.sender === 'user' && (
-                <div className="w-8 h-8 rounded-xl bg-[#182A29] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                  <User className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-xl bg-[#0F766E] text-white flex items-center justify-center shrink-0">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              </div>
-              <div className="bg-[#F8FAF7] border border-[#E2E8F0] rounded-2xl p-4 text-xs text-[#64748B] flex items-center gap-2">
-                <span>Synchronizing ground sensors and evaluating boundary layer...</span>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Query Input Box */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-2.5 flex items-center gap-2 shadow-sm">
-          <label htmlFor="assistant-query-input" className="sr-only">
-            Ask Atmospheric Assistant
-          </label>
-          <input
-            id="assistant-query-input"
-            name="assistant_query"
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder={`Ask about routines, window opening, purifiers or transit in ${selectedCity}...`}
-            className="flex-1 text-xs px-3 py-2 bg-transparent focus:outline-none text-[#182A29] placeholder-[#94A3B8]"
-          />
-          <button
-            type="button"
-            onClick={() => handleSendMessage()}
-            disabled={!inputText.trim() || loading}
-            className="w-9 h-9 rounded-xl bg-[#0F766E] text-white flex items-center justify-center hover:bg-[#115E59] disabled:opacity-40 transition shrink-0"
+        <Card className="p-4 sm:p-6 space-y-4">
+          <div
+            role="log"
+            aria-live="polite"
+            aria-label="Copilot conversation"
+            className="space-y-4 max-h-[55vh] overflow-y-auto pr-1"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-      </main>
-    </div>
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm space-y-2 ${
+                    msg.sender === 'user'
+                      ? 'bg-[#0F766E] text-white'
+                      : 'bg-[#F8FAF7] border border-[#E2E8F0] text-[#182A29]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 text-[11px]">
+                    <span className="font-bold">
+                      {msg.sender === 'user' ? 'You' : 'BreatheIQ Copilot'}
+                    </span>
+                    <span className={msg.sender === 'user' ? 'text-[#DDF5EC]' : 'text-[#475569]'}>
+                      {msg.timestamp}
+                    </span>
+                  </div>
+                  <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+                  {msg.sender === 'assistant' && msg.sourceBadge && (
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <Badge badgeType={msg.sourceBadge} />
+                      {msg.flags?.map((flag) => (
+                        <span
+                          key={flag}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white border border-[#E2E8F0] text-[#475569]"
+                        >
+                          {flag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={endRef} />
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-[#E2E8F0]">
+            {suggestions.slice(0, 3).map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                disabled={sending}
+                onClick={() => void sendMessage(prompt)}
+                className="text-xs px-3 py-1.5 rounded-full bg-[#F8FAF7] border border-[#CBD5E1] hover:border-[#0F766E] text-[#334155] font-medium transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void sendMessage();
+            }}
+            className="flex items-center gap-2"
+          >
+            <label htmlFor="copilot-input" className="sr-only">
+              Ask the atmospheric copilot
+            </label>
+            <input
+              id="copilot-input"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Ask about ${city} smog, windows, purifiers, or commutes...`}
+              className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
+            />
+            <Button type="submit" disabled={sending || !input.trim()} aria-label="Send message to Copilot">
+              <Send className="w-4 h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">{sending ? 'Sending...' : 'Send'}</span>
+            </Button>
+          </form>
+
+          <div className="flex items-center gap-2 text-[11px] text-[#475569]">
+            <ShieldAlert className="w-3.5 h-3.5 text-[#0F766E] shrink-0" aria-hidden="true" />
+            <span>Advisory guidance only — not medical advice.</span>
+          </div>
+        </Card>
+      </div>
+    </AppShell>
   );
 };

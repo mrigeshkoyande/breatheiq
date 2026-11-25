@@ -1,256 +1,209 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  CheckCircle2,
-  Circle,
-  Plus,
-  Trash2,
-  Clock,
-  Sparkles,
-  RefreshCw,
-  Sun,
-  Sunset,
-  Moon,
-  ShieldCheck
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { CalendarCheck, CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react';
+import { queryKeys, useImpactLedger, useRoutineTasks, useToggleRoutineTask } from '../api/hooks';
 import { apiRequest } from '../services/api';
-
-interface RoutineTask {
-  id: number;
-  time_slot: string;
-  title: string;
-  description: string;
-  category: string;
-  is_completed: boolean;
-}
+import { RoutineTask } from '../types/api';
+import { AppShell } from '../components/layout/AppShell';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
 
 export const RoutinePage: React.FC = () => {
-  const { user } = useAuth();
-  const [tasks, setTasks] = useState<RoutineTask[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskSlot, setNewTaskSlot] = useState('morning');
+  const qc = useQueryClient();
+  const { data: tasks = [], isLoading, error, refetch } = useRoutineTasks();
+  const { data: impact } = useImpactLedger();
+  const toggleMutation = useToggleRoutineTask();
 
-  const fetchTasks = async () => {
-    setLoading(true);
-    try {
-      const data = await apiRequest<RoutineTask[]>('/user/routine');
-      setTasks(data);
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [title, setTitle] = useState('');
+  const [slot, setSlot] = useState('morning');
+  const [category, setCategory] = useState('ventilation');
+  const [actionError, setActionError] = useState('');
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const handleToggle = async (taskId: number) => {
-    try {
-      await apiRequest(`/user/routine/${taskId}/toggle`, { method: 'PATCH' });
-      setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, is_completed: !t.is_completed } : t))
-      );
-    } catch {
-      // Handled
-    }
-  };
-
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim()) return;
-    try {
-      const created = await apiRequest<RoutineTask>('/user/routine', {
+  const addMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<RoutineTask>('/user/routine', {
         method: 'POST',
         body: JSON.stringify({
-          title: newTaskTitle.trim(),
-          time_slot: newTaskSlot,
-          category: 'routine',
+          title: title.trim(),
+          time_slot: slot,
+          category,
+          description: 'Custom family smog defense task',
         }),
-      });
-      setTasks((prev) => [...prev, created]);
-      setNewTaskTitle('');
-    } catch {
-      // Handled
-    }
-  };
+      }),
+    onSuccess: () => {
+      setTitle('');
+      void qc.invalidateQueries({ queryKey: queryKeys.routine });
+    },
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : 'Unable to add task.');
+    },
+  });
 
-  const handleDeleteTask = async (taskId: number) => {
-    try {
-      await apiRequest(`/user/routine/${taskId}`, { method: 'DELETE' });
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    } catch {
-      // Handled
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/user/routine/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.routine });
+    },
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : 'Unable to delete task.');
+    },
+  });
 
   const completedCount = tasks.filter((t) => t.is_completed).length;
-  const filteredTasks = selectedSlot === 'all' ? tasks : tasks.filter((t) => t.time_slot === selectedSlot);
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Adaptive Daily Routine</span>
-          </div>
-
-          <Link
-            to="/app/dashboard"
-            className="text-xs px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-          >
-            Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 lg:p-8 space-y-6">
-        {/* Header Strip & Progress */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+    <AppShell title="Adaptive Smog Routine">
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#182A29]">Adaptive Inversion-Proof Routine</h1>
-            <p className="text-xs text-[#64748B] mt-1">
-              Synchronized with diurnal thermal inversion cycles to minimize personal inhaled PM2.5 dosage.
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <CalendarCheck className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Adaptive Daily Smog Routine
+            </h1>
+            <p className="text-sm text-[#475569]">
+              Schedule outdoor errands around boundary layer expansion windows.
             </p>
           </div>
-
-          <div className="flex items-center gap-3 bg-[#F8FAF7] border border-[#E2E8F0] rounded-xl px-4 py-3 shrink-0">
-            <div className="text-right">
-              <span className="text-xs font-bold text-[#182A29] block">
-                {completedCount} of {tasks.length} Done
-              </span>
-              <span className="text-[10px] text-[#0F766E] font-semibold">Streak: 7 Days</span>
-            </div>
-            <div className="w-10 h-10 rounded-full border-4 border-[#0F766E] border-t-[#DDF5EC] flex items-center justify-center font-bold text-xs text-[#0F766E]">
-              {tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0}%
-            </div>
+          <div className="flex items-center gap-2">
+            <Badge badgeType="ESTIMATED" />
+            <span className="px-3 py-1 rounded-full bg-[#DDF5EC] text-[#0F766E] text-xs font-bold">
+              Ledger Streak: {impact?.clean_air_streak_days ?? tasks.length} Days
+            </span>
           </div>
         </div>
 
-        {/* Time Slot Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#E2E8F0] pb-2 text-xs font-bold">
-          {[
-            { id: 'all', label: 'All Day' },
-            { id: 'morning', label: 'Morning (06:00-11:00)', icon: Sun },
-            { id: 'afternoon', label: 'Midday (12:00-16:00)', icon: Sunset },
-            { id: 'evening', label: 'Night (17:00-23:00)', icon: Moon },
-          ].map((slot) => (
-            <button
-              key={slot.id}
-              onClick={() => setSelectedSlot(slot.id)}
-              className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                selectedSlot === slot.id
-                  ? 'bg-[#0F766E] text-white shadow-sm'
-                  : 'text-[#64748B] hover:bg-[#F1F5F9]'
-              }`}
-            >
-              <span>{slot.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Task List */}
-        {loading ? (
-          <div className="py-20 flex justify-center items-center gap-2 text-xs font-bold text-[#0F766E]">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Synchronizing Daily Plan...</span>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredTasks.map((t) => (
-              <div
-                key={t.id}
-                className={`bg-white rounded-xl border p-4 flex items-start justify-between gap-4 transition shadow-sm ${
-                  t.is_completed ? 'border-[#86EFAC] bg-[#F0FDF4]/30' : 'border-[#E2E8F0]'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleToggle(t.id)}
-                    className="mt-0.5 text-[#0F766E] hover:opacity-80"
-                  >
-                    {t.is_completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#2F9E62]" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-[#CBD5E1]" />
-                    )}
-                  </button>
-                  <div className="space-y-1">
-                    <span
-                      className={`text-xs font-bold block ${
-                        t.is_completed ? 'line-through text-[#64748B]' : 'text-[#182A29]'
-                      }`}
-                    >
-                      {t.title}
-                    </span>
-                    {t.description && (
-                      <p className="text-[11px] text-[#64748B] leading-relaxed">{t.description}</p>
-                    )}
-                    <span className="text-[10px] font-semibold text-[#0F766E] bg-[#DDF5EC] px-2 py-0.5 rounded-full inline-block uppercase">
-                      {t.time_slot}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTask(t.id)}
-                  className="text-[#94A3B8] hover:text-[#DC5252] transition p-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+        {(error || actionError) && (
+          <ErrorBanner
+            message={actionError || (error instanceof Error ? error.message : 'Error loading routine.')}
+            onRetry={() => void refetch()}
+          />
         )}
 
-        {/* Add Custom Task Form */}
-        <form
-          onSubmit={handleAddTask}
-          className="bg-white rounded-2xl border border-[#E2E8F0] p-4 flex flex-col sm:flex-row gap-3 items-center shadow-sm"
-        >
-          <label htmlFor="routine-task-input" className="sr-only">New task title</label>
-          <input
-            id="routine-task-input"
-            name="task_title"
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="Add new task (e.g. Check HEPA filter pre-mesh)..."
-            className="flex-1 w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
-          />
-          <label htmlFor="routine-task-slot-select" className="sr-only">Task time slot</label>
-          <select
-            id="routine-task-slot-select"
-            name="task_slot"
-            value={newTaskSlot}
-            onChange={(e) => setNewTaskSlot(e.target.value)}
-            className="text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full sm:w-auto"
+        <Card>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!title.trim()) return;
+              setActionError('');
+              addMutation.mutate();
+            }}
+            className="grid sm:grid-cols-12 gap-3 items-end"
           >
-            <option value="morning">Morning</option>
-            <option value="afternoon">Afternoon</option>
-            <option value="evening">Evening</option>
-          </select>
-          <button
-            type="submit"
-            className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] flex items-center gap-1.5 transition w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Task</span>
-          </button>
-        </form>
-      </main>
-    </div>
+            <div className="sm:col-span-6">
+              <Input
+                label="New Routine Action"
+                placeholder="e.g. Run bedroom HEPA before 21:00"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label htmlFor="routine-slot" className="text-xs font-semibold uppercase text-[#334155]">
+                Time Slot
+              </label>
+              <select
+                id="routine-slot"
+                value={slot}
+                onChange={(e) => setSlot(e.target.value)}
+                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+              >
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label htmlFor="routine-cat" className="text-xs font-semibold uppercase text-[#334155]">
+                Category
+              </label>
+              <select
+                id="routine-cat"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+              >
+                <option value="ventilation">Ventilation</option>
+                <option value="purifier">Purifier</option>
+                <option value="exercise">Exercise</option>
+                <option value="commute">Commute</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={addMutation.isPending} className="w-full h-10">
+                <Plus className="w-4 h-4" aria-hidden="true" />
+                Add
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        <Card className="space-y-4">
+          <div className="flex items-center justify-between text-sm font-bold">
+            <span>Today&apos;s Scheduled Tasks</span>
+            <span className="text-[#0F766E]">
+              {completedCount} of {tasks.length} completed
+            </span>
+          </div>
+
+          {isLoading ? (
+            <LoadingSkeleton lines={4} label="Loading daily tasks..." />
+          ) : tasks.length === 0 ? (
+            <p className="text-sm text-[#475569] py-4">No tasks scheduled yet. Add an action above.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
+                >
+                  <button
+                    type="button"
+                    aria-label={
+                      task.is_completed
+                        ? `Mark "${task.title}" incomplete`
+                        : `Mark "${task.title}" complete`
+                    }
+                    aria-pressed={task.is_completed}
+                    onClick={() => toggleMutation.mutate(task.id)}
+                    className="flex items-start gap-3 text-left flex-1 min-w-0"
+                  >
+                    {task.is_completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#2F9E62] shrink-0 mt-0.5" aria-hidden="true" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-[#475569] shrink-0 mt-0.5" aria-hidden="true" />
+                    )}
+                    <div className="min-w-0">
+                      <div
+                        className={`text-sm font-semibold ${
+                          task.is_completed ? 'line-through text-[#475569]' : 'text-[#182A29]'
+                        }`}
+                      >
+                        {task.title}
+                      </div>
+                      <div className="text-xs text-[#475569] capitalize">
+                        {task.time_slot} · {task.category}
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label={`Delete task "${task.title}"`}
+                    onClick={() => deleteMutation.mutate(task.id)}
+                    className="p-2 rounded-lg text-[#475569] hover:text-[#B91C1C] hover:bg-[#FEF2F2]"
+                  >
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    </AppShell>
   );
 };

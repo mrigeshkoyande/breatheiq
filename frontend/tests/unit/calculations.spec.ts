@@ -71,8 +71,8 @@ describe('BreatheIQ Calculation Utilities', () => {
 
   describe('calculateInhaledDosageUg', () => {
     it('calculates dosage accurately for light activity', () => {
-      // 0.8 m3/h * 100 ug/m3 * 2 h = 160 ug
-      expect(calculateInhaledDosageUg(100, 2, 'light')).toBe(160);
+      // 0.83 m3/h * 100 ug/m3 * 2 h = 166 ug
+      expect(calculateInhaledDosageUg(100, 2, 'light')).toBe(166);
     });
 
     it('calculates dosage accurately for heavy activity', () => {
@@ -81,8 +81,8 @@ describe('BreatheIQ Calculation Utilities', () => {
     });
 
     it('calculates resting dosage accurately', () => {
-      // 0.45 m3/h * 80 ug/m3 * 8 h = 288 ug
-      expect(calculateInhaledDosageUg(80, 8, 'resting')).toBe(288);
+      // 0.50 m3/h * 80 ug/m3 * 8 h = 320 ug (matches emission_factors.yaml)
+      expect(calculateInhaledDosageUg(80, 8, 'resting')).toBe(320);
     });
 
     it('returns zero for zero or negative duration or concentration', () => {
@@ -111,13 +111,12 @@ describe('BreatheIQ Calculation Utilities', () => {
 
   describe('calculateTransitSavings', () => {
     it('calculates CO2 and PM2.5 savings from ICE Car to Metro for 10 km', () => {
-      // Car: 140 g/km CO2, 18 mg/km PM2.5
-      // Metro: 15 g/km CO2, 1.2 mg/km PM2.5
-      // Delta CO2: (140 - 15) * 10 = 1250 g
-      // Delta PM2.5: (18 - 1.2) * 10 = 168 mg
+      // Matches emission_factors.yaml: Car 180 g/km CO2 & 45 mg/km PM2.5; Metro 18 g/km CO2 & 2 mg/km PM2.5
+      // Delta CO2: (180 - 18) * 10 = 1620 g
+      // Delta PM2.5: (45 - 2) * 10 = 430 mg
       const savings = calculateTransitSavings(10, 'car_ice', 'metro');
-      expect(savings.co2SavingsG).toBe(1250);
-      expect(savings.pm25AvoidedMg).toBe(168);
+      expect(savings.co2SavingsG).toBe(1620);
+      expect(savings.pm25AvoidedMg).toBe(430);
     });
 
     it('calculates zero savings if distance is zero or negative', () => {

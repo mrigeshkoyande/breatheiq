@@ -1,188 +1,112 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  ShieldCheck,
-  Users,
-  CheckCircle2,
-  XCircle,
-  Cpu,
-  Lock,
-  Activity,
-  RefreshCw,
-  Search,
-  Filter,
-  AlertTriangle,
-  Server
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Shield } from 'lucide-react';
 import { apiRequest } from '../services/api';
+import {
+  AITrace,
+  AdminUserSummary,
+  AuditLog,
+  CommunityReport,
+  IntegrationHealth,
+} from '../types/api';
+import { AppShell } from '../components/layout/AppShell';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
 
-interface UserRecord {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-  is_active: boolean;
-  is_verified: boolean;
-  created_at: string;
-}
-
-interface ModerationItem {
-  id: number;
-  report_type: string;
-  severity: string;
-  location_name: string;
-  description: string;
-  upvote_count: number;
-  status: string;
-}
-
-interface AITraceRecord {
-  id: number;
-  prompt_hash: string;
-  intent: string;
-  model: string;
-  latency_ms: number;
-  tokens_used: number;
-  validator_flags: string;
-  status: string;
-  created_at: string;
-}
-
-interface AuditLogRecord {
-  id: number;
-  action: string;
-  ip_address: string;
-  details: string;
-  timestamp: string;
-}
-
-interface IntegrationHealth {
-  service: string;
-  status: string;
-  latency_ms: number;
-  mode: string;
-}
+type AdminTab = 'moderation' | 'users' | 'ai' | 'audit' | 'health';
 
 export const AdminPage: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'users' | 'moderation' | 'traces' | 'audit' | 'integrations'>('users');
-  const [loading, setLoading] = useState(true);
-
-  // Tab data states
-  const [usersList, setUsersList] = useState<UserRecord[]>([]);
-  const [moderationQueue, setModerationQueue] = useState<ModerationItem[]>([]);
-  const [aiTraces, setAiTraces] = useState<AITraceRecord[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLogRecord[]>([]);
-  const [integrations, setIntegrations] = useState<IntegrationHealth[]>([]);
+  const qc = useQueryClient();
+  const [activeTab, setActiveTab] = useState<AdminTab>('moderation');
   const [userSearch, setUserSearch] = useState('');
+  const [actionError, setActionError] = useState('');
 
-  const fetchTabData = async (tab: string) => {
-    setLoading(true);
-    try {
-      if (tab === 'users') {
-        const data = await apiRequest<UserRecord[]>('/admin/users');
-        setUsersList(data);
-      } else if (tab === 'moderation') {
-        const data = await apiRequest<ModerationItem[]>('/admin/moderation/queue');
-        setModerationQueue(data);
-      } else if (tab === 'traces') {
-        const data = await apiRequest<AITraceRecord[]>('/admin/ai-traces');
-        setAiTraces(data);
-      } else if (tab === 'audit') {
-        const data = await apiRequest<AuditLogRecord[]>('/admin/audit-logs');
-        setAuditLogs(data);
-      } else if (tab === 'integrations') {
-        const data = await apiRequest<IntegrationHealth[]>('/admin/integrations/health');
-        setIntegrations(data);
-      }
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queueQuery = useQuery({
+    queryKey: ['admin', 'queue'],
+    queryFn: () => apiRequest<CommunityReport[]>('/admin/moderation/queue'),
+  });
+  const usersQuery = useQuery({
+    queryKey: ['admin', 'users', userSearch],
+    queryFn: () =>
+      apiRequest<AdminUserSummary[]>(
+        userSearch.trim()
+          ? `/admin/users?search=${encodeURIComponent(userSearch.trim())}`
+          : '/admin/users'
+      ),
+    enabled: activeTab === 'users',
+  });
+  const tracesQuery = useQuery({
+    queryKey: ['admin', 'traces'],
+    queryFn: () => apiRequest<AITrace[]>('/admin/ai-traces'),
+    enabled: activeTab === 'ai',
+  });
+  const auditQuery = useQuery({
+    queryKey: ['admin', 'audit'],
+    queryFn: () => apiRequest<AuditLog[]>('/admin/audit-logs'),
+    enabled: activeTab === 'audit',
+  });
+  const healthQuery = useQuery({
+    queryKey: ['admin', 'health'],
+    queryFn: () => apiRequest<IntegrationHealth[]>('/admin/integrations/health'),
+    enabled: activeTab === 'health',
+  });
 
-  useEffect(() => {
-    fetchTabData(activeTab);
-  }, [activeTab]);
-
-  const handleToggleUserStatus = async (userId: number, currentActive: boolean) => {
-    try {
-      await apiRequest(`/admin/users/${userId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ is_active: !currentActive }),
-      });
-      setUsersList((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, is_active: !currentActive } : u))
-      );
-    } catch {
-      // Handled
-    }
-  };
-
-  const handleModerate = async (reportId: number, action: 'VERIFY' | 'REJECT') => {
-    try {
-      await apiRequest(`/admin/moderation/${reportId}`, {
+  const moderateMutation = useMutation({
+    mutationFn: ({ id, action }: { id: number; action: 'VERIFY' | 'REJECT' }) =>
+      apiRequest(`/admin/moderation/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ action }),
-      });
-      setModerationQueue((prev) => prev.filter((r) => r.id !== reportId));
-    } catch {
-      // Handled
-    }
-  };
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['admin', 'queue'] }),
+    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Moderation failed.'),
+  });
+
+  const toggleUserMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      apiRequest(`/admin/users/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active }),
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'User update failed.'),
+  });
+
+  const tabs: Array<{ id: AdminTab; label: string }> = [
+    { id: 'moderation', label: 'Moderation Queue' },
+    { id: 'users', label: 'Users' },
+    { id: 'ai', label: 'AI Traces' },
+    { id: 'audit', label: 'Audit Logs' },
+    { id: 'health', label: 'Integrations' },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Unified Command Center</span>
-            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#DC5252]">
-              ADMIN
-            </span>
-          </div>
-
-          <Link
-            to="/app/dashboard"
-            className="text-xs px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-          >
-            Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
+    <AppShell title="Admin & Moderation Command">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-black text-[#182A29]">Administration & Operational Integrity</h1>
-          <p className="text-xs text-[#64748B] mt-1">
-            RBAC tenant administration, community crowdsource moderation, AI trace logging, and service telemetry.
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+            <Shield className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+            Administration & Moderation Console
+          </h1>
+          <p className="text-sm text-[#475569]">
+            RBAC-enforced moderation queue, Copilot safety traces, audit logs, and provider health.
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-[#E2E8F0] pb-2 text-xs font-bold overflow-x-auto">
-          {[
-            { id: 'users', label: 'Users & Roles' },
-            { id: 'moderation', label: 'Moderation Queue' },
-            { id: 'traces', label: 'AI Trace Log' },
-            { id: 'audit', label: 'Security Audit' },
-            { id: 'integrations', label: 'Integrations Health' },
-          ].map((tab) => (
+        {actionError && <ErrorBanner message={actionError} />}
+
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Admin sections">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-[#0F766E] text-white shadow-sm'
-                  : 'text-[#64748B] hover:bg-[#F1F5F9]'
+                  ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                  : 'bg-white text-[#334155] border-[#CBD5E1]'
               }`}
             >
               {tab.label}
@@ -190,232 +114,146 @@ export const AdminPage: React.FC = () => {
           ))}
         </div>
 
-        {loading ? (
-          <div className="py-20 flex justify-center items-center gap-2 text-xs font-bold text-[#0F766E]">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Querying Administration Records...</span>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-            {/* Tab 1: Users */}
-            {activeTab === 'users' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-black text-[#182A29]">Registered Accounts & RBAC</h2>
-                  <span className="text-xs text-[#64748B]">{usersList.length} Accounts Found</span>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#F8FAF7] text-[#64748B] font-bold border-b border-[#E2E8F0]">
-                      <tr>
-                        <th className="p-3">ID</th>
-                        <th className="p-3">User</th>
-                        <th className="p-3">Role</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E2E8F0] text-[#3E4947]">
-                      {usersList.map((u) => (
-                        <tr key={u.id} className="hover:bg-[#F8FAF7]/50">
-                          <td className="p-3 font-mono">#{u.id}</td>
-                          <td className="p-3 font-semibold">
-                            {u.full_name} <span className="block text-[11px] text-[#64748B] font-normal">{u.email}</span>
-                          </td>
-                          <td className="p-3">
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E]">
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                                u.is_active ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-[#FEE2E2] text-[#DC5252]'
-                              }`}
-                            >
-                              {u.is_active ? 'ACTIVE' : 'SUSPENDED'}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                              className="text-[11px] font-bold text-[#0F766E] hover:underline"
-                            >
-                              {u.is_active ? 'Deactivate' : 'Activate'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Moderation Queue */}
-            {activeTab === 'moderation' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-black text-[#182A29]">Air Watch Moderation Queue</h2>
-                  <span className="text-xs text-[#64748B]">{moderationQueue.length} Pending Observations</span>
-                </div>
-
-                {moderationQueue.length === 0 ? (
-                  <p className="text-xs text-[#64748B] py-6 text-center">
-                    Moderation queue is clean. All community observations verified.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {moderationQueue.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAF7] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                      >
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold uppercase bg-[#FEF3C7] text-[#B45309] px-2 py-0.5 rounded-full">
-                            {item.report_type} · {item.severity}
-                          </span>
-                          <h3 className="text-xs font-bold text-[#182A29]">{item.location_name}</h3>
-                          <p className="text-xs text-[#475569]">{item.description}</p>
-                          <span className="text-[10px] text-[#0F766E] font-semibold block">
-                            Confirmed by {item.upvote_count} nearby users
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleModerate(item.id, 'VERIFY')}
-                            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#2F9E62] text-white hover:bg-[#23784B]"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleModerate(item.id, 'REJECT')}
-                            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#DC5252] text-white hover:bg-[#B91C1C]"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+        {activeTab === 'moderation' && (
+          <Card className="space-y-3">
+            <h2 className="font-bold text-lg">Unverified Community Reports</h2>
+            {queueQuery.isLoading ? (
+              <LoadingSkeleton lines={3} />
+            ) : queueQuery.error ? (
+              <ErrorBanner message="Unable to fetch moderation queue." onRetry={() => void queueQuery.refetch()} />
+            ) : (queueQuery.data ?? []).length === 0 ? (
+              <p className="text-sm text-[#475569]">No pending unverified reports.</p>
+            ) : (
+              (queueQuery.data ?? []).map((r) => (
+                <div
+                  key={r.id}
+                  className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3"
+                >
+                  <div>
+                    <div className="font-bold text-sm">{r.location_name}</div>
+                    <div className="text-xs text-[#475569]">
+                      {r.report_type} · {r.severity} · {r.upvote_count} confirmations
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab 3: AI Trace Log */}
-            {activeTab === 'traces' && (
-              <div className="space-y-4">
-                <h2 className="text-base font-black text-[#182A29]">Grounded Assistant Trace Logs</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#F8FAF7] text-[#64748B] font-bold border-b border-[#E2E8F0]">
-                      <tr>
-                        <th className="p-3">Prompt Hash</th>
-                        <th className="p-3">Intent</th>
-                        <th className="p-3">Model</th>
-                        <th className="p-3">Latency</th>
-                        <th className="p-3">Validator Flags</th>
-                        <th className="p-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E2E8F0] text-[#3E4947]">
-                      {aiTraces.map((t) => (
-                        <tr key={t.id} className="hover:bg-[#F8FAF7]/50">
-                          <td className="p-3 font-mono text-[10px] text-[#64748B]">
-                            {t.prompt_hash.slice(0, 12)}...
-                          </td>
-                          <td className="p-3 font-semibold">{t.intent}</td>
-                          <td className="p-3 text-[11px] text-[#64748B]">{t.model}</td>
-                          <td className="p-3 font-mono">{t.latency_ms} ms</td>
-                          <td className="p-3 text-[10px] text-[#0F766E]">{t.validator_flags || 'Clean'}</td>
-                          <td className="p-3">
-                            <span
-                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                                t.status === 'SUCCESS'
-                                  ? 'bg-[#DCFCE7] text-[#15803D]'
-                                  : t.status === 'CORRECTION_APPLIED'
-                                  ? 'bg-[#FEF3C7] text-[#B45309]'
-                                  : 'bg-[#FEE2E2] text-[#DC5252]'
-                              }`}
-                            >
-                              {t.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => moderateMutation.mutate({ id: r.id, action: 'VERIFY' })}
+                    >
+                      Verify
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => moderateMutation.mutate({ id: r.id, action: 'REJECT' })}
+                    >
+                      Reject
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ))
             )}
+          </Card>
+        )}
 
-            {/* Tab 4: Security Audit */}
-            {activeTab === 'audit' && (
-              <div className="space-y-4">
-                <h2 className="text-base font-black text-[#182A29]">Cryptographic Security Audit Log</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#F8FAF7] text-[#64748B] font-bold border-b border-[#E2E8F0]">
-                      <tr>
-                        <th className="p-3">Timestamp</th>
-                        <th className="p-3">Action</th>
-                        <th className="p-3">IP Address</th>
-                        <th className="p-3">Details</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E2E8F0] text-[#3E4947]">
-                      {auditLogs.map((log) => (
-                        <tr key={log.id} className="hover:bg-[#F8FAF7]/50">
-                          <td className="p-3 text-[#64748B]">
-                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="p-3 font-mono font-bold text-[#182A29]">{log.action}</td>
-                          <td className="p-3 font-mono text-[11px]">{log.ip_address}</td>
-                          <td className="p-3 text-[11px] text-[#475569]">{log.details || 'Standard transaction'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 5: Integration Health */}
-            {activeTab === 'integrations' && (
-              <div className="space-y-4">
-                <h2 className="text-base font-black text-[#182A29]">Atmospheric Service Integrations Health</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {integrations.map((svc, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAF7] space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-[#182A29]">{svc.service}</span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            svc.status === 'HEALTHY' || svc.status === 'READY'
-                              ? 'bg-[#DCFCE7] text-[#15803D]'
-                              : 'bg-[#FEF3C7] text-[#B45309]'
-                          }`}
-                        >
-                          {svc.status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-[11px] text-[#64748B]">
-                        <span>Mode: {svc.mode}</span>
-                        <span>Latency: {svc.latency_ms} ms</span>
+        {activeTab === 'users' && (
+          <Card className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-bold text-lg">Registered Accounts</h2>
+              <input
+                aria-label="Filter accounts by email or name"
+                placeholder="Search users..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-1.5 text-sm"
+              />
+            </div>
+            {usersQuery.isLoading ? (
+              <LoadingSkeleton lines={3} />
+            ) : (
+              <div className="space-y-2">
+                {(usersQuery.data ?? []).map((u) => (
+                  <div
+                    key={u.id}
+                    className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-sm">{u.email}</div>
+                      <div className="text-[#475569]">
+                        Role: {u.role} · {u.is_active ? 'Active' : 'Suspended'}
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleUserMutation.mutate({ id: u.id, is_active: !u.is_active })}
+                    >
+                      {u.is_active ? 'Suspend' : 'Activate'}
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
+          </Card>
         )}
-      </main>
-    </div>
+
+        {activeTab === 'ai' && (
+          <Card className="space-y-3">
+            <h2 className="font-bold text-lg">Copilot Safety & Validation Traces</h2>
+            {tracesQuery.isLoading ? (
+              <LoadingSkeleton lines={3} />
+            ) : (
+              (tracesQuery.data ?? []).map((t) => (
+                <div key={t.id} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between">
+                  <div>
+                    <strong>{t.intent}</strong> · Model: {t.model} · Status: {t.status}
+                  </div>
+                  <span className="text-[#475569]">{t.latency_ms} ms</span>
+                </div>
+              ))
+            )}
+          </Card>
+        )}
+
+        {activeTab === 'audit' && (
+          <Card className="space-y-3">
+            <h2 className="font-bold text-lg">Security Audit Logs</h2>
+            {auditQuery.isLoading ? (
+              <LoadingSkeleton lines={3} />
+            ) : (
+              (auditQuery.data ?? []).map((a) => (
+                <div key={a.id} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between">
+                  <span>
+                    <strong>{a.action}</strong> — {a.details || 'Verified event'}
+                  </span>
+                  <span className="text-[#475569]">{new Date(a.timestamp).toLocaleString()}</span>
+                </div>
+              ))
+            )}
+          </Card>
+        )}
+
+        {activeTab === 'health' && (
+          <Card className="space-y-3">
+            <h2 className="font-bold text-lg">External Telemetry & AI Integration Health</h2>
+            {healthQuery.isLoading ? (
+              <LoadingSkeleton lines={3} />
+            ) : (
+              (healthQuery.data ?? []).map((h) => (
+                <div key={h.service} className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex justify-between text-xs">
+                  <div>
+                    <div className="font-bold text-sm">{h.service}</div>
+                    <div className="text-[#475569]">{h.mode}</div>
+                  </div>
+                  <span className="font-bold text-[#0F766E]">
+                    {h.status} ({h.latency_ms} ms)
+                  </span>
+                </div>
+              ))
+            )}
+          </Card>
+        )}
+      </div>
+    </AppShell>
   );
 };

@@ -1,13 +1,19 @@
-import os
+"""Application settings loaded from environment variables."""
+
 import json
 import sys
 from pathlib import Path
-from typing import List, Union
-from pydantic import field_validator, model_validator, ValidationInfo
+from typing import Any, Literal
+
+from pydantic import ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_JWT_PLACEHOLDER = "breatheiq-super-secret-key-change-in-production-min-32-chars-long"
 
 
 class Settings(BaseSettings):
+    """Typed runtime settings validated at startup."""
+
     PROJECT_NAME: str = "BreatheIQ"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"  # development | demo | production | testing
@@ -15,14 +21,22 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # JWT Settings (JWT only - no Firebase/OAuth)
-    JWT_SECRET_KEY: str = "breatheiq-super-secret-key-change-in-production-min-32-chars-long"
+    JWT_SECRET_KEY: str = DEFAULT_JWT_PLACEHOLDER
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    COOKIE_SECURE: bool = False  # Set to True in demo and production (HTTPS)
-    COOKIE_SAMESITE: str = "lax"  # "strict" or "lax" for same-domain; "none" for cross-domain
+    COOKIE_SECURE: bool = False  # Set True in demo and production (HTTPS)
+    # SameSite=strict for canonical same-origin Docker/Render; set "none" via env for cross-site Vercel+Render
+    COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "strict"
 
-    # Database (PostgreSQL for production; SQLite fallback for zero-setup demo)
+    # Security & Resilience
+    RATE_LIMIT_ENABLED: bool = True
+    AUTH_LOCKOUT_THRESHOLD: int = 5
+    AUTH_LOCKOUT_MINUTES: int = 15
+    MAX_REQUEST_BODY_BYTES: int = 1_048_576
+    CACHE_MAX_SIZE: int = 128
+
+    # Database (PostgreSQL for production; SQLite fallback for local/demo)
     DATABASE_URL: str = "sqlite+aiosqlite:///./breatheiq.db"
 
     # Environmental Demo Mode
@@ -34,7 +48,7 @@ class Settings(BaseSettings):
     OPENAQ_API_KEY: str = ""
 
     # CORS Allowed Origins
-    ALLOWED_ORIGINS: Union[List[str], str] = [
+    ALLOWED_ORIGINS: list[str] | str = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -44,35 +58,36 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str], None]) -> List[str]:
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        """Normalize ALLOWED_ORIGINS from list, JSON string, CSV string, or single URL."""
         if v is None:
             return []
+        origins: list[str]
         if isinstance(v, list):
-            origins = v
+            origins = [str(item) for item in v]
         elif isinstance(v, str):
-            v = v.strip()
-            if not v:
+            stripped = v.strip()
+            if not stripped:
                 return []
-            if v.startswith("[") and v.endswith("]"):
+            if stripped.startswith("[") and stripped.endswith("]"):
                 try:
-                    parsed = json.loads(v)
-                    if isinstance(parsed, list):
-                        origins = parsed
-                    else:
-                        origins = [str(parsed)]
+                    parsed = json.loads(stripped)
+                    origins = [str(item) for item in parsed] if isinstance(parsed, list) else [str(parsed)]
                 except json.JSONDecodeError:
-                    cleaned = v.strip("[]").replace("'", "").replace('"', "")
+                    cleaned = stripped.strip("[]").replace("'", "").replace('"', "")
                     origins = [item.strip() for item in cleaned.split(",") if item.strip()]
-            elif "," in v:
-                origins = [item.strip() for item in v.split(",") if item.strip()]
+            elif "," in stripped:
+                origins = [item.strip() for item in stripped.split(",") if item.strip()]
             else:
-                origins = [v]
+                origins = [stripped]
         else:
-            raise ValueError(f"Invalid type for ALLOWED_ORIGINS: {type(v)}. Expected JSON array string or comma-separated URLs.")
+            raise ValueError(
+                f"Invalid type for ALLOWED_ORIGINS: {type(v)}. Expected JSON array string or comma-separated URLs."
+            )
 
-        cleaned_origins: List[str] = []
+        cleaned_origins: list[str] = []
         for origin in origins:
-            origin_str = str(origin).strip().rstrip("/")
+            origin_str = origin.strip().rstrip("/")
             if not origin_str:
                 continue
             if origin_str == "*":
@@ -80,9 +95,9 @@ class Settings(BaseSettings):
                     "Wildcard '*' origin cannot be combined with credentials (allow_credentials=True). "
                     "Specify explicit origins (e.g. 'https://breatheiq.vercel.app') or leave empty for same-origin."
                 )
-            if not (origin_str.startswith("http://") or origin_str.startswith("https://")):
+            if not origin_str.startswith(("http://", "https://")):
                 raise ValueError(
-                    f"Invalid CORS origin '{origin_str}': each origin must begin with 'http://' or 'https://' (e.g., https://your-app.vercel.app)"
+                    f"Invalid CORS origin '{origin_str}': each origin must begin with 'http://' or 'https://'"
                 )
             cleaned_origins.append(origin_str)
 
@@ -91,68 +106,73 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
+        """Normalize SQLite and PostgreSQL async driver prefixes."""
         base_dir = Path(__file__).resolve().parent.parent.parent
         canonical_sqlite = f"sqlite+aiosqlite:///{(base_dir / 'breatheiq.db').as_posix()}"
         if not v:
             return canonical_sqlite
-        v = str(v).strip()
-        if "sqlite" in v and "./breatheiq.db" in v:
+        url = str(v).strip()
+        if "sqlite" in url and "./breatheiq.db" in url:
             return canonical_sqlite
-        # Translate asyncpg incompatible sslmode to ssl
-        if "sslmode=" in v:
-            v = v.replace("sslmode=", "ssl=")
-        # Render / Supabase / Heroku provide postgres:// or postgresql:// without async dialect
-        if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif v.startswith("postgresql://") and "+asyncpg" not in v:
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        elif v.startswith("sqlite:///") and "+aiosqlite" not in v:
-            return v.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
-        return v
+        if "sslmode=" in url:
+            url = url.replace("sslmode=", "ssl=")
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgresql://") and "+asyncpg" not in url:
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if url.startswith("sqlite:///") and "+aiosqlite" not in url:
+            return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+        return url
 
     @field_validator("DEBUG", mode="before")
     @classmethod
-    def parse_debug_flag(cls, v: Union[bool, str, int]) -> bool:
+    def parse_debug_flag(cls, v: Any) -> bool:
+        """Normalize boolean string flags cleanly."""
         if isinstance(v, bool):
             return v
         if isinstance(v, (str, int)):
             return str(v).strip().lower() in ("true", "1", "yes", "t")
         return False
 
+    @field_validator("COOKIE_SAMESITE", mode="before")
+    @classmethod
+    def normalize_samesite(cls, v: Any) -> str:
+        """Normalize SameSite cookie attribute lowercase."""
+        if isinstance(v, str):
+            return v.strip().lower()
+        return str(v)
+
     @field_validator("JWT_SECRET_KEY")
     @classmethod
     def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
+        """Reject weak or default JWT secret in production."""
         env = info.data.get("ENVIRONMENT", "development")
-        if env == "production":
-            default_placeholder = "breatheiq-super-secret-key-change-in-production-min-32-chars-long"
-            if not v or v == default_placeholder or len(v) < 32:
-                raise ValueError(
-                    "Production environment requires a strong, non-default JWT_SECRET_KEY with at least 32 characters."
-                )
+        if env == "production" and (not v or v == DEFAULT_JWT_PLACEHOLDER or len(v) < 32):
+            raise ValueError(
+                "Production environment requires a strong, non-default JWT_SECRET_KEY with at least 32 characters."
+            )
         return v
 
     @model_validator(mode="after")
     def validate_production_and_cookies(self) -> "Settings":
-        if self.ENVIRONMENT in ("demo", "production"):
-            if "COOKIE_SECURE" not in self.model_fields_set:
-                self.COOKIE_SECURE = True
+        """Enforce secure cookies in hosted demo/production environments."""
+        if self.ENVIRONMENT in ("demo", "production") and "COOKIE_SECURE" not in self.model_fields_set:
+            self.COOKIE_SECURE = True
+        if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE and self.ENVIRONMENT != "development":
+            self.COOKIE_SECURE = True
         return self
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        extra="ignore"
+        extra="ignore",
     )
 
 
 try:
     settings = Settings()
-except Exception as _e:
+except Exception as exc:  # noqa: BLE001 — fail fast with clear operator guidance at startup
     sys.stderr.write(
-        f"\n[FATAL CONFIGURATION ERROR] Failed to load application settings: {_e}\n"
-        f"Verify your environment variables. In particular, ALLOWED_ORIGINS accepts:\n"
-        f"  - Empty / unset: defaults to local development origins\n"
-        f"  - Single origin: 'https://breatheiq.vercel.app'\n"
-        f"  - Comma-separated: 'https://breatheiq.vercel.app, https://preview.vercel.app'\n"
-        f"  - JSON array: '[\"https://breatheiq.vercel.app\"]'\n\n"
+        f"\n[FATAL CONFIGURATION ERROR] Failed to load application settings: {exc}\n"
+        "Verify your environment variables (ALLOWED_ORIGINS, JWT_SECRET_KEY, DATABASE_URL).\n\n"
     )
     sys.exit(1)

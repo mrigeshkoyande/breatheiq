@@ -71,3 +71,27 @@ async def test_naqi_api_endpoint(client):
     assert data["is_valid"] is True
     assert data["category"] == "Good"
     assert data["aqi"] <= 50
+
+
+def test_sub_index_continuous_gap_and_edge_cases():
+    # Fractional gap ranges (e.g. 30.05 PM2.5, 400.5 NH3, 1.005 CO) must interpolate rather than drop to 0
+    assert calculate_sub_index("pm25", 30.05) == 51
+    assert calculate_sub_index("nh3", 400.5) == 101
+    assert calculate_sub_index("co", 1.005) == 51
+    # Clamping above max statutory bracket and rejecting negative/unknown pollutants
+    assert calculate_sub_index("pm25", 750.0) == 500
+    assert calculate_sub_index("pm25", -1.0) is None
+    assert calculate_sub_index("benzene", 10.0) is None
+    assert get_category_info(450)[0] == "Severe"
+
+
+@pytest.mark.asyncio
+async def test_naqi_breakpoints_and_factors_endpoints(client):
+    bp = await client.get("/api/v1/engines/naqi/breakpoints")
+    assert bp.status_code == 200
+    assert "pm25" in bp.json()["pollutants"]
+
+    factors = await client.get("/api/v1/engines/factors")
+    assert factors.status_code == 200
+    assert factors.json()["transit_emissions"]["petrol_car_solo"]["co2_g_per_km"] == 180.0
+

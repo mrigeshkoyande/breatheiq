@@ -1,214 +1,199 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
+import { useAuthConfig } from '../api/hooks';
+import { Button, buttonStyles } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { SkipLink } from '../components/layout/SkipLink';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
+  const { data: authConfig } = useAuthConfig();
   const navigate = useNavigate();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const showDemoQuickFill = authConfig?.demo_mode === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError('');
+    if (!email.trim() || !password) {
+      setError('Please enter both your email address and password.');
+      return;
+    }
     setLoading(true);
-
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate('/app/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Invalid credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  const setDemoCredentials = (demoEmail: string) => {
+  const quickFillDemo = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('Password123!');
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] flex flex-col justify-between">
-      {/* Header */}
-      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white/70 backdrop-blur-md">
-        <Link to="/" className="flex items-center gap-3">
-          <img src="/logo-mark.webp" alt="BreatheIQ Mark" className="w-8 h-8 rounded-lg" />
-          <div className="flex flex-col">
-            <span className="font-heading font-bold text-lg leading-none text-[#182A29]">
-              Breathe<span className="text-[#0F766E]">IQ</span>
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#64748B]">
-              Environmental Sanctuary
-            </span>
-          </div>
+    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+      <SkipLink />
+      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 backdrop-blur-md">
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
+          <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
         </Link>
-        <Link to="/" className="text-xs font-semibold text-[#0F766E] hover:underline">
-          Back to Platform
-        </Link>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[#475569] hidden sm:inline">Need an account?</span>
+          <Link to="/signup" className={buttonStyles({ variant: 'outline', size: 'sm' })}>
+            Create Account
+          </Link>
+        </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 flex items-center justify-center p-4 lg:p-10">
-        <div className="w-full max-w-5xl bg-white rounded-3xl border border-[#E2E8F0] shadow-elevated overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-          {/* Left Column: Atmospheric Showcase */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#E9FEFB] via-[#DDF2F0] to-[#A8ECE5] p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#E2E8F0] text-[10px] font-bold text-[#0F766E] uppercase tracking-wider mb-6">
-                <span className="w-2 h-2 rounded-full bg-[#2F9E62] animate-pulse" />
-                CPCB Telemetry Synchronized
+      <main id="main-content" className="flex-1 flex items-center justify-center p-4 py-10">
+        <div className="max-w-4xl w-full grid md:grid-cols-2 gap-8 items-center">
+          <div className="hidden md:flex flex-col gap-6 pr-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DDF5EC] text-[#0F766E] w-fit text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              JWT Session Security
+            </div>
+            <p className="text-3xl font-extrabold tracking-tight leading-tight">
+              Return to Your Family Atmospheric Command Center.
+            </p>
+            <p className="text-[#475569] leading-relaxed">
+              Sign in to access personalized Window Oracle schedules, family AirTwin sensitivity
+              alerts, indoor CADR filtration profiles, and saved impact records.
+            </p>
+            <Card className="bg-white/80 border-[#CCFBF1] space-y-2 p-5">
+              <div className="flex items-center gap-2 font-bold text-sm text-[#0F766E]">
+                <span
+                  aria-hidden="true"
+                  className="w-2 h-2 rounded-full bg-[#2F9E62] animate-pulse motion-reduce:animate-none"
+                />
+                Security Architecture
               </div>
-
-              <Link to="/" className="flex items-center gap-3 mb-2 group" title="BreatheIQ Home">
-                <img src="/logo-mark.webp" alt="Logo" className="w-10 h-10 rounded-xl shadow-sm group-hover:scale-105 transition-transform" />
-                <div>
-                  <h2 className="font-heading font-bold text-xl text-[#182A29]">
-                    Breathe<span className="text-[#0F766E]">IQ</span>
-                  </h2>
-                  <p className="text-[10px] font-bold tracking-widest text-[#64748B] uppercase">
-                    Atmospheric Precision
-                  </p>
-                </div>
-              </Link>
-
-              <p className="text-[#0F766E] font-heading font-semibold text-base mt-2">
-                Breathe Smarter. Live Healthier.
+              <p className="text-xs text-[#475569] leading-relaxed">
+                Access tokens reside strictly in volatile memory. Refresh sessions use rotating
+                HttpOnly cookies with family reuse detection and Argon2id password verification.
               </p>
-            </div>
-
-            <div className="relative z-10 my-8 space-y-4">
-              <div className="bg-white/85 backdrop-blur-sm rounded-xl p-4 border border-[#E2E8F0]/80 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" />
-                  <p className="text-xs text-[#3E4947] leading-relaxed">
-                    “Precision atmospheric intelligence for every breath you take — grounded in real-time continuous CPCB telemetry.”
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center gap-2 text-[#3E4947]">
-                  <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                  <span>Ground station telemetry with timestamped provenance</span>
-                </div>
-                <div className="flex items-center gap-2 text-[#3E4947]">
-                  <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                  <span>Diurnal thermal inversion forecasting</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Demo Accounts Pill Bar */}
-            <div className="relative z-10 pt-4 border-t border-[#0F766E]/15">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F766E] block mb-2">
-                One-Click Demo Accounts:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setDemoCredentials('user@breatheiq.org')}
-                  className="px-2 py-1 rounded bg-white/70 hover:bg-white text-[11px] font-medium text-[#182A29] border border-[#E2E8F0]"
-                >
-                  User
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoCredentials('moderator@breatheiq.org')}
-                  className="px-2 py-1 rounded bg-white/70 hover:bg-white text-[11px] font-medium text-[#182A29] border border-[#E2E8F0]"
-                >
-                  Moderator
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoCredentials('admin@breatheiq.org')}
-                  className="px-2 py-1 rounded bg-white/70 hover:bg-white text-[11px] font-medium text-[#182A29] border border-[#E2E8F0]"
-                >
-                  Admin
-                </button>
-              </div>
-            </div>
+            </Card>
           </div>
 
-          {/* Right Column: Sign In Form */}
-          <div className="lg:col-span-7 p-8 lg:p-12 flex flex-col justify-center">
-            <div className="max-w-md w-full mx-auto space-y-6">
-              <div>
-                <h1 className="font-heading font-bold text-2xl text-[#182A29]">
-                  Welcome back
-                </h1>
-                <p className="text-sm text-[#64748B] mt-1">
-                  Access your hyper-local air intelligence dashboard
-                </p>
+          <Card elevated className="p-6 sm:p-8">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold tracking-tight mb-1">Sign In</h1>
+              <p className="text-sm text-[#475569]">Enter your credentials to continue.</p>
+            </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium"
+              >
+                {error}
               </div>
+            )}
 
-              {error && (
-                <div className="p-3 bg-[#FDECEC] border border-[#F4A8A8] rounded-xl flex items-center gap-2.5 text-xs text-[#DC5252] font-medium">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  id="login-email"
-                  name="email"
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g., priya@example.com"
-                  required
-                />
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="login-password" className="text-xs font-semibold uppercase tracking-wider text-[#3E4947]">
-                      Password
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-xs font-semibold text-[#0F766E] hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+              <div className="space-y-1">
+                <div className="relative">
                   <Input
-                    id="login-password"
-                    name="password"
-                    type="password"
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
                     required
+                    autoComplete="current-password"
+                    className="pr-11"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 bottom-2.5 p-1 text-[#475569] hover:text-[#182A29] rounded"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="w-4 h-4" aria-hidden="true" />
+                    )}
+                  </button>
                 </div>
-
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
-                </Button>
-              </form>
-
-              <div className="pt-4 text-center border-t border-[#E2E8F0] text-xs text-[#64748B]">
-                Don't have an account?{' '}
-                <Link to="/signup" className="font-semibold text-[#0F766E] hover:underline">
-                  Sign up for BreatheIQ
-                </Link>
+                <div className="flex justify-end pt-0.5">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-semibold text-[#0F766E] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
-            </div>
-          </div>
+
+              <Button type="submit" disabled={loading} className="w-full h-11">
+                {loading ? (
+                  'Signing in...'
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Lock className="w-4 h-4" aria-hidden="true" />
+                    Sign In
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            {showDemoQuickFill && (
+              <div className="mt-6 pt-5 border-t border-[#E2E8F0]">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#475569] mb-2.5">
+                  Demo Mode Quick-Fill Accounts
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => quickFillDemo('user@breatheiq.org')}
+                    className="text-xs px-2.5 py-2 rounded-lg bg-[#DDF5EC] hover:bg-[#CCFBF1] text-[#0F766E] font-semibold transition"
+                  >
+                    Demo User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillDemo('moderator@breatheiq.org')}
+                    className="text-xs px-2.5 py-2 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#182A29] font-semibold transition"
+                  >
+                    Moderator
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillDemo('admin@breatheiq.org')}
+                    className="text-xs px-2.5 py-2 rounded-lg bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#92400E] font-semibold transition"
+                  >
+                    Admin
+                  </button>
+                </div>
+              </div>
+            )}
+          </Card>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="py-4 text-center text-xs text-[#64748B]">
-        BreatheIQ &copy; 2026. Challenge 6 — Urban Air Quality Assistant. All calculations adhere to CPCB benchmarks.
-      </footer>
     </div>
   );
 };

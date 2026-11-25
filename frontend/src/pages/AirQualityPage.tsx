@@ -1,170 +1,166 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Wind,
-  Layers,
-  Thermometer,
-  Droplets,
-  ShieldCheck,
-  RefreshCw,
-  Clock,
-  Compass,
-  ArrowRight
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { apiRequest } from '../services/api';
+import React, { useState } from 'react';
+import { Activity, Droplets, Layers, Thermometer, Wind } from 'lucide-react';
+import { useCities, useCurrentAirQuality, useHousehold } from '../api/hooks';
+import { AppShell } from '../components/layout/AppShell';
+import { AqiBadge } from '../components/ui/AqiBadge';
+import { Badge } from '../components/ui/Badge';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
+import { CpcbCategory } from '../utils/calculations';
 
 export const AirQualityPage: React.FC = () => {
-  const { user } = useAuth();
-  const [airData, setAirData] = useState<any>(null);
-  const [selectedCity, setSelectedCity] = useState('Mumbai');
-  const [loading, setLoading] = useState(true);
+  const { data: household } = useHousehold();
+  const { data: cities = [] } = useCities();
+  const [cityOverride, setCityOverride] = useState<string | null>(null);
+  const selectedCity = cityOverride ?? household?.city ?? 'Mumbai';
 
-  const fetchAQI = async (city: string) => {
-    setLoading(true);
-    try {
-      const data = await apiRequest(`/air-quality/current?city=${encodeURIComponent(city)}`);
-      setAirData(data);
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: airData,
+    isLoading,
+    error,
+    refetch,
+  } = useCurrentAirQuality(selectedCity);
 
-  useEffect(() => {
-    fetchAQI(selectedCity);
-  }, [selectedCity]);
+  const category: CpcbCategory =
+    airData?.naqi.category && airData.naqi.category !== 'Incomplete Data'
+      ? airData.naqi.category
+      : 'Moderate';
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Air Quality Deep Dive</span>
+    <AppShell title="Atmospheric Command Center">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <Activity className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Multi-Pollutant Atmospheric Readings
+            </h1>
+            <p className="text-sm text-[#475569]">
+              Station and modeled particulate readings with statutory CPCB NAQI sub-indices.
+            </p>
           </div>
-
-          <div className="flex items-center gap-3 text-xs">
-            <label htmlFor="air-quality-city-select" className="sr-only">
-              Select City
-            </label>
-            <select
-              id="air-quality-city-select"
-              name="air_quality_city"
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="bg-[#F8FAF7] border border-[#CBD5E1] rounded-lg px-2.5 py-1 font-semibold"
-            >
-              <option value="Mumbai">Mumbai</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Bengaluru">Bengaluru</option>
-              <option value="Kolkata">Kolkata</option>
-              <option value="Pune">Pune</option>
-            </select>
-            <Link
-              to="/app/dashboard"
-              className="px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-            >
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
-        <div>
-          <h1 className="text-2xl font-black text-[#182A29]">Air Quality & Ground Station Telemetry</h1>
-          <p className="text-xs text-[#64748B] mt-1">
-            Verified Central Pollution Control Board (CPCB) statutory breakpoints and sub-indices.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="py-20 flex justify-center items-center gap-2 text-xs font-bold text-[#0F766E]">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Updating Telemetry...</span>
-          </div>
-        ) : airData ? (
-          <>
-            {/* Overview Dial Banner */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-              <div className="space-y-2 text-center md:text-left">
-                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#DDF5EC] text-[#0F766E]">
-                  {airData.source} OBSERVATION
-                </span>
-                <h2 className="text-xl font-black text-[#182A29]">{airData.location_name}</h2>
-                <p className="text-xs text-[#64748B]">
-                  Dominant Driver: <strong>{airData.naqi.dominant_pollutant}</strong> · Monitored Parameters: 6
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center font-black text-white shadow-md"
-                  style={{ backgroundColor: airData.naqi.color }}
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Select city">
+            {(cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']).map(
+              (c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={selectedCity.toLowerCase() === c.toLowerCase()}
+                  onClick={() => setCityOverride(c)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${
+                    selectedCity.toLowerCase() === c.toLowerCase()
+                      ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                      : 'bg-white text-[#334155] border-[#CBD5E1]'
+                  }`}
                 >
-                  <span className="text-3xl leading-none">{airData.naqi.aqi}</span>
-                  <span className="text-[10px] uppercase">NAQI</span>
-                </div>
+                  {c}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {isLoading && <LoadingSkeleton lines={5} label="Loading atmospheric pollutant telemetry..." />}
+        {error && (
+          <ErrorBanner
+            message={error instanceof Error ? error.message : 'Unable to fetch air telemetry.'}
+            onRetry={() => void refetch()}
+          />
+        )}
+
+        {airData && !isLoading && (
+          <>
+            <Card elevated className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <span className="text-base font-black uppercase" style={{ color: airData.naqi.color }}>
-                    {airData.naqi.category}
-                  </span>
-                  <span className="text-xs text-[#64748B] block mt-0.5">
-                    Updated {new Date(airData.timestamp_utc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
-                  </span>
+                  <h2 className="text-xl font-bold">{airData.location_name}</h2>
+                  <p className="text-xs text-[#475569]">
+                    Timestamp: {new Date(airData.timestamp_utc).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge badgeType={airData.source} />
+                  <AqiBadge aqi={airData.naqi.aqi ?? 0} category={category} />
                 </div>
               </div>
-            </div>
 
-            {/* Pollutant Sub-index Breakdown */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(airData.naqi.sub_indices).map(([key, item]: [string, any]) => (
-                <div key={key} className="bg-white rounded-xl border border-[#E2E8F0] p-4 space-y-3 shadow-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-black text-[#182A29]">{item.pollutant}</span>
-                    <span
-                      className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    >
-                      {item.category}
-                    </span>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                {[
+                  { label: 'PM2.5', value: `${airData.pm25} µg/m³` },
+                  { label: 'PM10', value: `${airData.pm10} µg/m³` },
+                  { label: 'NO2', value: `${airData.no2} µg/m³` },
+                  { label: 'SO2', value: `${airData.so2} µg/m³` },
+                  { label: 'CO', value: `${airData.co} mg/m³` },
+                  { label: 'O3', value: `${airData.o3} µg/m³` },
+                ].map((p) => (
+                  <div key={p.label} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <div className="text-xs font-bold text-[#475569]">{p.label}</div>
+                    <div className="text-base font-extrabold mt-1">{p.value}</div>
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-[#182A29]">
-                      {item.concentration} <span className="text-xs font-normal text-[#64748B]">{item.unit}</span>
+                ))}
+              </div>
+            </Card>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="space-y-3">
+                <h2 className="font-bold text-lg">Meteorological Dispersion Vectors</h2>
+                <div className="space-y-2.5 text-sm">
+                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <span className="flex items-center gap-2 text-[#475569]">
+                      <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                      Wind Speed
                     </span>
-                    <span className="text-xs font-bold text-[#64748B]">Sub-index: {item.sub_index}</span>
+                    <strong>{airData.wind_speed_ms} m/s</strong>
                   </div>
-                  <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <span className="flex items-center gap-2 text-[#475569]">
+                      <Thermometer className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                      Temperature
+                    </span>
+                    <strong>{airData.temperature_c} °C</strong>
+                  </div>
+                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <span className="flex items-center gap-2 text-[#475569]">
+                      <Droplets className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                      Relative Humidity
+                    </span>
+                    <strong>{airData.relative_humidity_pct}%</strong>
+                  </div>
+                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <span className="flex items-center gap-2 text-[#475569]">
+                      <Layers className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                      Mixing Height
+                    </span>
+                    <strong>{airData.boundary_layer_height_m ?? 450} m</strong>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="space-y-3">
+                <h2 className="font-bold text-lg">CPCB Sub-Index Breakdown</h2>
+                <div className="space-y-2.5">
+                  {Object.values(airData.naqi.sub_indices).map((sub) => (
                     <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(100, (item.sub_index / 500) * 100)}%`,
-                        backgroundColor: item.color,
-                      }}
-                    />
-                  </div>
+                      key={sub.pollutant}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-sm"
+                    >
+                      <div>
+                        <span className="font-bold">{sub.pollutant}</span>{' '}
+                        <span className="text-xs text-[#475569]">
+                          ({sub.concentration} {sub.unit})
+                        </span>
+                      </div>
+                      <span className="font-bold text-[#0F766E]">
+                        {sub.sub_index} · {sub.category}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* Health Advisory */}
-            <div className="bg-[#DDF5EC]/30 border border-[#A7E8C6]/50 rounded-2xl p-6 flex items-start gap-3 text-xs">
-              <ShieldCheck className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-[#0F766E] block mb-1">Official CPCB Health Advisory</span>
-                <p className="text-[#3E4947] leading-relaxed">{airData.naqi.health_advisory}</p>
-              </div>
+              </Card>
             </div>
           </>
-        ) : null}
-      </main>
-    </div>
+        )}
+      </div>
+    </AppShell>
   );
 };

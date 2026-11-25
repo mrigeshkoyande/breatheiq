@@ -1,304 +1,206 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Users,
-  AlertTriangle,
-  Flame,
-  Truck,
-  Building,
-  Plus,
-  ThumbsUp,
-  Filter,
-  RefreshCw,
-  Clock,
-  ShieldCheck,
-  CheckCircle2
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { MessageSquareHeart, Plus, ThumbsUp } from 'lucide-react';
+import { useCommunityReports, useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
-
-interface CommunityReport {
-  id: number;
-  report_type: string;
-  severity: string;
-  location_name: string;
-  description: string;
-  upvote_count: number;
-  status: string;
-  created_at: string;
-}
+import { CommunityReport } from '../types/api';
+import { AppShell } from '../components/layout/AppShell';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
 
 export const CommunityPage: React.FC = () => {
-  const { user } = useAuth();
-  const [reports, setReports] = useState<CommunityReport[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState('all');
+  const qc = useQueryClient();
+  const { data: household } = useHousehold();
+  const [filterSeverity, setFilterSeverity] = useState('');
+  const { data: reports = [], isLoading, error, refetch } = useCommunityReports(undefined, filterSeverity);
 
-  // New report form state
   const [reportType, setReportType] = useState('construction_dust');
-  const [severity, setSeverity] = useState('moderate');
-  const [locationName, setLocationName] = useState('SV Road Metro Line Corridor, Andheri West');
+  const [severity, setSeverity] = useState('severe');
+  const [locationName, setLocationName] = useState('');
   const [description, setDescription] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState('');
 
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const data = await apiRequest<CommunityReport[]>('/community/reports');
-      setReports(data);
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const handleUpvote = async (id: number) => {
-    try {
-      const updated = await apiRequest<CommunityReport>(`/community/reports/${id}/verify`, { method: 'POST' });
-      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, upvote_count: updated.upvote_count } : r)));
-    } catch {
-      // Handled
-    }
-  };
-
-  const handleCreateReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!locationName.trim()) return;
-    setSubmitting(true);
-    try {
-      const created = await apiRequest<CommunityReport>('/community/reports', {
+  const submitMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<CommunityReport>('/community/reports', {
         method: 'POST',
         body: JSON.stringify({
           report_type: reportType,
           severity,
           location_name: locationName.trim(),
+          latitude: household?.latitude ?? 19.076,
+          longitude: household?.longitude ?? 72.8777,
           description: description.trim(),
-          latitude: 19.0760,
-          longitude: 72.8777,
         }),
-      });
-      setReports((prev) => [created, ...prev]);
+      }),
+    onSuccess: () => {
+      setLocationName('');
       setDescription('');
-      setShowAddForm(false);
-    } catch {
-      // Handled
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      void qc.invalidateQueries({ queryKey: ['community', 'reports'] });
+    },
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : 'Unable to submit report.');
+    },
+  });
 
-  const filteredReports =
-    filterType === 'all' ? reports : reports.filter((r) => r.report_type === filterType);
+  const upvoteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest<CommunityReport>(`/community/reports/${id}/verify`, { method: 'POST' }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['community', 'reports'] }),
+    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Unable to upvote report.'),
+  });
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Community Air Watch</span>
-          </div>
-
-          <Link
-            to="/app/dashboard"
-            className="text-xs px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-          >
-            Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 lg:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <AppShell title="Community Air Watch">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black text-[#182A29]">Air Watch Community Reports</h1>
-            <p className="text-xs text-[#64748B] mt-1">
-              Crowdsourced hyper-local pollution observations. Reports carry an UNVERIFIED tag until peer-confirmed.
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <MessageSquareHeart className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Community Smog Watch Feed
+            </h1>
+            <p className="text-sm text-[#475569]">
+              Citizen hazard reports marked UNVERIFIED until reviewed by community moderators.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] flex items-center gap-2 transition self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Report Pollution Incident</span>
-          </button>
+          <Badge badgeType="USER-REPORTED" />
         </div>
 
-        {/* Add Report Form */}
-        {showAddForm && (
-          <form
-            onSubmit={handleCreateReport}
-            className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-4"
-          >
-            <h3 className="text-sm font-black text-[#182A29]">Log Hyper-Local Incident Observation</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label htmlFor="incident-type-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Incident Type</label>
+        {(error || actionError) && (
+          <ErrorBanner
+            message={actionError || (error instanceof Error ? error.message : 'Unable to fetch reports.')}
+            onRetry={() => void refetch()}
+          />
+        )}
+
+        <div className="grid lg:grid-cols-12 gap-6">
+          <Card className="lg:col-span-4 space-y-4 h-fit">
+            <h2 className="font-bold text-lg">Report Local Hazard</h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!locationName.trim()) return;
+                setActionError('');
+                submitMutation.mutate();
+              }}
+              className="space-y-3"
+            >
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="comm-type" className="text-xs font-semibold uppercase text-[#334155]">
+                  Hazard Type
+                </label>
                 <select
-                  id="incident-type-select"
-                  name="incident_type"
+                  id="comm-type"
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
+                  className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="construction_dust">Uncovered Construction Dust</option>
-                  <option value="garbage_burning">Open Waste / Garbage Smoldering</option>
-                  <option value="stubble_burning">Biomass / Stubble Smoke</option>
-                  <option value="industrial_plume">Industrial Chimney Plume</option>
-                  <option value="traffic_congestion">Severe Diesel Traffic Stagnation</option>
+                  <option value="construction_dust">Construction Dust</option>
+                  <option value="garbage_burning">Garbage Burning</option>
+                  <option value="traffic_congestion">Diesel Traffic Plume</option>
+                  <option value="industrial_plume">Industrial Emission</option>
                 </select>
               </div>
-
-              <div>
-                <label htmlFor="incident-severity-select" className="text-[11px] font-bold text-[#64748B] block mb-1">Severity Rating</label>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="comm-sev" className="text-xs font-semibold uppercase text-[#334155]">
+                  Severity
+                </label>
                 <select
-                  id="incident-severity-select"
-                  name="severity"
+                  id="comm-sev"
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
+                  className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="moderate">Moderate (Noticeable haze/dust)</option>
-                  <option value="severe">Severe (Acrid odor, low visibility)</option>
-                  <option value="hazardous">Hazardous (Immediate respiratory choking)</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="severe">Severe</option>
+                  <option value="hazardous">Hazardous</option>
                 </select>
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="incident-location-input" className="text-[11px] font-bold text-[#64748B] block mb-1">Location Details</label>
-              <input
-                id="incident-location-input"
-                name="location_name"
-                type="text"
+              <Input
+                label="Corridor / Junction"
+                placeholder="e.g. Link Road & SV Road"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
-                placeholder="Street address, landmark, intersection..."
-                className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
+                required
               />
-            </div>
-
-            <div>
-              <label htmlFor="incident-description-textarea" className="text-[11px] font-bold text-[#64748B] block mb-1">Description</label>
-              <textarea
-                id="incident-description-textarea"
-                name="description"
+              <Input
+                label="Observation Note"
+                placeholder="Visible smoke or dust plume"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-                placeholder="Observed details (e.g. trucks unloading loose sand without tarp cover)..."
-                className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7]"
               />
+              <Button type="submit" disabled={submitMutation.isPending} className="w-full">
+                <Plus className="w-4 h-4" aria-hidden="true" />
+                {submitMutation.isPending ? 'Submitting...' : 'Submit Citizen Report'}
+              </Button>
+            </form>
+          </Card>
+
+          <div className="lg:col-span-8 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-bold text-sm">Recent Corridor Reports</span>
+              <select
+                aria-label="Filter reports by severity"
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-1.5 text-xs font-semibold"
+              >
+                <option value="">All Severities</option>
+                <option value="moderate">Moderate</option>
+                <option value="severe">Severe</option>
+                <option value="hazardous">Hazardous</option>
+              </select>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="text-xs px-4 py-2 rounded-xl border border-[#CBD5E1] text-[#64748B]"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="text-xs font-bold px-4 py-2 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59]"
-              >
-                {submitting ? 'Submitting...' : 'Post Observation'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs font-bold">
-          <span className="text-[#64748B] text-[11px] uppercase mr-1">Filter:</span>
-          {[
-            { id: 'all', label: 'All Incidents' },
-            { id: 'construction_dust', label: 'Construction Dust' },
-            { id: 'garbage_burning', label: 'Waste Burning' },
-            { id: 'traffic_congestion', label: 'Traffic Idling' },
-          ].map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFilterType(f.id)}
-              className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition ${
-                filterType === f.id
-                  ? 'bg-[#0F766E] text-white'
-                  : 'bg-white border border-[#CBD5E1] text-[#64748B] hover:bg-[#F1F5F9]'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Reports Feed */}
-        {loading ? (
-          <div className="py-20 flex justify-center items-center gap-2 text-xs font-bold text-[#0F766E]">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Fetching Community Feed...</span>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredReports.map((r) => (
-              <div
-                key={r.id}
-                className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-3"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
+            {isLoading ? (
+              <LoadingSkeleton lines={4} label="Loading community reports..." />
+            ) : reports.length === 0 ? (
+              <Card>
+                <p className="text-sm text-[#475569]">No community reports match this filter.</p>
+              </Card>
+            ) : (
+              reports.map((report) => (
+                <Card key={report.id} className="space-y-2.5">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-base">{report.location_name}</div>
+                      <div className="text-xs text-[#475569] capitalize">
+                        {report.report_type.replace('_', ' ')} · Severity: {report.severity}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <span
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                          r.status === 'VERIFIED'
-                            ? 'bg-[#DCFCE7] text-[#15803D]'
-                            : 'bg-[#FEF3C7] text-[#B45309]'
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                          report.status === 'VERIFIED'
+                            ? 'bg-[#DDF5EC] text-[#0F766E]'
+                            : 'bg-[#FEF3C7] text-[#92400E]'
                         }`}
                       >
-                        {r.status}
+                        {report.status}
                       </span>
-                      <span className="text-[10px] font-bold text-[#DC5252] uppercase bg-[#FEE2E2] px-2 py-0.5 rounded-full">
-                        {r.severity}
-                      </span>
-                      <span className="text-xs text-[#64748B] flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <Badge badgeType="USER-REPORTED" />
                     </div>
-
-                    <h3 className="text-sm font-bold text-[#182A29] pt-1">{r.location_name}</h3>
-                    <p className="text-xs text-[#475569] leading-relaxed">{r.description}</p>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleUpvote(r.id)}
-                    className="flex flex-col items-center justify-center bg-[#F8FAF7] border border-[#CBD5E1] hover:border-[#0F766E] text-[#0F766E] rounded-xl px-3 py-2 shrink-0 transition"
-                  >
-                    <ThumbsUp className="w-4 h-4 mb-0.5" />
-                    <span className="text-xs font-bold">{r.upvote_count}</span>
-                    <span className="text-[9px] uppercase tracking-tighter">Confirm</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+                  {report.description && <p className="text-sm text-[#334155]">{report.description}</p>}
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => upvoteMutation.mutate(report.id)}
+                    >
+                      <ThumbsUp className="w-3.5 h-3.5" aria-hidden="true" />
+                      Confirm ({report.upvote_count})
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      </div>
+    </AppShell>
   );
 };

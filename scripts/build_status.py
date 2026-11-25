@@ -61,6 +61,19 @@ def check_e2e_screenshots(path):
     desktop = os.path.exists(os.path.join(screenshot_dir, f"{clean_path}_desktop.png"))
     return mobile and tablet and desktop
 
+def count_component_lines(subdir: str) -> int:
+    """Count lines across extracted modular components for a composite page."""
+    folder = os.path.join("frontend", "src", "components", subdir)
+    if not os.path.isdir(folder):
+        return 0
+    total = 0
+    for fname in os.listdir(folder):
+        if fname.endswith((".ts", ".tsx")):
+            with open(os.path.join(folder, fname), "r", encoding="utf-8", errors="ignore") as f:
+                total += len(f.read().splitlines())
+    return total
+
+
 def audit_route(route, app_content):
     path = route["path"]
 
@@ -104,35 +117,37 @@ def audit_route(route, app_content):
 
     # Evaluate registered pages
     if path == "/":
-        if line_count >= 300:
+        composite_lines = line_count + count_component_lines("landing")
+        if composite_lines >= 300:
             evidence_prefix = "Verified across 3 viewports (390/768/1440px);" if has_e2e else "Functional layout;"
             return {
                 "status": status,
-                "evidence": f"{evidence_prefix} Complete Mumbai redesign ({line_count} lines); What-If simulator, bento grid, location search, FAQ",
+                "evidence": f"{evidence_prefix} Modular Mumbai landing ({line_count} page + {composite_lines - line_count} component lines); What-If simulator, bento grid, corridor selector",
                 "page": page_filename,
-                "lines": line_count
+                "lines": composite_lines
             }
         return {
             "status": "STUB",
-            "evidence": f"Incomplete layout ({line_count} lines)",
+            "evidence": f"Incomplete layout ({composite_lines} lines)",
             "page": page_filename,
-            "lines": line_count
+            "lines": composite_lines
         }
 
     if path == "/app/dashboard":
-        if line_count >= 300:
+        composite_lines = line_count + count_component_lines("dashboard")
+        if composite_lines >= 300:
             evidence_prefix = "Verified across 3 viewports (390/768/1440px);" if has_e2e else "Functional dashboard;"
             return {
                 "status": status,
-                "evidence": f"{evidence_prefix} Complete Andheri West dashboard ({line_count} lines); interactive routine, Window Oracle, AQI dial",
+                "evidence": f"{evidence_prefix} Modular Andheri West dashboard ({line_count} page + {composite_lines - line_count} component lines); interactive routine, Window Oracle, AQI dial",
                 "page": page_filename,
-                "lines": line_count
+                "lines": composite_lines
             }
         return {
             "status": "STUB",
-            "evidence": f"Incomplete dashboard ({line_count} lines)",
+            "evidence": f"Incomplete dashboard ({composite_lines} lines)",
             "page": page_filename,
-            "lines": line_count
+            "lines": composite_lines
         }
 
     if path in ["/login", "/signup", "/forgot-password", "/reset-password"]:

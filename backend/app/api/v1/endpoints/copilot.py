@@ -1,28 +1,33 @@
-"""
-backend/app/api/v1/endpoints/copilot.py
-Grounded Atmospheric Copilot Pipeline with Intent Classification,
-Evidence Retrieval, Fallback Templates, and Code-Based Safety & Evidence Validator.
+"""Grounded Atmospheric Copilot Pipeline.
+
+Includes adversarial prompt-injection filtering, domain intent classification,
+forecast-backed telemetry context retrieval, Gemini generation with labeled fallback,
+and deterministic code-based safety validation.
 """
 
+import asyncio
 import hashlib
-import time
+import logging
 import re
-from typing import Dict, Any, List, Optional
+import time
+from typing import Annotated, Any
+
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user_optional, get_db
 from app.core.config import settings
-from app.api.deps import get_db, get_current_user_optional
+from app.core.rate_limit import limiter
+from app.engines.ventilation import evaluate_window_oracle
 from app.models.auth import User
 from app.models.copilot import AITrace
+from app.schemas.app_schemas import CopilotChatRequest, CopilotChatResponse
 from app.services.air_data import air_data_service
-from app.engines.ventilation import evaluate_window_oracle
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/assistant", tags=["Atmospheric Assistant Copilot"])
 
-# Prompt injection patterns
 INJECTION_PATTERNS = [
     r"(?i)\bignore\s+(?:all\s+)?(?:previous|prior)\s+instructions\b",
     r"(?i)\bdisregard\s+(?:all\s+)?(?:previous|prior)\s+instructions\b",
@@ -32,51 +37,68 @@ INJECTION_PATTERNS = [
     r"(?i)\bforget\s+(?:all\s+)?your\s+rules\b",
 ]
 
-class CopilotChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=1000)
-    city: Optional[str] = "Mumbai"
-    lat: Optional[float] = 19.0760
-    lon: Optional[float] = 72.8777
-    user_profile: Optional[Dict[str, Any]] = None
+MEDICAL_DISCLAIMER_TEXT = (
+    "*Public health guidance only — not clinical medical advice. "
+    "Consult a licensed physician for medical symptoms.*"
+)
 
-class CopilotChatResponse(BaseModel):
-    reply: str
-    intent: str
-    source_badge: str
-    evidence_context: Dict[str, Any]
-    why_this_advice: str
-    limitations: str
-    validator_flags: List[str]
-    suggested_prompts: List[str]
-    is_fallback: bool
+SUGGESTED_PROMPTS_MAP: dict[str, list[str]] = {
+    "ROUTINE": [
+        "When is it safe to open windows today?",
+        "What is the best commute route right now?",
+        "How do I protect my child from morning smog?",
+    ],
+    "VENTILATION": [
+        "How does the thermal inversion work?",
+        "What CADR purifier do I need for my bedroom?",
+        "Should I open windows now?",
+    ],
+    "PURIFIER": [
+        "What is a Corsi-Rosenthal box?",
+        "How often should I clean the pre-filter?",
+        "Does a purifier remove cooking fumes?",
+    ],
+    "TRANSIT": [
+        "How much CO2 do I save by taking the metro?",
+        "Should I cycle in this AQI?",
+        "What mask is effective against PM2.5?",
+    ],
+    "HEALTH_ADVISORY": [
+        "What are the symptoms of PM2.5 exposure?",
+        "Is indoor air always safer than outdoor?",
+        "When is the next low-exposure window?",
+    ],
+    "GENERAL": [
+        "What is the dominant pollutant in Mumbai?",
+        "How is CPCB NAQI calculated?",
+        "What is the 24-hour smog forecast?",
+    ],
+}
+
 
 def detect_prompt_injection(query: str) -> bool:
-    """Detects adversarial prompt-injection attempts."""
-    for pattern in INJECTION_PATTERNS:
-        if re.search(pattern, query):
-            return True
-    return False
+    """Detect common adversarial prompt-injection signatures."""
+    return any(re.search(pattern, query) for pattern in INJECTION_PATTERNS)
+
 
 def classify_intent(query: str) -> str:
-    """Rule-based intent classifier for atmospheric domains."""
+    """Rule-based intent classifier for atmospheric guidance domains."""
     q = query.lower()
-    if any(k in q for k in ["routine", "morning walk", "jog", "exercise", "walk", "schedule", "run", "outside"]):
+    if any(k in q for k in ("routine", "morning walk", "jog", "exercise", "walk", "schedule", "run", "outside")):
         return "ROUTINE"
-    if any(k in q for k in ["window", "air out", "ventilat", "inversion", "open"]):
+    if any(k in q for k in ("window", "air out", "ventilat", "inversion", "open")):
         return "VENTILATION"
-    if any(k in q for k in ["purifier", "cadr", "hepa", "filter", "corsi", "cleaner"]):
+    if any(k in q for k in ("purifier", "cadr", "hepa", "filter", "corsi", "cleaner")):
         return "PURIFIER"
-    if any(k in q for k in ["commute", "transit", "route", "cleanroute", "metro", "car", "travel", "bike"]):
+    if any(k in q for k in ("commute", "transit", "route", "cleanroute", "metro", "car", "travel", "bike")):
         return "TRANSIT"
-    if any(k in q for k in ["symptom", "asthma", "cough", "chest", "mask", "n95", "doctor", "health", "child", "elderly"]):
+    if any(k in q for k in ("symptom", "asthma", "cough", "chest", "mask", "n95", "doctor", "health", "child", "elderly")):
         return "HEALTH_ADVISORY"
     return "GENERAL"
 
-def generate_fallback_template(intent: str, context: Dict[str, Any], city: str) -> str:
-    """
-    Rich, deterministic category template fallback using real context telemetry.
-    Ensures the assistant NEVER crashes or returns ungrounded empty text.
-    """
+
+def generate_fallback_template(intent: str, context: dict[str, Any], city: str) -> str:
+    """Deterministic category template fallback grounded in retrieved air context."""
     aqi = context.get("aqi", 150)
     category = context.get("category", "Moderate")
     dominant = context.get("dominant_pollutant", "PM2.5")
@@ -88,80 +110,63 @@ def generate_fallback_template(intent: str, context: Dict[str, Any], city: str) 
 
     if intent == "ROUTINE":
         return (
-            f"Based on real-time atmospheric data in {city} (NAQI {aqi} · {category}), surface particulate "
+            f"Based on atmospheric telemetry in {city} (NAQI {aqi} · {category}), surface particulate "
             f"density is currently {pm25} µg/m³ with {dominant} as the dominant driver. "
-            f"Peak winter nocturnal inversion typically traps emissions until mid-morning. "
-            f"Recommendation: Reschedule intense outdoor exercise to indoor spaces or postpone outdoor runs "
-            f"until the solar boundary layer expands around {best_start}."
+            f"Reschedule intense outdoor exercise indoors or postpone outdoor activity until "
+            f"boundary layer mixing improves around {best_start}."
         )
-
     if intent == "VENTILATION":
         return (
             f"Window Oracle analysis for {city} indicates current status: {current_action}. "
-            f"Due to nocturnal ground radiative cooling and boundary layer compression, ground particulates are elevated. "
-            f"The safest aeration window is modeled between {best_start} and {best_end}, when midday solar heating "
-            f"elevates the mixing height and surface wind speed assists particulate dilution."
+            f"The safest modeled aeration window is between {best_start} and {best_end}, when "
+            "solar boundary layer expansion and surface wind aid particulate dilution."
         )
-
     if intent == "PURIFIER":
         return (
-            f"For indoor spaces in {city} under current ambient PM2.5 of {pm25} µg/m³, a True HEPA (H13) air purifier "
-            f"sized for 5 Air Changes per Hour (ACH) is recommended. "
-            f"Required CADR is calculated by: Volume (m³) × 5.0. "
-            f"Keep windows sealed during operation to prevent continuous infiltration of ambient particles."
+            f"For indoor spaces in {city} under ambient PM2.5 of {pm25} µg/m³, size a True HEPA (H13) "
+            "air purifier for 5 Air Changes per Hour (CADR = Volume m³ x 5.0) and keep windows sealed."
         )
-
     if intent == "TRANSIT":
         return (
-            f"Commuting in {city} during {category} air quality (AQI {aqi}): "
-            f"Electric metro reduces per-passenger CO2 to 18 g/km (compared to 180 g/km for solo car travel) "
-            f"while avoiding roadside particulate plumes. If traveling above ground during rush hours, wear a fitted N95 mask."
+            f"Commuting in {city} during {category} air quality (AQI {aqi}): electric metro transit cuts "
+            "per-passenger exhaust to 18 g CO2/km (vs 180 g/km solo petrol car) while lowering roadside "
+            "particulate exposure. Wear a fitted N95 mask on arterial corridors."
         )
-
     if intent == "HEALTH_ADVISORY":
         return (
-            f"In {city}, the composite NAQI is currently {aqi} ({category}), driven primarily by {dominant}. "
-            f"CPCB guidance: Sensitive groups (children, elderly, and individuals with respiratory conditions) "
-            f"should avoid prolonged outdoor exertion. Use an N95 respirator if stepping out during twilight stagnation."
+            f"In {city}, composite NAQI is {aqi} ({category}), driven by {dominant}. "
+            "CPCB advisory: sensitive groups (children, seniors, respiratory conditions) should minimize "
+            "prolonged outdoor exertion and use an N95 respirator during peak stagnation."
         )
 
-    # General
     return (
-        f"Atmospheric summary for {city}: The National Air Quality Index is currently {aqi} ({category}) "
-        f"with a PM2.5 concentration of {pm25} µg/m³ [Data Provenance: {source}]. "
-        f"Dominant pollutant is {dominant}. Weather parameters show wind speed at {context.get('wind_speed', 3.0)} m/s."
+        f"Atmospheric summary for {city}: NAQI is {aqi} ({category}) with PM2.5 at {pm25} µg/m³ "
+        f"[Provenance: {source}]. Dominant pollutant is {dominant}; wind speed is "
+        f"{context.get('wind_speed', 3.0)} m/s."
     )
+
 
 def validate_and_correct_response(
     raw_text: str,
-    context: Dict[str, Any],
+    context: dict[str, Any],
     city: str,
-    source: str
-) -> (str, List[str]):
-    """
-    Code-Based Safety and Evidence Validator:
-    1. Enforces medical disclaimers on clinical terms.
-    2. Verifies numerical consistency against retrieved ground context; corrects hallucinations.
-    3. Enforces source citation badges.
-    """
-    flags = []
+    source: str,
+) -> tuple[str, list[str]]:
+    """Enforce medical boundary disclaimer, AQI numerical consistency, and source citation."""
+    flags: list[str] = []
     text = raw_text
 
-    # 1. Medical Claim Check
-    medical_terms = ["asthma", "inhaler", "diagnos", "prescrib", "bronchitis", "copd", "medication", "pill", "treat"]
-    if any(t in text.lower() for t in medical_terms):
+    medical_terms = ("asthma", "inhaler", "diagnos", "prescrib", "bronchitis", "copd", "medication", "pill", "treat")
+    if any(term in text.lower() for term in medical_terms):
         flags.append("MEDICAL_DISCLAIMER_ATTACHED")
         if "guidance only" not in text.lower():
-            text += "\n\n*Public health guidance only — not clinical medical advice. Consult a licensed physician for medical symptoms.*"
+            text += f"\n\n{MEDICAL_DISCLAIMER_TEXT}"
 
-    # 2. Numerical Consistency Check (AQI numbers)
     real_aqi = context.get("aqi")
-    if real_aqi is not None:
-        # Check for cited AQI numbers
+    if isinstance(real_aqi, (int, float)):
         aqi_matches = re.findall(r"\bAQI\s*(?:is|of|level|around|:)?\s*(\d{2,3})\b", text, re.IGNORECASE)
         for cited_str in aqi_matches:
             cited_val = int(cited_str)
-            # If difference exceeds 15% from context data, apply correction
             if abs(cited_val - real_aqi) / max(1, real_aqi) > 0.15:
                 flags.append("CORRECTION_APPLIED")
                 text = re.sub(
@@ -169,11 +174,10 @@ def validate_and_correct_response(
                     f"AQI {real_aqi} [CORRECTION_APPLIED: Verified context AQI is {real_aqi}]",
                     text,
                     count=1,
-                    flags=re.IGNORECASE
+                    flags=re.IGNORECASE,
                 )
 
-    # 3. Source Citation Enforcement
-    timestamp = context.get("timestamp", "Current")
+    timestamp = str(context.get("timestamp", "Current"))
     badge_str = f"[{source}: {city} · {timestamp[:16] if 'T' in timestamp else timestamp}]"
     if badge_str not in text:
         text += f"\n\n{badge_str}"
@@ -181,52 +185,117 @@ def validate_and_correct_response(
 
     return text, flags
 
+
+async def _fetch_gemini_reply(
+    request: Request,
+    city: str,
+    user_message: str,
+    context_data: dict[str, Any],
+    model_name: str,
+) -> tuple[str | None, int]:
+    """Call Google Gemini server-side using shared connection pool when configured."""
+    if not settings.GEMINI_API_KEY:
+        return None, 0
+
+    gemini_url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        f"?key={settings.GEMINI_API_KEY}"
+    )
+    system_instruction = (
+        "You are BreatheIQ Atmospheric Assistant. Give concise, grounded advice for families facing winter smog. "
+        "CRITICAL RULES: Ground recommendations only in provided context data. "
+        "Cite exact NAQI and PM2.5 values provided. Never invent clinical diagnoses or medications."
+    )
+    prompt = (
+        f"Context Telemetry for {city}:\n"
+        f"- NAQI: {context_data['aqi']} ({context_data['category']})\n"
+        f"- Dominant Pollutant: {context_data['dominant_pollutant']}\n"
+        f"- PM2.5: {context_data['pm25']} µg/m³\n"
+        f"- Best Window Ventilation: {context_data['best_window_start']} - {context_data['best_window_end']}\n"
+        f"- Current Action: {context_data['current_action']}\n\n"
+        f"User Query: {user_message}\n"
+        "Answer concisely in 2-4 sentences."
+    )
+    payload = {"contents": [{"parts": [{"text": f"{system_instruction}\n\n{prompt}"}]}]}
+    shared_client: httpx.AsyncClient | None = getattr(request.app.state, "http_client", None)
+
+    try:
+        if shared_client is not None:
+            res = await shared_client.post(gemini_url, json=payload, timeout=6.0)
+        else:
+            async with httpx.AsyncClient(timeout=6.0) as local_client:
+                res = await local_client.post(gemini_url, json=payload)
+
+        if res.status_code == 200:
+            data = res.json()
+            candidates = data.get("candidates", [])
+            if candidates:
+                raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                tokens = int(data.get("usageMetadata", {}).get("totalTokenCount", 120))
+                if raw_text:
+                    return str(raw_text), tokens
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        logger.warning("Gemini API request failed (%s); falling back to template.", exc)
+
+    return None, 0
+
+
 @router.post("/chat", response_model=CopilotChatResponse)
+@limiter.limit("20/minute")
 async def copilot_chat_endpoint(
+    request: Request,
     req: CopilotChatRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional)
-):
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User | None, Depends(get_current_user_optional)],
+) -> CopilotChatResponse:
+    """Process a Copilot turn with prompt-injection guard, forecast context, and validation."""
     start_time = time.time()
     city = req.city or "Mumbai"
+    lat = req.lat if req.lat is not None else 19.0760
+    lon = req.lon if req.lon is not None else 72.8777
     prompt_hash = hashlib.sha256(req.message.encode("utf-8")).hexdigest()
 
-    # Step 1: Prompt Injection Detection
     if detect_prompt_injection(req.message):
         latency_ms = int((time.time() - start_time) * 1000)
-        trace = AITrace(
-            user_id=current_user.id if current_user else None,
-            prompt_hash=prompt_hash,
-            intent="INJECTION_BLOCKED",
-            model="safety-firewall-v1",
-            latency_ms=latency_ms,
-            tokens_used=0,
-            validator_flags="INJECTION_DETECTED",
-            status="INJECTION_BLOCKED"
+        db.add(
+            AITrace(
+                user_id=current_user.id if current_user else None,
+                prompt_hash=prompt_hash,
+                intent="INJECTION_BLOCKED",
+                model="safety-firewall-v1",
+                latency_ms=latency_ms,
+                tokens_used=0,
+                validator_flags="INJECTION_DETECTED",
+                status="INJECTION_BLOCKED",
+            )
         )
-        db.add(trace)
         await db.commit()
-
         return CopilotChatResponse(
-            reply="I cannot fulfill requests that attempt to alter my safety instructions or system prompt. I am here to help you navigate winter smog and urban air quality.",
+            reply=(
+                "I cannot fulfill requests that attempt to alter my safety instructions or system prompt. "
+                "I am here to help you navigate winter smog and urban air quality."
+            ),
             intent="INJECTION_BLOCKED",
             source_badge="BLOCKED",
             evidence_context={},
             why_this_advice="The message matched adversarial prompt injection patterns.",
             limitations="System instructions and safety firewalls are non-negotiable.",
             validator_flags=["INJECTION_BLOCKED"],
-            suggested_prompts=["What is the current AQI in Mumbai?", "When is the best time to ventilate today?"],
-            is_fallback=True
+            suggested_prompts=[
+                "What is the current AQI in Mumbai?",
+                "When is the best time to ventilate today?",
+            ],
+            is_fallback=True,
         )
 
-    # Step 2: Intent Classification
     intent = classify_intent(req.message)
+    air_payload, forecast_series = await asyncio.gather(
+        air_data_service.get_current_air_quality(lat, lon, city),
+        air_data_service.get_forecast(lat, lon, hours=24),
+    )
+    oracle_out = evaluate_window_oracle(forecast_series)
 
-    # Step 3: Context Retrieval
-    air_payload = await air_data_service.get_current_air_quality(req.lat or 19.0760, req.lon or 72.8777, city)
-    oracle_out = evaluate_window_oracle()
-
-    context_data = {
+    context_data: dict[str, Any] = {
         "city": air_payload.city,
         "aqi": air_payload.naqi.aqi or 150,
         "category": air_payload.naqi.category or "Moderate",
@@ -240,94 +309,59 @@ async def copilot_chat_endpoint(
         "timestamp": air_payload.timestamp_utc,
         "best_window_start": oracle_out.best_window_start,
         "best_window_end": oracle_out.best_window_end,
-        "current_action": oracle_out.current_action
+        "current_action": oracle_out.current_action,
     }
 
-    # Step 4: LLM Generation or Category Template Fallback
-    raw_reply = None
-    is_fallback = False
     model_name = settings.GEMINI_MODEL or "gemini-2.5-flash"
-    tokens_used = 0
-
-    if settings.GEMINI_API_KEY:
-        try:
-            # Direct server-side Gemini API call
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={settings.GEMINI_API_KEY}"
-                system_instruction = (
-                    "You are BreatheIQ Atmospheric Assistant. You give concise, grounded advice for families facing winter smog. "
-                    "CRITICAL RULES: Ground all recommendations in the provided context data. "
-                    "Cite the exact AQI and PM2.5 provided. Do not invent medical diagnoses or medications."
-                )
-                prompt = (
-                    f"Context Telemetry for {city}:\n"
-                    f"- NAQI: {context_data['aqi']} ({context_data['category']})\n"
-                    f"- Dominant Pollutant: {context_data['dominant_pollutant']}\n"
-                    f"- PM2.5: {context_data['pm25']} µg/m³\n"
-                    f"- Best Window Ventilation: {context_data['best_window_start']} - {context_data['best_window_end']}\n"
-                    f"- Current Action: {context_data['current_action']}\n\n"
-                    f"User Query: {req.message}\n"
-                    f"Answer concisely in 2-4 sentences."
-                )
-                payload = {
-                    "contents": [{"parts": [{"text": f"{system_instruction}\n\n{prompt}"}]}]
-                }
-                res = await client.post(gemini_url, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        raw_reply = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        tokens_used = data.get("usageMetadata", {}).get("totalTokenCount", 120)
-        except Exception:
-            raw_reply = None
+    raw_reply, tokens_used = await _fetch_gemini_reply(
+        request, city, req.message, context_data, model_name
+    )
+    is_fallback = False
 
     if not raw_reply:
-        # Labeled Category Template Fallback
-        raw_reply = generate_fallback_template(intent, context_data, city)
+        raw_reply = (
+            f"Template guidance — not AI generated: "
+            f"{generate_fallback_template(intent, context_data, city)}"
+        )
         is_fallback = True
         model_name = "category-template-fallback"
 
-    # Step 5: Code-Based Safety & Evidence Validator
     validated_reply, validator_flags = validate_and_correct_response(
         raw_reply, context_data, city, air_payload.source
     )
 
     latency_ms = int((time.time() - start_time) * 1000)
-    status_code = "FALLBACK_TEMPLATE" if is_fallback else ("CORRECTION_APPLIED" if "CORRECTION_APPLIED" in validator_flags else "SUCCESS")
-
-    # Step 6: Trace Logging
-    trace = AITrace(
-        user_id=current_user.id if current_user else None,
-        prompt_hash=prompt_hash,
-        intent=intent,
-        model=model_name,
-        latency_ms=latency_ms,
-        tokens_used=tokens_used,
-        validator_flags=",".join(validator_flags),
-        status=status_code
+    trace_status = (
+        "FALLBACK_TEMPLATE"
+        if is_fallback
+        else ("CORRECTION_APPLIED" if "CORRECTION_APPLIED" in validator_flags else "SUCCESS")
     )
-    db.add(trace)
-    await db.commit()
 
-    # Contextual Follow-up Prompts
-    suggested = {
-        "ROUTINE": ["When is it safe to open windows today?", "What is the best commute route right now?", "How do I protect my child from morning smog?"],
-        "VENTILATION": ["How does the thermal inversion work?", "What CADR purifier do I need for my bedroom?", "Should I open windows now?"],
-        "PURIFIER": ["What is a Corsi-Rosenthal box?", "How often should I clean the pre-filter?", "Does a purifier remove cooking fumes?"],
-        "TRANSIT": ["How much CO2 do I save by taking the metro?", "Should I cycle in this AQI?", "What mask is effective against PM2.5?"],
-        "HEALTH_ADVISORY": ["What are the symptoms of PM2.5 exposure?", "Is indoor air always safer than outdoor?", "When is the next low-exposure window?"],
-        "GENERAL": ["What is the dominant pollutant in Mumbai?", "How is CPCB NAQI calculated?", "What is the 24-hour smog forecast?"]
-    }.get(intent, ["When to open windows?", "What is the current AQI?", "Best morning walk time?"])
+    db.add(
+        AITrace(
+            user_id=current_user.id if current_user else None,
+            prompt_hash=prompt_hash,
+            intent=intent,
+            model=model_name,
+            latency_ms=latency_ms,
+            tokens_used=tokens_used,
+            validator_flags=",".join(validator_flags),
+            status=trace_status,
+        )
+    )
+    await db.commit()
 
     return CopilotChatResponse(
         reply=validated_reply,
         intent=intent,
         source_badge=air_payload.source,
         evidence_context=context_data,
-        why_this_advice=f"Computed from {city} air telemetry (NAQI {context_data['aqi']} · {context_data['category']}) and Window Oracle inversion dynamics.",
+        why_this_advice=(
+            f"Computed from {city} air telemetry (NAQI {context_data['aqi']} · "
+            f"{context_data['category']}) and Window Oracle forecast dynamics."
+        ),
         limitations="Public health guidance only — not clinical medical advice.",
         validator_flags=validator_flags,
-        suggested_prompts=suggested,
-        is_fallback=is_fallback
+        suggested_prompts=SUGGESTED_PROMPTS_MAP.get(intent, SUGGESTED_PROMPTS_MAP["GENERAL"]),
+        is_fallback=is_fallback,
     )

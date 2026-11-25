@@ -8,13 +8,13 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 export const Badge: React.FC<BadgeProps> = ({ badgeType, className, ...props }) => {
-  const styles = {
+  const styles: Record<SourceBadgeType, string> = {
     LIVE: 'bg-[#DDF5EC] text-[#0F766E] border-transparent',
-    MODELED: 'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]',
-    FORECAST: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
-    ESTIMATED: 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
-    'USER-REPORTED': 'bg-[#F3E8FF] text-[#7E22CE] border-[#E9D5FF]',
-    DEMO: 'bg-[#F3F4F6] text-[#6B7280] border-[#CBD5E1] border-dashed',
+    MODELED: 'bg-[#F1F5F9] text-[#334155] border-[#CBD5E1]',
+    FORECAST: 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]',
+    ESTIMATED: 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A]',
+    'USER-REPORTED': 'bg-[#F3E8FF] text-[#6B21A8] border-[#E9D5FF]',
+    DEMO: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1] border-dashed',
   };
 
   return (
@@ -27,7 +27,10 @@ export const Badge: React.FC<BadgeProps> = ({ badgeType, className, ...props }) 
       {...props}
     >
       {badgeType === 'LIVE' && (
-        <span className="w-1.5 h-1.5 rounded-full bg-[#2F9E62] animate-pulse" />
+        <span
+          aria-hidden="true"
+          className="w-1.5 h-1.5 rounded-full bg-[#2F9E62] animate-pulse motion-reduce:animate-none"
+        />
       )}
       {badgeType}
     </span>

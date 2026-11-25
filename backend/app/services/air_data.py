@@ -1,25 +1,49 @@
-"""
-backend/app/services/air_data.py
-Air Data Ingestion Layer with Provenance Tracking & Statutory NAQI Computation.
-Supports:
-1. OpenAQ Provider (Ground stations / CAAQMS; LIVE)
-2. Open-Meteo Air Quality & Weather Provider (MODELED / FORECAST)
-3. Demo Air Data Provider (Deterministic offline winter smog profiles; DEMO)
-4. In-Memory TTL Cache (15 min current, 1 hr forecast)
+"""Air Data Ingestion Layer with Provenance Tracking & Statutory NAQI Computation.
+
+Provider fallback chain (never silent; source is recorded in payload):
+1. OpenAQ v3 Station Adapter (`LIVE`, when `OPENAQ_API_KEY` is configured and not in demo/test mode)
+2. Open-Meteo Atmospheric Air Quality & Weather (`MODELED` / `FORECAST`)
+3. Demo Air Data Provider (`DEMO`, deterministic diurnal winter smog profiles)
 """
 
-import time
 import asyncio
-import httpx
+import logging
+import time
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from pydantic import BaseModel, Field
-from app.engines.naqi import calculate_cpcb_naqi, NAQIResult
-from app.core.config import settings
+from collections import OrderedDict
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any, TypedDict, TypeVar
 
-# Preconfigured Indian Metropolitan Corridors
-PRECONFIGURED_CITIES = {
+import httpx
+from pydantic import BaseModel, ConfigDict
+
+from app.core.config import settings
+from app.engines.naqi import NAQIResult, calculate_cpcb_naqi
+
+T = TypeVar("T")
+logger = logging.getLogger(__name__)
+
+
+class CityConfig(TypedDict):
+    """Preconfigured urban corridor metadata and deterministic fallback baseline."""
+
+    city: str
+    state: str
+    latitude: float
+    longitude: float
+    base_pm25: float
+    base_pm10: float
+    base_no2: float
+    base_so2: float
+    base_co: float
+    base_o3: float
+    temp_c: float
+    humidity: float
+    wind_speed: float
+
+
+PRECONFIGURED_CITIES: dict[str, CityConfig] = {
     "mumbai": {
         "city": "Mumbai",
         "state": "Maharashtra",
@@ -33,7 +57,7 @@ PRECONFIGURED_CITIES = {
         "base_o3": 38.0,
         "temp_c": 28.5,
         "humidity": 68.0,
-        "wind_speed": 3.4
+        "wind_speed": 3.4,
     },
     "delhi": {
         "city": "Delhi",
@@ -48,7 +72,7 @@ PRECONFIGURED_CITIES = {
         "base_o3": 44.0,
         "temp_c": 19.0,
         "humidity": 78.0,
-        "wind_speed": 1.8
+        "wind_speed": 1.8,
     },
     "bengaluru": {
         "city": "Bengaluru",
@@ -63,7 +87,7 @@ PRECONFIGURED_CITIES = {
         "base_o3": 31.0,
         "temp_c": 24.0,
         "humidity": 55.0,
-        "wind_speed": 4.1
+        "wind_speed": 4.1,
     },
     "kolkata": {
         "city": "Kolkata",
@@ -78,7 +102,7 @@ PRECONFIGURED_CITIES = {
         "base_o3": 36.0,
         "temp_c": 25.0,
         "humidity": 72.0,
-        "wind_speed": 2.2
+        "wind_speed": 2.2,
     },
     "pune": {
         "city": "Pune",
@@ -93,66 +117,78 @@ PRECONFIGURED_CITIES = {
         "base_o3": 42.0,
         "temp_c": 26.5,
         "humidity": 58.0,
-        "wind_speed": 3.1
-    }
+        "wind_speed": 3.1,
+    },
 }
 
+
 class AirDataPayload(BaseModel):
+    """Normalized current telemetry payload returned to routes and UI."""
+
+    model_config = ConfigDict(extra="forbid")
+
     city: str
     location_name: str
     latitude: float
     longitude: float
     timestamp_utc: str
-    source: str  # "LIVE" | "MODELED" | "FORECAST" | "DEMO"
+    source: str  # LIVE | MODELED | FORECAST | DEMO
     confidence_score: float
-    station_id: Optional[str] = None
+    station_id: str | None = None
     pm25: float
     pm10: float
     no2: float
     so2: float
-    co: float  # in mg/m³
+    co: float
     o3: float
     temperature_c: float
     relative_humidity_pct: float
     wind_speed_ms: float
-    boundary_layer_height_m: Optional[float] = None
+    boundary_layer_height_m: float | None = None
     naqi: NAQIResult
 
+
 class AirDataProvider(ABC):
-    @abstractmethod
-    async def get_current(self, lat: float, lon: float, city_name: Optional[str] = None) -> AirDataPayload:
-        pass
+    """Abstract interface for environmental telemetry providers."""
 
     @abstractmethod
-    async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
-        pass
+    async def get_current(
+        self, lat: float, lon: float, city_name: str | None = None
+    ) -> AirDataPayload:
+        """Fetch current atmospheric telemetry for a coordinate or city."""
+
+    @abstractmethod
+    async def get_forecast(
+        self, lat: float, lon: float, hours: int = 48
+    ) -> list[dict[str, Any]]:
+        """Fetch hourly particulate and weather forecast."""
+
 
 class DemoAirDataProvider(AirDataProvider):
-    """Zero-setup deterministic fallback with realistic diurnal winter pollution curves."""
+    """Deterministic offline fallback modeling typical urban diurnal winter smog curves."""
 
-    def _match_city(self, lat: float, lon: float, city_name: Optional[str]) -> Dict[str, Any]:
+    def _match_city(self, lat: float, lon: float, city_name: str | None) -> CityConfig:
         if city_name:
-            k = city_name.strip().lower()
-            if k in PRECONFIGURED_CITIES:
-                return PRECONFIGURED_CITIES[k]
+            key = city_name.strip().lower()
+            if key in PRECONFIGURED_CITIES:
+                return PRECONFIGURED_CITIES[key]
 
-        # Find closest city by Euclidean distance
         closest = PRECONFIGURED_CITIES["mumbai"]
         min_dist = float("inf")
-        for c in PRECONFIGURED_CITIES.values():
-            dist = (c["latitude"] - lat) ** 2 + (c["longitude"] - lon) ** 2
+        for city_cfg in PRECONFIGURED_CITIES.values():
+            dist = (city_cfg["latitude"] - lat) ** 2 + (city_cfg["longitude"] - lon) ** 2
             if dist < min_dist:
                 min_dist = dist
-                closest = c
+                closest = city_cfg
         return closest
 
-    async def get_current(self, lat: float, lon: float, city_name: Optional[str] = None) -> AirDataPayload:
+    async def get_current(
+        self, lat: float, lon: float, city_name: str | None = None
+    ) -> AirDataPayload:
         city_info = self._match_city(lat, lon, city_name)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         hour = now.hour
 
-        # Diurnal diurnal multiplier: peak morning 07:00-09:00 (+25%) and evening 19:00-22:00 (+20%)
-        # Midday inversion dip 12:00-15:00 (-30%)
         if 7 <= hour <= 9:
             diurnal = 1.25
         elif 19 <= hour <= 22:
@@ -169,18 +205,9 @@ class DemoAirDataProvider(AirDataProvider):
         co = round(city_info["base_co"] * diurnal, 2)
         o3 = round(city_info["base_o3"] * (1.4 if 12 <= hour <= 16 else 0.6), 1)
 
-        readings = {
-            "pm25": pm25,
-            "pm10": pm10,
-            "no2": no2,
-            "so2": so2,
-            "co": co,
-            "o3": o3
-        }
-
-        naqi_res = calculate_cpcb_naqi(readings)
-
-        # Boundary layer simulation: shallow at night (250m), deep at midday (950m)
+        naqi_res = calculate_cpcb_naqi(
+            {"pm25": pm25, "pm10": pm10, "no2": no2, "so2": so2, "co": co, "o3": o3}
+        )
         bl_height = 950.0 if 12 <= hour <= 15 else 280.0
 
         return AirDataPayload(
@@ -202,226 +229,349 @@ class DemoAirDataProvider(AirDataProvider):
             relative_humidity_pct=city_info["humidity"],
             wind_speed_ms=city_info["wind_speed"],
             boundary_layer_height_m=bl_height,
-            naqi=naqi_res
+            naqi=naqi_res,
         )
 
-    async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
+    async def get_forecast(
+        self, lat: float, lon: float, hours: int = 48
+    ) -> list[dict[str, Any]]:
         city_info = self._match_city(lat, lon, None)
-        now = datetime.now(timezone.utc)
-        forecast = []
+        now = datetime.now(UTC)
+        forecast: list[dict[str, Any]] = []
 
         for h in range(hours):
             target_time = now + timedelta(hours=h)
             hour = target_time.hour
 
             if 7 <= hour <= 9:
-                diurnal = 1.30
-                bl = 240.0
-                wind = 1.6
+                diurnal, bl, wind = 1.30, 240.0, 1.6
             elif 19 <= hour <= 22:
-                diurnal = 1.25
-                bl = 300.0
-                wind = 1.8
+                diurnal, bl, wind = 1.25, 300.0, 1.8
             elif 12 <= hour <= 15:
-                diurnal = 0.68
-                bl = 980.0
-                wind = 3.6
+                diurnal, bl, wind = 0.68, 980.0, 3.6
             else:
-                diurnal = 0.95
-                bl = 450.0
-                wind = 2.4
+                diurnal, bl, wind = 0.95, 450.0, 2.4
 
-            forecast.append({
-                "time": target_time.isoformat(),
-                "pm25": round(city_info["base_pm25"] * diurnal, 1),
-                "pm10": round(city_info["base_pm10"] * diurnal, 1),
-                "wind_speed_ms": wind,
-                "temperature_c": round(city_info["temp_c"] + (3.0 if 12 <= hour <= 15 else -2.5), 1),
-                "relative_humidity_pct": round(city_info["humidity"] + (10.0 if 4 <= hour <= 8 else -12.0), 1),
-                "boundary_layer_height_m": bl,
-                "badge": "FORECAST"
-            })
+            forecast.append(
+                {
+                    "time": target_time.isoformat(),
+                    "pm25": round(city_info["base_pm25"] * diurnal, 1),
+                    "pm10": round(city_info["base_pm10"] * diurnal, 1),
+                    "wind_speed_ms": wind,
+                    "temperature_c": round(city_info["temp_c"] + (3.0 if 12 <= hour <= 15 else -2.5), 1),
+                    "relative_humidity_pct": round(
+                        city_info["humidity"] + (10.0 if 4 <= hour <= 8 else -12.0), 1
+                    ),
+                    "boundary_layer_height_m": bl,
+                    "badge": "DEMO_FORECAST",
+                }
+            )
 
         return forecast
 
-class OpenMeteoAirQualityProvider(AirDataProvider):
-    """
-    Ingests global high-resolution CAMS / SILAM air quality and meteorological forecast models.
-    No API key required; falls back gracefully to Demo provider if offline.
-    """
 
-    def __init__(self):
+class OpenAQAndMeteoProvider(AirDataProvider):
+    """Ingests OpenAQ ground stations (LIVE) or Open-Meteo forecasts (MODELED), with Demo fallback."""
+
+    def __init__(self, http_client: httpx.AsyncClient | None = None) -> None:
         self.demo = DemoAirDataProvider()
+        self._http_client = http_client
 
-    async def get_current(self, lat: float, lon: float, city_name: Optional[str] = None) -> AirDataPayload:
-        if getattr(settings, "DEMO_MODE", False) or getattr(settings, "ENVIRONMENT", "") in ["testing", "test"]:
+    def set_http_client(self, client: httpx.AsyncClient | None) -> None:
+        """Attach shared connection-pooled HTTPX client."""
+        self._http_client = client
+
+    async def _fetch_openaq_pm25(
+        self, client: httpx.AsyncClient, lat: float, lon: float
+    ) -> tuple[float | None, str | None]:
+        """Query nearest OpenAQ v3 station measurement when OPENAQ_API_KEY is configured."""
+        if not settings.OPENAQ_API_KEY:
+            return None, None
+        url = (
+            "https://api.openaq.org/v3/locations"
+            f"?coordinates={lat},{lon}&radius=15000&limit=3"
+        )
+        headers = {"X-API-Key": settings.OPENAQ_API_KEY}
+        resp = await client.get(url, headers=headers)
+        if resp.status_code != 200:
+            return None, None
+        results = resp.json().get("results", [])
+        if not results:
+            return None, None
+        loc = results[0]
+        loc_id = str(loc.get("id", "OPENAQ-LOCAL"))
+        name = str(loc.get("name") or f"OpenAQ #{loc_id}")
+        latest = await client.get(
+            f"https://api.openaq.org/v3/locations/{loc_id}/latest", headers=headers
+        )
+        if latest.status_code != 200:
+            return None, None
+        for meas in latest.json().get("results", []):
+            param_name = str(meas.get("parameter", {}).get("name", "")).lower()
+            val = meas.get("value")
+            if param_name in ("pm25", "pm2.5") and isinstance(val, (int, float)) and val >= 0:
+                return round(float(val), 1), name
+        return None, None
+
+    async def _run_with_client(
+        self, coro_factory: Callable[[httpx.AsyncClient], Awaitable[T]]
+    ) -> T:
+        if self._http_client is not None:
+            return await coro_factory(self._http_client)
+        async with httpx.AsyncClient(timeout=4.0) as local_client:
+            return await coro_factory(local_client)
+
+    async def get_current(
+        self, lat: float, lon: float, city_name: str | None = None
+    ) -> AirDataPayload:
+        if settings.DEMO_MODE or settings.ENVIRONMENT in ("testing", "test"):
             return await self.demo.get_current(lat, lon, city_name)
 
+        async def _query(client: httpx.AsyncClient) -> AirDataPayload | None:
+            aq_url = (
+                "https://air-quality-api.open-meteo.com/v1/air-quality"
+                f"?latitude={lat}&longitude={lon}"
+                "&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone"
+            )
+            wx_url = (
+                "https://api.open-meteo.com/v1/forecast"
+                f"?latitude={lat}&longitude={lon}"
+                "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
+            )
+
+            aq_res, wx_res, openaq_res = await asyncio.gather(
+                client.get(aq_url),
+                client.get(wx_url),
+                self._fetch_openaq_pm25(client, lat, lon),
+                return_exceptions=True,
+            )
+
+            openaq_pm25: float | None = None
+            openaq_station: str | None = None
+            if isinstance(openaq_res, tuple):
+                openaq_pm25, openaq_station = openaq_res
+
+            if (
+                isinstance(aq_res, httpx.Response)
+                and isinstance(wx_res, httpx.Response)
+                and aq_res.status_code == 200
+                and wx_res.status_code == 200
+            ):
+                aq_data = aq_res.json().get("current", {})
+                wx_data = wx_res.json().get("current", {})
+
+                pm25 = openaq_pm25 if openaq_pm25 is not None else float(aq_data.get("pm2_5") or 85.0)
+                pm10 = float(aq_data.get("pm10") or 130.0)
+                no2 = float(aq_data.get("nitrogen_dioxide") or 45.0)
+                so2 = float(aq_data.get("sulphur_dioxide") or 15.0)
+                co_raw = float(aq_data.get("carbon_monoxide") or 1200.0)
+                co = round(co_raw / 1000.0, 2)
+                o3 = float(aq_data.get("ozone") or 40.0)
+
+                temp = float(wx_data.get("temperature_2m") or 26.0)
+                hum = float(wx_data.get("relative_humidity_2m") or 65.0)
+                wind = float(wx_data.get("wind_speed_10m") or 2.8)
+
+                naqi_res = calculate_cpcb_naqi(
+                    {"pm25": pm25, "pm10": pm10, "no2": no2, "so2": so2, "co": co, "o3": o3}
+                )
+                resolved_city = city_name or "Regional Grid"
+                is_live = openaq_pm25 is not None
+                return AirDataPayload(
+                    city=resolved_city,
+                    location_name=(
+                        f"{resolved_city} ({openaq_station})"
+                        if openaq_station
+                        else f"{resolved_city} (Atmospheric Model Grid)"
+                    ),
+                    latitude=lat,
+                    longitude=lon,
+                    timestamp_utc=datetime.now(UTC).isoformat(),
+                    source="LIVE" if is_live else "MODELED",
+                    confidence_score=0.95 if is_live else 0.90,
+                    station_id=openaq_station or "OPEN-METEO-CAMS",
+                    pm25=pm25,
+                    pm10=pm10,
+                    no2=no2,
+                    so2=so2,
+                    co=co,
+                    o3=o3,
+                    temperature_c=temp,
+                    relative_humidity_pct=hum,
+                    wind_speed_ms=wind,
+                    boundary_layer_height_m=550.0,
+                    naqi=naqi_res,
+                )
+            return None
+
         try:
-            async with httpx.AsyncClient(timeout=3.5) as client:
-                aq_url = (
-                    f"https://air-quality-api.open-meteo.com/v1/air-quality?"
-                    f"latitude={lat}&longitude={lon}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone"
-                )
-                wx_url = (
-                    f"https://api.open-meteo.com/v1/forecast?"
-                    f"latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
-                )
+            payload = await self._run_with_client(_query)
+            if payload is not None:
+                return payload
+        except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+            logger.warning("Upstream current telemetry failed (%s); using DEMO fallback.", exc)
 
-                aq_res, wx_res = await client.get(aq_url), await client.get(wx_url)
-
-                if aq_res.status_code == 200 and wx_res.status_code == 200:
-                    aq_data = aq_res.json().get("current", {})
-                    wx_data = wx_res.json().get("current", {})
-
-                    pm25 = float(aq_data.get("pm2_5") or 85.0)
-                    pm10 = float(aq_data.get("pm10") or 130.0)
-                    no2 = float(aq_data.get("nitrogen_dioxide") or 45.0)
-                    so2 = float(aq_data.get("sulphur_dioxide") or 15.0)
-                    co_raw = float(aq_data.get("carbon_monoxide") or 1200.0)
-                    co = round(co_raw / 1000.0, 2)  # Convert µg/m³ to mg/m³
-                    o3 = float(aq_data.get("ozone") or 40.0)
-
-                    temp = float(wx_data.get("temperature_2m") or 26.0)
-                    hum = float(wx_data.get("relative_humidity_2m") or 65.0)
-                    wind = float(wx_data.get("wind_speed_10m") or 2.8)
-
-                    readings = {
-                        "pm25": pm25, "pm10": pm10, "no2": no2,
-                        "so2": so2, "co": co, "o3": o3
-                    }
-                    naqi_res = calculate_cpcb_naqi(readings)
-
-                    resolved_city = city_name or "Regional Grid"
-                    return AirDataPayload(
-                        city=resolved_city,
-                        location_name=f"{resolved_city} (Atmospheric Model Grid)",
-                        latitude=lat,
-                        longitude=lon,
-                        timestamp_utc=datetime.now(timezone.utc).isoformat(),
-                        source="MODELED",
-                        confidence_score=0.92,
-                        station_id="OPEN-METEO-CAMS",
-                        pm25=pm25,
-                        pm10=pm10,
-                        no2=no2,
-                        so2=so2,
-                        co=co,
-                        o3=o3,
-                        temperature_c=temp,
-                        relative_humidity_pct=hum,
-                        wind_speed_ms=wind,
-                        boundary_layer_height_m=550.0,
-                        naqi=naqi_res
-                    )
-        except Exception:
-            pass
-
-        # Offline or error fallback to Demo Provider
         return await self.demo.get_current(lat, lon, city_name)
 
-    async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
-        if getattr(settings, "DEMO_MODE", False) or getattr(settings, "ENVIRONMENT", "") in ["testing", "test"]:
+    async def get_forecast(
+        self, lat: float, lon: float, hours: int = 48
+    ) -> list[dict[str, Any]]:
+        if settings.DEMO_MODE or settings.ENVIRONMENT in ("testing", "test"):
             return await self.demo.get_forecast(lat, lon, hours)
 
-        try:
-            async with httpx.AsyncClient(timeout=3.5) as client:
-                url = (
-                    f"https://air-quality-api.open-meteo.com/v1/air-quality?"
-                    f"latitude={lat}&longitude={lon}&hourly=pm10,pm2_5&forecast_days=3"
-                )
-                res = await client.get(url)
-                if res.status_code == 200:
-                    hourly = res.json().get("hourly", {})
-                    times = hourly.get("time", [])[:hours]
-                    pm25_list = hourly.get("pm2_5", [])[:hours]
-                    pm10_list = hourly.get("pm10", [])[:hours]
+        async def _query_forecast(client: httpx.AsyncClient) -> list[dict[str, Any]] | None:
+            aq_url = (
+                "https://air-quality-api.open-meteo.com/v1/air-quality"
+                f"?latitude={lat}&longitude={lon}&hourly=pm10,pm2_5&forecast_days=3"
+            )
+            wx_url = (
+                "https://api.open-meteo.com/v1/forecast"
+                f"?latitude={lat}&longitude={lon}"
+                "&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,boundary_layer_height"
+                "&forecast_days=3"
+            )
+            aq_res, wx_res = await asyncio.gather(
+                client.get(aq_url),
+                client.get(wx_url),
+                return_exceptions=True,
+            )
+            if not (isinstance(aq_res, httpx.Response) and aq_res.status_code == 200):
+                return None
 
-                    forecast = []
-                    for t, p25, p10 in zip(times, pm25_list, pm10_list):
-                        val_pm25 = float(p25 or 75.0)
-                        val_pm10 = float(p10 or 120.0)
-                        hour_int = int(t.split("T")[-1][:2]) if "T" in t else 12
-                        bl = 900.0 if 12 <= hour_int <= 15 else 320.0
-                        forecast.append({
-                            "time": t if "T" in t else f"{t}T00:00:00Z",
-                            "pm25": round(val_pm25, 1),
-                            "pm10": round(val_pm10, 1),
-                            "wind_speed_ms": 3.0,
-                            "temperature_c": 26.0,
-                            "relative_humidity_pct": 60.0,
-                            "boundary_layer_height_m": bl,
-                            "badge": "FORECAST"
-                        })
-                    return forecast
-        except Exception:
-            pass
+            aq_hourly = aq_res.json().get("hourly", {})
+            wx_hourly = (
+                wx_res.json().get("hourly", {})
+                if isinstance(wx_res, httpx.Response) and wx_res.status_code == 200
+                else {}
+            )
+
+            times = aq_hourly.get("time", [])[:hours]
+            pm25_list = aq_hourly.get("pm2_5", [])[:hours]
+            pm10_list = aq_hourly.get("pm10", [])[:hours]
+            winds = wx_hourly.get("wind_speed_10m", [])
+            temps = wx_hourly.get("temperature_2m", [])
+            hums = wx_hourly.get("relative_humidity_2m", [])
+            bls = wx_hourly.get("boundary_layer_height", [])
+
+            forecast: list[dict[str, Any]] = []
+            for idx, (t, p25, p10) in enumerate(zip(times, pm25_list, pm10_list, strict=False)):
+                val_pm25 = float(p25 if p25 is not None else 75.0)
+                val_pm10 = float(p10 if p10 is not None else 120.0)
+                hour_int = int(t.split("T")[-1][:2]) if "T" in t else 12
+                wind_val = float(winds[idx]) if idx < len(winds) and winds[idx] is not None else 3.0
+                temp_val = float(temps[idx]) if idx < len(temps) and temps[idx] is not None else 26.0
+                hum_val = float(hums[idx]) if idx < len(hums) and hums[idx] is not None else 60.0
+                bl_val = (
+                    float(bls[idx])
+                    if idx < len(bls) and bls[idx] is not None
+                    else (900.0 if 12 <= hour_int <= 15 else 320.0)
+                )
+                forecast.append(
+                    {
+                        "time": t if "T" in t else f"{t}T00:00:00Z",
+                        "pm25": round(val_pm25, 1),
+                        "pm10": round(val_pm10, 1),
+                        "wind_speed_ms": round(wind_val, 1),
+                        "temperature_c": round(temp_val, 1),
+                        "relative_humidity_pct": round(hum_val, 1),
+                        "boundary_layer_height_m": round(bl_val, 1),
+                        "badge": "FORECAST",
+                    }
+                )
+            return forecast
+
+        try:
+            series = await self._run_with_client(_query_forecast)
+            if series:
+                return series
+        except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+            logger.warning("Upstream forecast telemetry failed (%s); using DEMO fallback.", exc)
 
         return await self.demo.get_forecast(lat, lon, hours)
 
-# Ingest Orchestrator with single-flight request coalescing and in-memory TTL caching
+
+# Backward-compatible class alias
+OpenMeteoAirQualityProvider = OpenAQAndMeteoProvider
+
+
 class AirDataService:
-    def __init__(self):
-        self.provider = OpenMeteoAirQualityProvider()
+    """Ingest orchestrator with single-flight coalescing and bounded LRU TTL cache."""
+
+    CURRENT_TTL = 900.0
+    FORECAST_TTL = 3600.0
+
+    def __init__(self) -> None:
+        self.provider = OpenAQAndMeteoProvider()
         self.demo = DemoAirDataProvider()
-        self._current_cache: Dict[str, Tuple[float, AirDataPayload]] = {}
-        self._forecast_cache: Dict[str, Tuple[float, List[Dict[str, Any]]]] = {}
-        self._current_locks: Dict[str, asyncio.Lock] = {}
-        self._forecast_locks: Dict[str, asyncio.Lock] = {}
-        self.CURRENT_TTL = 900.0  # 15 minutes
-        self.FORECAST_TTL = 3600.0  # 1 hour
+        self._current_cache: OrderedDict[str, tuple[float, AirDataPayload]] = OrderedDict()
+        self._forecast_cache: OrderedDict[str, tuple[float, list[dict[str, Any]]]] = OrderedDict()
+        self._current_locks: dict[str, asyncio.Lock] = {}
+        self._forecast_locks: dict[str, asyncio.Lock] = {}
+
+    def set_http_client(self, client: httpx.AsyncClient | None) -> None:
+        """Bind shared async HTTP client from FastAPI lifespan."""
+        self.provider.set_http_client(client)
+
+    def invalidate_cache(self) -> None:
+        """Clear in-memory telemetry caches."""
+        self._current_cache.clear()
+        self._forecast_cache.clear()
 
     def _cache_key(self, lat: float, lon: float) -> str:
         return f"{round(lat, 2)}:{round(lon, 2)}"
 
-    async def get_current_air_quality(self, lat: float, lon: float, city: Optional[str] = None) -> AirDataPayload:
+    def _store_bounded(
+        self, cache: OrderedDict[str, Any], key: str, value: Any
+    ) -> None:
+        if key in cache:
+            cache.move_to_end(key)
+        cache[key] = value
+        while len(cache) > settings.CACHE_MAX_SIZE:
+            cache.popitem(last=False)
+
+    async def get_current_air_quality(
+        self, lat: float, lon: float, city: str | None = None
+    ) -> AirDataPayload:
+        """Return cached or freshly fetched current telemetry."""
         key = self._cache_key(lat, lon)
         now = time.time()
-        if key in self._current_cache:
-            cached_time, cached_val = self._current_cache[key]
-            if now - cached_time < self.CURRENT_TTL:
-                return cached_val
+        cached = self._current_cache.get(key)
+        if cached and now - cached[0] < self.CURRENT_TTL:
+            return cached[1]
 
-        # Single-flight request coalescing
-        if key not in self._current_locks:
-            self._current_locks[key] = asyncio.Lock()
-
-        async with self._current_locks[key]:
-            # Double check cache inside lock
+        lock = self._current_locks.setdefault(key, asyncio.Lock())
+        async with lock:
             now = time.time()
-            if key in self._current_cache:
-                cached_time, cached_val = self._current_cache[key]
-                if now - cached_time < self.CURRENT_TTL:
-                    return cached_val
-
+            cached = self._current_cache.get(key)
+            if cached and now - cached[0] < self.CURRENT_TTL:
+                return cached[1]
             data = await self.provider.get_current(lat, lon, city)
-            self._current_cache[key] = (now, data)
+            self._store_bounded(self._current_cache, key, (now, data))
             return data
 
-    async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> List[Dict[str, Any]]:
+    async def get_forecast(
+        self, lat: float, lon: float, hours: int = 48
+    ) -> list[dict[str, Any]]:
+        """Return cached or freshly fetched hourly forecast series."""
         key = f"{self._cache_key(lat, lon)}:{hours}"
         now = time.time()
-        if key in self._forecast_cache:
-            cached_time, cached_val = self._forecast_cache[key]
-            if now - cached_time < self.FORECAST_TTL:
-                return cached_val
+        cached = self._forecast_cache.get(key)
+        if cached and now - cached[0] < self.FORECAST_TTL:
+            return cached[1]
 
-        # Single-flight request coalescing
-        if key not in self._forecast_locks:
-            self._forecast_locks[key] = asyncio.Lock()
-
-        async with self._forecast_locks[key]:
+        lock = self._forecast_locks.setdefault(key, asyncio.Lock())
+        async with lock:
             now = time.time()
-            if key in self._forecast_cache:
-                cached_time, cached_val = self._forecast_cache[key]
-                if now - cached_time < self.FORECAST_TTL:
-                    return cached_val
-
+            cached = self._forecast_cache.get(key)
+            if cached and now - cached[0] < self.FORECAST_TTL:
+                return cached[1]
             data = await self.provider.get_forecast(lat, lon, hours)
-            self._forecast_cache[key] = (now, data)
+            self._store_bounded(self._forecast_cache, key, (now, data))
             return data
 
-    def get_cities(self) -> List[Dict[str, Any]]:
+    def get_cities(self) -> list[CityConfig]:
+        """Return preconfigured city monitoring corridors."""
         return list(PRECONFIGURED_CITIES.values())
+
 
 air_data_service = AirDataService()

@@ -23,12 +23,25 @@ jobs:
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 
-      - name: Run Backend Unit & Integration Tests
+      - name: Lint Backend (Ruff)
+        run: |
+          ruff check backend/app backend/tests/conftest.py
+
+      - name: Typecheck Backend (Mypy Strict)
         run: |
           cd backend
-          pytest -v --durations=10
+          mypy -p app
+
+      - name: Security Vulnerability Audit (pip-audit)
+        run: |
+          pip-audit -r backend/requirements.txt
+
+      - name: Run Backend Unit & Integration Tests with Branch Coverage
+        run: |
+          cd backend
+          pytest tests --cov=app --cov-branch --cov-report=term-missing -q
 
       - name: Enforce Truth & Anti-Hallucination Claims Check
         run: |
@@ -47,7 +60,7 @@ jobs:
           python scripts/check_repo_size.py
 
   frontend-build-and-test:
-    name: Frontend Build & Unit Tests
+    name: Frontend Lint, Build & Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -60,17 +73,37 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install frontend dependencies
         run: |
           cd frontend
           npm ci
 
-      - name: TypeScript Typecheck & Vite Production Build
+      - name: Lint Frontend (ESLint + jsx-a11y)
         run: |
           cd frontend
+          npm run lint
+
+      - name: TypeScript Strict Typecheck & Vite Production Build
+        run: |
+          cd frontend
+          npm run typecheck
           npm run build
 
-      - name: Run Frontend Unit Tests
+      - name: Frontend Bundle Budget Audit
+        run: |
+          python scripts/measure_bundle.py
+
+      - name: Frontend Security Audit
         run: |
           cd frontend
-          npm test
+          npm audit --audit-level=high
+
+      - name: Run Frontend Unit Tests with Coverage
+        run: |
+          cd frontend
+          npm run test:coverage

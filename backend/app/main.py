@@ -1,40 +1,98 @@
+"""FastAPI application entrypoint with security headers, rate limiting, and SPA hosting."""
+
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from typing import Any
+
+import httpx
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.api.v1.endpoints import (
+    admin,
+    air_quality,
+    auth,
+    community,
+    copilot,
+    engines,
+    health,
+    user_flow,
+)
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.db.seed import seed_database
-from app.api.v1.endpoints import auth, health, air_quality, engines, copilot, user_flow, community, admin
+from app.services.air_data import air_data_service
+
+
+async def _rate_limit_handler(request: Request, exc: Exception) -> Response:
+    _ = request
+    detail = getattr(exc, "detail", "Rate limit exceeded. Please try again later.")
+    return JSONResponse(status_code=429, content={"detail": f"Rate limit exceeded: {detail}"})
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
+    """Attach strict HTTP security headers and CSP to every response."""
+
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
+        response: Response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(self), microphone=()"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; "
-            "connect-src 'self' https://*.vercel.app https://*.onrender.com; "
+            "connect-src 'self' https://*.vercel.app https://*.onrender.com https://fonts.googleapis.com https://fonts.gstatic.com; "
             "frame-ancestors 'none'"
         )
         if settings.ENVIRONMENT in ("demo", "production"):
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject oversized request bodies before parsing payloads."""
+
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
+        content_length = request.headers.get("content-length")
+        if content_length and content_length.isdigit() and int(content_length) > settings.MAX_REQUEST_BODY_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request payload exceeds 1 MB maximum limit."},
+            )
+        body = await request.body()
+        if len(body) > settings.MAX_REQUEST_BODY_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request payload exceeds 1 MB maximum limit."},
+            )
+        response: Response = await call_next(request)
+        return response
+
+
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Only seed demo accounts in development and demo environments; never in production or testing
+async def lifespan(fastapi_app: FastAPI) -> AsyncGenerator[None, None]:
+    """Manage pooled HTTP client lifecycle and optional demo seeding."""
+    http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=4.0))
+    fastapi_app.state.http_client = http_client
+    air_data_service.set_http_client(http_client)
+
     if settings.ENVIRONMENT in ("development", "demo"):
         await seed_database()
-    yield
+    try:
+        yield
+    finally:
+        air_data_service.set_http_client(None)
+        await http_client.aclose()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -42,10 +100,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
-# Security and CORS Middleware
+app.state.limiter = limiter
+app.state.http_client = None
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+
+app.add_middleware(RequestSizeLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 if settings.ALLOWED_ORIGINS:
     app.add_middleware(
@@ -53,11 +115,10 @@ if settings.ALLOWED_ORIGINS:
         allow_origins=settings.ALLOWED_ORIGINS,
         allow_origin_regex=r"^https://.*\.vercel\.app$",
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
-# API Routers (Mounted under canonical /api/v1 prefix)
 app.include_router(health.router)
 
 API_V1_PREFIX = "/api/v1"
@@ -69,8 +130,9 @@ app.include_router(user_flow.router, prefix=API_V1_PREFIX)
 app.include_router(community.router, prefix=API_V1_PREFIX)
 app.include_router(admin.router, prefix=API_V1_PREFIX)
 
-# SPA Static File Serving for single-origin container deployment
-FRONTEND_DIST = os.environ.get("FRONTEND_DIST") or os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+FRONTEND_DIST = os.environ.get("FRONTEND_DIST") or os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
+)
 if not os.path.exists(FRONTEND_DIST):
     FRONTEND_DIST = "/app/frontend/dist"
 
@@ -80,8 +142,12 @@ if os.path.exists(FRONTEND_DIST):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str):
-        if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("redoc") or full_path in ("healthz", "readyz"):
+    async def serve_spa(full_path: str) -> Response:
+        """Serve built SPA entry point and static assets while keeping /api 404s JSON."""
+        if (
+            full_path.startswith(("api/", "docs", "redoc"))
+            or full_path in ("healthz", "readyz")
+        ):
             return JSONResponse(status_code=404, content={"detail": "Not Found"})
         candidate = os.path.join(FRONTEND_DIST, full_path)
         if os.path.isfile(candidate):

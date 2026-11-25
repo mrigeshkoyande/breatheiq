@@ -1,40 +1,45 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  Compass,
-  MapPin,
-  Users,
-  ShieldAlert,
-  Bell,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles
-} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Bell, CheckCircle2, MapPin, ShieldAlert, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCities, useSaveHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner } from '../components/ui/StatusBanner';
+import { SkipLink } from '../components/layout/SkipLink';
+
+interface DraftMember {
+  name: string;
+  age_category: string;
+  sensitivity: string;
+}
 
 export const OnboardingPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [saving, setSaving] = useState(false);
+  const { data: cities = [] } = useCities();
+  const saveHousehold = useSaveHousehold();
 
-  // Step 1: Location state
+  const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [city, setCity] = useState('Mumbai');
   const [neighborhood, setNeighborhood] = useState('Andheri West');
 
-  // Step 2: Household members
-  const [members, setMembers] = useState([
+  const [members, setMembers] = useState<DraftMember[]>([
     { name: user?.full_name || 'Primary User', age_category: 'adult', sensitivity: 'none' },
   ]);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberAge, setNewMemberAge] = useState('child');
   const [newMemberSens, setNewMemberSens] = useState('asthma');
 
-  // Step 3: Alert thresholds
   const [aqiThreshold, setAqiThreshold] = useState(200);
   const [enablePush, setEnablePush] = useState(true);
+
+  const selectedCityMeta = cities.find((c) => c.city.toLowerCase() === city.toLowerCase());
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -51,20 +56,16 @@ export const OnboardingPage: React.FC = () => {
 
   const handleCompleteOnboarding = async () => {
     setSaving(true);
+    setErrorMsg('');
     try {
-      // 1. Save household
-      await apiRequest('/user/household', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'Home',
-          city,
-          neighborhood,
-          latitude: city === 'Mumbai' ? 19.0760 : 28.6139,
-          longitude: city === 'Mumbai' ? 72.8777 : 77.2090,
-        }),
+      await saveHousehold.mutateAsync({
+        name: `${neighborhood} Residence`,
+        city,
+        neighborhood,
+        latitude: selectedCityMeta?.latitude ?? (city === 'Delhi' ? 28.6139 : 19.076),
+        longitude: selectedCityMeta?.longitude ?? (city === 'Delhi' ? 77.209 : 72.8777),
       });
 
-      // 2. Save members
       for (const m of members) {
         await apiRequest('/user/members', {
           method: 'POST',
@@ -72,7 +73,6 @@ export const OnboardingPage: React.FC = () => {
         });
       }
 
-      // 3. Save alert rules
       await apiRequest('/user/alerts/rules', {
         method: 'POST',
         body: JSON.stringify({
@@ -85,326 +85,256 @@ export const OnboardingPage: React.FC = () => {
       });
 
       navigate('/app/dashboard');
-    } catch {
-      navigate('/app/dashboard');
+    } catch (err: unknown) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : 'Could not save onboarding setup. Please verify your connection and retry.'
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const availableCities = cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune'];
+
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      {/* Top Header */}
+    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+      <SkipLink />
       <header className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-            <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-            <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
+            <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
           </Link>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#94A3B8]">/</span>
-            <span className="font-bold text-[#182A29]">Family AirTwin Setup</span>
-          </div>
-          <span className="text-xs font-bold text-[#0F766E]">Step {currentStep} of 3</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+            Setup Step {step} of 3
+          </span>
         </div>
       </header>
 
-      {/* Main Form Body */}
-      <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-8 flex flex-col justify-center">
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 sm:p-8 shadow-sm space-y-6">
-          {/* Progress Indicators */}
-          <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4">
-            <div className="flex items-center gap-2">
+      <main id="main-content" className="flex-1 max-w-3xl w-full mx-auto px-4 py-10 space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Personalize Your Family Air Defense
+          </h1>
+          <p className="text-sm text-[#475569]">
+            Configure your city corridor, household respiratory vulnerabilities, and smog alerts.
+          </p>
+          <div
+            className="grid grid-cols-3 gap-2 pt-2"
+            role="progressbar"
+            aria-label="Onboarding progress"
+            aria-valuemin={1}
+            aria-valuemax={3}
+            aria-valuenow={step}
+          >
+            {[1, 2, 3].map((idx) => (
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  currentStep >= 1 ? 'bg-[#0F766E] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
-                }`}
-              >
-                1
-              </div>
-              <span className="text-xs font-bold text-[#182A29] hidden sm:inline">Location</span>
-            </div>
-            <div className="h-0.5 flex-1 mx-3 bg-[#E2E8F0]">
-              <div
-                className={`h-full bg-[#0F766E] transition-all ${
-                  currentStep === 1 ? 'w-0' : currentStep === 2 ? 'w-1/2' : 'w-full'
-                }`}
+                key={idx}
+                className={`h-2 rounded-full ${step >= idx ? 'bg-[#0F766E]' : 'bg-[#E2E8F0]'}`}
               />
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  currentStep >= 2 ? 'bg-[#0F766E] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
-                }`}
-              >
-                2
-              </div>
-              <span className="text-xs font-bold text-[#182A29] hidden sm:inline">Household</span>
-            </div>
-            <div className="h-0.5 flex-1 mx-3 bg-[#E2E8F0]">
-              <div
-                className={`h-full bg-[#0F766E] transition-all ${
-                  currentStep === 3 ? 'w-full' : 'w-0'
-                }`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  currentStep === 3 ? 'bg-[#0F766E] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
-                }`}
-              >
-                3
-              </div>
-              <span className="text-xs font-bold text-[#182A29] hidden sm:inline">Alerts</span>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* Step 1: Location Setup */}
-          {currentStep === 1 && (
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-lg font-black text-[#182A29]">
-                  Select your monitoring corridor
-                </h1>
-                <p className="text-xs text-[#64748B] mt-0.5">
-                  BreatheIQ connects your home with the closest official CAAQMS station and atmospheric models.
-                </p>
+        {errorMsg && <ErrorBanner message={errorMsg} onRetry={() => void handleCompleteOnboarding()} />}
+
+        <Card elevated className="p-6 sm:p-8 space-y-6">
+          {step === 1 && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+                <MapPin className="w-5 h-5" aria-hidden="true" />
+                <h2>Step 1 · Select Urban Monitoring Corridor</h2>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <label htmlFor="onboarding-city-select" className="text-xs font-bold text-[#334155] block mb-1">City</label>
-                  <select
-                    id="onboarding-city-select"
-                    name="onboarding_city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] focus:ring-2 focus:ring-[#0F766E]"
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {availableCities.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    aria-pressed={city === c}
+                    onClick={() => setCity(c)}
+                    className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                      city === c
+                        ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
+                        : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
+                    }`}
                   >
-                    <option value="Mumbai">Mumbai (Maharashtra)</option>
-                    <option value="Delhi">Delhi (NCT of Delhi)</option>
-                    <option value="Bengaluru">Bengaluru (Karnataka)</option>
-                    <option value="Kolkata">Kolkata (West Bengal)</option>
-                    <option value="Pune">Pune (Maharashtra)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="onboarding-neighborhood-input" className="text-xs font-bold text-[#334155] block mb-1">
-                    Neighborhood / Ward
-                  </label>
-                  <input
-                    id="onboarding-neighborhood-input"
-                    name="neighborhood"
-                    type="text"
-                    value={neighborhood}
-                    onChange={(e) => setNeighborhood(e.target.value)}
-                    placeholder="e.g. Andheri West, Connaught Place, Koramangala"
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] focus:ring-2 focus:ring-[#0F766E]"
-                  />
-                </div>
+                    {c}
+                  </button>
+                ))}
               </div>
 
-              <div className="bg-[#DDF5EC]/30 border border-[#A7E8C6]/50 rounded-xl p-3 flex items-start gap-2.5 text-xs text-[#0F766E]">
-                <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-                <p>
-                  Location data is stored locally and used exclusively to fetch boundary layer forecasts.
-                </p>
+              <Input
+                label="Neighborhood / Locality"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                placeholder="e.g. Andheri West, Rohini, Indiranagar"
+                required
+              />
+
+              <div className="flex justify-end pt-2">
+                <Button type="button" onClick={() => setStep(2)}>
+                  Next: Family AirTwin
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Button>
               </div>
             </div>
           )}
 
-          {/* Step 2: Household Members & Sensitivities */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-lg font-black text-[#182A29]">
-                  Configure family vulnerability profiles
-                </h1>
-                <p className="text-xs text-[#64748B] mt-0.5">
-                  Tailors exposure dosage warnings for children, seniors, and respiratory sensitivities.
-                </p>
+          {step === 2 && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+                <Users className="w-5 h-5" aria-hidden="true" />
+                <h2>Step 2 · Household AirTwin Profiles</h2>
               </div>
 
-              {/* Members List */}
               <div className="space-y-2">
                 {members.map((m, idx) => (
                   <div
-                    key={idx}
-                    className="bg-[#F8FAF7] border border-[#E2E8F0] rounded-xl p-3 flex items-center justify-between text-xs"
+                    key={`${m.name}-${idx}`}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAF7]"
                   >
                     <div>
-                      <span className="font-bold text-[#182A29] block">{m.name}</span>
-                      <span className="text-[11px] text-[#64748B] capitalize">
-                        {m.age_category} · {m.sensitivity === 'none' ? 'Standard profile' : m.sensitivity}
-                      </span>
+                      <div className="font-semibold text-sm">{m.name}</div>
+                      <div className="text-xs text-[#475569] capitalize">
+                        {m.age_category} · {m.sensitivity.replace('_', ' ')}
+                      </div>
                     </div>
                     {idx > 0 && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleRemoveMember(idx)}
-                        className="text-[11px] text-[#DC5252] font-semibold hover:underline"
                       >
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
               </div>
 
-              {/* Add New Member Mini Form */}
-              <div className="border-t border-[#F1F5F9] pt-4 space-y-3">
-                <span className="text-xs font-bold text-[#182A29] block">Add another member:</span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div>
-                    <label htmlFor="onboarding-member-name" className="sr-only">Member Name</label>
-                    <input
-                      id="onboarding-member-name"
-                      name="member_name"
-                      type="text"
-                      value={newMemberName}
-                      onChange={(e) => setNewMemberName(e.target.value)}
-                      placeholder="Name"
-                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="onboarding-member-age" className="sr-only">Age Category</label>
-                    <select
-                      id="onboarding-member-age"
-                      name="member_age"
-                      value={newMemberAge}
-                      onChange={(e) => setNewMemberAge(e.target.value)}
-                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
-                    >
-                      <option value="infant">Infant (0-2y)</option>
-                      <option value="child">Child (3-12y)</option>
-                      <option value="adult">Adult (13-64y)</option>
-                      <option value="senior">Senior (65y+)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="onboarding-member-sens" className="sr-only">Sensitivities</label>
-                    <select
-                      id="onboarding-member-sens"
-                      name="member_sens"
-                      value={newMemberSens}
-                      onChange={(e) => setNewMemberSens(e.target.value)}
-                      className="text-xs p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAF7] w-full"
-                    >
-                      <option value="none">No sensitivities</option>
-                      <option value="asthma">Asthma</option>
-                      <option value="bronchitis">Bronchitis</option>
-                      <option value="heart_condition">Cardiovascular</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddMember}
-                  className="text-xs font-bold text-[#0F766E] hover:underline block"
-                >
-                  + Add Member to Household
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Alert Thresholds & Channels */}
-          {currentStep === 3 && (
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-lg font-black text-[#182A29]">
-                  Set SmogShield notification triggers
-                </h1>
-                <p className="text-xs text-[#64748B] mt-0.5">
-                  Receive proactive alerts before peak twilight and nocturnal inversion stagnation hits.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <label htmlFor="onboarding-aqi-threshold" className="font-bold text-[#334155] cursor-pointer">Alert Threshold (NAQI):</label>
-                    <span className="font-bold text-[#0F766E]">{aqiThreshold} NAQI</span>
-                  </div>
-                  <input
-                    id="onboarding-aqi-threshold"
-                    name="aqi_threshold"
-                    type="range"
-                    min="100"
-                    max="350"
-                    step="25"
-                    value={aqiThreshold}
-                    onChange={(e) => setAqiThreshold(Number(e.target.value))}
-                    className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
-                  />
-                  <div className="flex justify-between text-[10px] text-[#64748B] mt-1">
-                    <span>100 (Moderate)</span>
-                    <span>200 (Poor)</span>
-                    <span>300 (Very Poor)</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-[#F8FAF7] border border-[#E2E8F0] rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#182A29] block">Push & In-App Alerts</span>
-                    <span className="text-[11px] text-[#64748B]">Notify on rapid PM2.5 spikes</span>
-                  </div>
-                  <label htmlFor="onboarding-enable-push" className="cursor-pointer">
-                    <span className="sr-only">Enable push and in-app alerts</span>
-                    <input
-                      id="onboarding-enable-push"
-                      name="enable_push"
-                      type="checkbox"
-                      checked={enablePush}
-                      onChange={(e) => setEnablePush(e.target.checked)}
-                      className="w-4 h-4 text-[#0F766E] rounded accent-[#0F766E]"
-                    />
+              <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-[#E2E8F0] bg-white">
+                <Input
+                  label="Member Name"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  placeholder="e.g. Aarav"
+                />
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="onb-age" className="text-xs font-semibold uppercase tracking-wider text-[#334155]">
+                    Age Tier
                   </label>
+                  <select
+                    id="onb-age"
+                    value={newMemberAge}
+                    onChange={(e) => setNewMemberAge(e.target.value)}
+                    className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                  >
+                    <option value="infant">Infant (0-2)</option>
+                    <option value="child">Child (3-17)</option>
+                    <option value="adult">Adult (18-59)</option>
+                    <option value="senior">Senior (60+)</option>
+                  </select>
                 </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="onb-sens" className="text-xs font-semibold uppercase tracking-wider text-[#334155]">
+                    Sensitivity
+                  </label>
+                  <select
+                    id="onb-sens"
+                    value={newMemberSens}
+                    onChange={(e) => setNewMemberSens(e.target.value)}
+                    className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                  >
+                    <option value="none">None</option>
+                    <option value="asthma">Asthma</option>
+                    <option value="bronchitis">Bronchitis</option>
+                    <option value="heart_condition">Heart Condition</option>
+                    <option value="pregnancy">Pregnancy</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-3 flex justify-end">
+                  <Button type="button" variant="secondary" size="sm" onClick={handleAddMember}>
+                    Add Family Member
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                  <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                  Back
+                </Button>
+                <Button type="button" onClick={() => setStep(3)}>
+                  Next: Alert Thresholds
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Button>
               </div>
             </div>
           )}
 
-          {/* Step Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#F1F5F9]">
-            {currentStep > 1 ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((s) => s - 1)}
-                className="text-xs font-bold px-4 py-2 rounded-xl border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9] flex items-center gap-1.5 transition"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
-              </button>
-            ) : (
-              <div />
-            )}
+          {step === 3 && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+                <Bell className="w-5 h-5" aria-hidden="true" />
+                <h2>Step 3 · SmogShield Alert Threshold</h2>
+              </div>
 
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((s) => s + 1)}
-                className="text-xs font-bold px-5 py-2.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] flex items-center gap-1.5 transition"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleCompleteOnboarding}
-                disabled={saving}
-                className="text-xs font-bold px-6 py-2.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#115E59] flex items-center gap-1.5 transition disabled:opacity-50"
-              >
-                <span>{saving ? 'Configuring AirTwin...' : 'Complete & Open Dashboard'}</span>
-                <CheckCircle2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
+              <div className="space-y-2">
+                <label htmlFor="onb-threshold" className="flex justify-between text-sm font-semibold">
+                  <span>Trigger High-Priority Smog Alert At</span>
+                  <span className="text-[#0F766E]">{aqiThreshold} NAQI</span>
+                </label>
+                <input
+                  id="onb-threshold"
+                  type="range"
+                  min={100}
+                  max={400}
+                  step={25}
+                  value={aqiThreshold}
+                  onChange={(e) => setAqiThreshold(Number(e.target.value))}
+                  className="w-full accent-[#0F766E]"
+                />
+                <div className="flex justify-between text-xs text-[#475569]">
+                  <span>100 (Moderate)</span>
+                  <span>200 (Poor)</span>
+                  <span>300+ (Very Poor / Severe)</span>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-3 p-3.5 rounded-xl border border-[#E2E8F0] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enablePush}
+                  onChange={(e) => setEnablePush(e.target.checked)}
+                  className="w-4 h-4 accent-[#0F766E]"
+                />
+                <span className="text-sm font-medium">
+                  Enable browser & in-app smog surge alerts (quiet hours 22:00 - 07:00)
+                </span>
+              </label>
+
+              <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs text-[#475569] flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
+                <span>Public health guidance only — not medical advice.</span>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <Button type="button" variant="outline" onClick={() => setStep(2)} disabled={saving}>
+                  <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                  Back
+                </Button>
+                <Button type="button" onClick={() => void handleCompleteOnboarding()} disabled={saving}>
+                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                  {saving ? 'Saving Household...' : 'Finish & Open Dashboard'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
       </main>
     </div>
   );

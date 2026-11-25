@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, AuthResponse } from '../types/auth';
-import { apiRequest, setAccessToken } from '../services/api';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest, SESSION_HINT_KEY, setAccessToken } from '../services/api';
+import { AuthResponse, User } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -9,17 +10,18 @@ interface AuthContextType {
   signup: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  setUserProfile: (updated: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_HINT_KEY = 'breatheiq_has_session';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [hasHint] = useState(() => localStorage.getItem(SESSION_HINT_KEY) === 'true');
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasHint);
+  const queryClient = useQueryClient();
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     try {
       const res = await apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' });
       setAccessToken(res.access_token);
@@ -32,17 +34,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // Only attempt silent session refresh if a previous session existed
-    const hasSession = localStorage.getItem(SESSION_HINT_KEY) === 'true';
-    if (!hasSession) {
-      setLoading(false);
-      return;
-    }
-    refreshAuth();
-  }, []);
+    if (!hasHint) return;
+    let active = true;
+    apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' })
+      .then((res) => {
+        if (!active) return;
+        setAccessToken(res.access_token);
+        setUser(res.user);
+        localStorage.setItem(SESSION_HINT_KEY, 'true');
+      })
+      .catch(() => {
+        if (!active) return;
+        setAccessToken(null);
+        setUser(null);
+        localStorage.removeItem(SESSION_HINT_KEY);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [hasHint]);
 
   const login = async (email: string, password: string) => {
     const res = await apiRequest<AuthResponse>('/auth/login', {
@@ -52,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAccessToken(res.access_token);
     setUser(res.user);
     localStorage.setItem(SESSION_HINT_KEY, 'true');
+    queryClient.clear();
   };
 
   const signup = async (email: string, password: string, fullName?: string) => {
@@ -62,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAccessToken(res.access_token);
     setUser(res.user);
     localStorage.setItem(SESSION_HINT_KEY, 'true');
+    queryClient.clear();
   };
 
   const logout = async () => {
@@ -71,11 +89,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAccessToken(null);
       setUser(null);
       localStorage.removeItem(SESSION_HINT_KEY);
+      queryClient.clear();
     }
   };
 
+  const setUserProfile = useCallback((updated: User) => {
+    setUser(updated);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshAuth }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshAuth, setUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,202 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Sparkles,
-  Sliders,
-  TrendingDown,
-  Leaf,
-  ShieldCheck,
-  RefreshCw,
-  ArrowRight
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { Sliders } from 'lucide-react';
+import { useCurrentAirQuality, useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
+import { HouseholdImpactSummary } from '../types/api';
+import { AppShell } from '../components/layout/AppShell';
+import { Badge } from '../components/ui/Badge';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner } from '../components/ui/StatusBanner';
 
 export const WhatIfPage: React.FC = () => {
-  const { user } = useAuth();
-  const [metroDays, setMetroDays] = useState(4);
-  const [purifierHours, setPurifierHours] = useState(10);
-  const [commuteDistance, setCommuteDistance] = useState(15);
-  const [simResult, setSimResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const { data: household } = useHousehold();
+  const { data: airData } = useCurrentAirQuality(household?.city || 'Mumbai');
+  const outdoorPm25 = airData?.pm25 ?? 160;
 
-  const runSimulation = async () => {
-    setLoading(true);
-    try {
-      const res = await apiRequest('/engines/impact/calculate', {
-        method: 'POST',
-        body: JSON.stringify({
-          outdoor_pm25: 165.0,
-          indoor_purified_pm25: 25.0,
-          indoor_hours: Number(purifierHours),
-          transit_distance_km: Number(commuteDistance) * (Number(metroDays) / 7.0),
-          transit_mode: 'electric_metro',
-        }),
-      });
-      setSimResult(res);
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [indoorPm25, setIndoorPm25] = useState(25);
+  const [indoorHours, setIndoorHours] = useState(12);
+  const [transitKm, setTransitKm] = useState(15);
+  const [transitMode, setTransitMode] = useState('electric_metro');
+  const [simResult, setSimResult] = useState<HouseholdImpactSummary | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    runSimulation();
-  }, [metroDays, purifierHours, commuteDistance]);
-
-  const winterDays = 120; // Standard North/West Indian winter smog corridor duration
-  const annualPM25AvertedMg = simResult
-    ? Math.round((simResult.daily_averted_pm25_dose_ug * winterDays) / 1000.0)
-    : 85;
-  const annualCO2AvertedKg = simResult
-    ? Math.round(simResult.daily_co2_averted_kg * winterDays)
-    : 280;
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          setErrorMsg('');
+          const res = await apiRequest<HouseholdImpactSummary>('/engines/impact/calculate', {
+            method: 'POST',
+            body: JSON.stringify({
+              outdoor_pm25: outdoorPm25,
+              indoor_purified_pm25: indoorPm25,
+              indoor_hours: indoorHours,
+              transit_distance_km: transitKm,
+              transit_mode: transitMode,
+            }),
+          });
+          setSimResult(res);
+        } catch (err: unknown) {
+          setErrorMsg(err instanceof Error ? err.message : 'Unable to evaluate scenario.');
+        }
+      })();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [outdoorPm25, indoorPm25, indoorHours, transitKm, transitMode]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">What-If Lifestyle Simulator</span>
+    <AppShell title="What-If Impact Scenario Builder">
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <Sliders className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Seasonal Lifestyle Impact Simulator
+            </h1>
+            <p className="text-sm text-[#475569]">
+              Evaluating against current {household?.city || 'Mumbai'} PM2.5 ({outdoorPm25} µg/m³).
+            </p>
           </div>
-
-          <Link
-            to="/app/impact"
-            className="text-xs px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-          >
-            ← Impact Ledger
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 lg:p-8 space-y-8">
-        <div>
-          <h1 className="text-2xl font-black text-[#182A29]">What-If Lifestyle & Policy Simulator</h1>
-          <p className="text-xs text-[#64748B] mt-1">
-            Model how small changes to your weekly commute and home aeration routine transform family toxic exposure.
-          </p>
+          <Badge badgeType="ESTIMATED" />
         </div>
 
-        {/* Sliders Card */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 lg:p-8 shadow-sm space-y-6">
-          <h2 className="text-base font-black text-[#182A29]">Adjust Lifestyle Levers:</h2>
+        {errorMsg && <ErrorBanner message={errorMsg} />}
 
-          {/* Slider 1: Metro Days */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-bold">
-              <label htmlFor="whatif-metro-days" className="text-[#334155] cursor-pointer">Switch car commute to electric metro:</label>
-              <span className="text-[#0F766E]">{metroDays} Days / Week</span>
-            </div>
-            <input
-              id="whatif-metro-days"
-              name="metro_days"
-              type="range"
-              min="0"
-              max="7"
-              value={metroDays}
-              onChange={(e) => setMetroDays(Number(e.target.value))}
-              className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
-            />
-          </div>
-
-          {/* Slider 2: Purifier Hours */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-bold">
-              <label htmlFor="whatif-purifier-hours" className="text-[#334155] cursor-pointer">Operate HEPA Purifier in living/sleeping rooms:</label>
-              <span className="text-[#0F766E]">{purifierHours} Hours / Day</span>
-            </div>
-            <input
-              id="whatif-purifier-hours"
-              name="purifier_hours"
-              type="range"
-              min="2"
-              max="24"
-              value={purifierHours}
-              onChange={(e) => setPurifierHours(Number(e.target.value))}
-              className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
-            />
-          </div>
-
-          {/* Slider 3: Commute Distance */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-bold">
-              <label htmlFor="whatif-commute-distance" className="text-[#334155] cursor-pointer">One-way daily commute distance:</label>
-              <span className="text-[#0F766E]">{commuteDistance} km</span>
-            </div>
-            <input
-              id="whatif-commute-distance"
-              name="commute_distance"
-              type="range"
-              min="5"
-              max="40"
-              value={commuteDistance}
-              onChange={(e) => setCommuteDistance(Number(e.target.value))}
-              className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
-            />
-          </div>
-        </div>
-
-        {/* Projected Simulation Outcomes */}
-        {simResult && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-[#0F766E]/30 p-6 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-[#0F766E] uppercase tracking-wider">
-                Daily Inhaled PM2.5 Averted
-              </span>
-              <span className="text-4xl font-black text-[#182A29] block">
-                {Math.round(simResult.daily_averted_pm25_dose_ug)} µg / day
-              </span>
-              <p className="text-xs text-[#64748B]">
-                Equivalent to averting approximately {simResult.equivalent_unfiltered_cigarettes_avoided} cigarettes of passive particulate exposure per day.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-[#2F9E62]/30 p-6 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-[#2F9E62] uppercase tracking-wider">
-                Daily Vehicular Carbon Mitigated
-              </span>
-              <span className="text-4xl font-black text-[#182A29] block">
-                {simResult.daily_co2_averted_kg} kg CO2 / day
-              </span>
-              <p className="text-xs text-[#64748B]">
-                Eliminates combustion emissions using urban electric mass transit infrastructure.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Annualized Winter Smog Projection */}
-        <div className="bg-[#DDF5EC]/40 border border-[#A7E8C6]/60 rounded-2xl p-6 sm:p-8 space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#0F766E]" />
-            <h3 className="text-base font-black text-[#0F766E]">
-              Projected 120-Day Winter Smog Season Cumulative Impact
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="space-y-5">
+            <h2 className="font-bold text-lg">Adjust Daily Habits</h2>
             <div>
-              <span className="text-[#64748B] block">Total Inhaled Dose Prevented:</span>
-              <span className="text-2xl font-black text-[#182A29] mt-0.5 block">
-                {annualPM25AvertedMg} mg PM2.5
-              </span>
-              <span className="text-[11px] text-[#64748B]">Across the 4-month inversion period</span>
+              <label htmlFor="wi-indoor-pm" className="flex justify-between text-xs font-bold mb-1">
+                <span>Indoor Purified Target PM2.5</span>
+                <span>{indoorPm25} µg/m³</span>
+              </label>
+              <input
+                id="wi-indoor-pm"
+                type="range"
+                min={5}
+                max={100}
+                value={indoorPm25}
+                onChange={(e) => setIndoorPm25(Number(e.target.value))}
+                className="w-full accent-[#0F766E]"
+              />
             </div>
             <div>
-              <span className="text-[#64748B] block">Net Carbon Footprint Reduced:</span>
-              <span className="text-2xl font-black text-[#182A29] mt-0.5 block">
-                {annualCO2AvertedKg} kg CO2
-              </span>
-              <span className="text-[11px] text-[#64748B]">Equivalent to planting ~13 urban saplings</span>
+              <label htmlFor="wi-hours" className="flex justify-between text-xs font-bold mb-1">
+                <span>Protected Indoor Hours / Day</span>
+                <span>{indoorHours} hrs</span>
+              </label>
+              <input
+                id="wi-hours"
+                type="range"
+                min={2}
+                max={24}
+                value={indoorHours}
+                onChange={(e) => setIndoorHours(Number(e.target.value))}
+                className="w-full accent-[#0F766E]"
+              />
             </div>
-          </div>
+            <div>
+              <label htmlFor="wi-km" className="flex justify-between text-xs font-bold mb-1">
+                <span>Daily Transit Switch Distance</span>
+                <span>{transitKm} km</span>
+              </label>
+              <input
+                id="wi-km"
+                type="range"
+                min={0}
+                max={60}
+                value={transitKm}
+                onChange={(e) => setTransitKm(Number(e.target.value))}
+                className="w-full accent-[#0F766E]"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="wi-mode" className="text-xs font-bold uppercase text-[#334155]">
+                Commute Mode Replacing Solo Car
+              </label>
+              <select
+                id="wi-mode"
+                value={transitMode}
+                onChange={(e) => setTransitMode(e.target.value)}
+                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+              >
+                <option value="electric_metro">Electric Metro</option>
+                <option value="cng_bus">CNG Public Bus</option>
+                <option value="cycling_walking">Cycling / Walking</option>
+              </select>
+            </div>
+          </Card>
+
+          <Card elevated className="space-y-4">
+            <h2 className="font-bold text-lg">Estimated Daily & 90-Day Winter Impact</h2>
+            {simResult ? (
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA]">
+                  <div className="text-xs font-bold text-[#0F766E]">Daily Averted PM2.5 Intake</div>
+                  <div className="text-3xl font-extrabold mt-1">
+                    {simResult.daily_averted_pm25_dose_ug} µg
+                  </div>
+                  <div className="text-xs text-[#475569] mt-1">
+                    {simResult.inhalation_detail.protection_efficiency_pct}% reduction vs unfiltered air
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <div className="text-xs font-bold text-[#475569]">Daily CO2 Saved</div>
+                    <div className="text-xl font-extrabold mt-1">{simResult.daily_co2_averted_kg} kg</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                    <div className="text-xs font-bold text-[#475569]">90-Day CO2 Saved</div>
+                    <div className="text-xl font-extrabold mt-1">
+                      {(simResult.daily_co2_averted_kg * 90).toFixed(1)} kg
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-[#475569] leading-relaxed">{simResult.methodology}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-[#475569]">Adjust sliders to evaluate scenario...</p>
+            )}
+          </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 };

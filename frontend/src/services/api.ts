@@ -3,21 +3,32 @@ import { AuthResponse } from '../types/auth';
 let inMemoryToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
 
+export const SESSION_HINT_KEY = 'breatheiq_has_session';
+
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 export const setAccessToken = (token: string | null) => {
   inMemoryToken = token;
 };
 
 export const getAccessToken = () => inMemoryToken;
 
-// Compute canonical API base URL
 const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '');
-const BASE_URL = rawBase === '' || rawBase === '/api/v1'
-  ? '/api/v1'
-  : rawBase.endsWith('/api/v1')
-  ? rawBase
-  : rawBase.endsWith('/api')
-  ? `${rawBase}/v1`
-  : `${rawBase}/api/v1`;
+const BASE_URL =
+  rawBase === '' || rawBase === '/api/v1'
+    ? '/api/v1'
+    : rawBase.endsWith('/api/v1')
+    ? rawBase
+    : rawBase.endsWith('/api')
+    ? `${rawBase}/v1`
+    : `${rawBase}/api/v1`;
 
 async function executeTokenRefresh(): Promise<string | null> {
   if (refreshPromise) {
@@ -34,16 +45,15 @@ async function executeTokenRefresh(): Promise<string | null> {
       if (refreshRes.ok) {
         const refreshData: AuthResponse = await refreshRes.json();
         setAccessToken(refreshData.access_token);
-        localStorage.setItem('breatheiq_has_session', 'true');
+        localStorage.setItem(SESSION_HINT_KEY, 'true');
         return refreshData.access_token;
-      } else {
-        setAccessToken(null);
-        localStorage.removeItem('breatheiq_has_session');
-        return null;
       }
+      setAccessToken(null);
+      localStorage.removeItem(SESSION_HINT_KEY);
+      return null;
     } catch {
       setAccessToken(null);
-      localStorage.removeItem('breatheiq_has_session');
+      localStorage.removeItem(SESSION_HINT_KEY);
       return null;
     } finally {
       refreshPromise = null;
@@ -51,6 +61,24 @@ async function executeTokenRefresh(): Promise<string | null> {
   })();
 
   return refreshPromise;
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal ?? controller.signal,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your network connection.');
+    }
+    throw new Error('Unable to connect to air quality server. Please verify your internet connection.');
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function apiRequest<T>(
@@ -64,35 +92,18 @@ export async function apiRequest<T>(
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
-
   if (inMemoryToken) {
     headers.set('Authorization', `Bearer ${inMemoryToken}`);
   }
 
-  options.credentials = 'include'; // Required to transmit HttpOnly session cookies
-  options.headers = headers;
+  const requestOpts: RequestInit = {
+    ...options,
+    credentials: 'include',
+    headers,
+  };
 
-  // Add 15-second request timeout controller if none provided
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
-  if (!options.signal) {
-    options.signal = controller.signal;
-  }
+  let res = await fetchWithTimeout(url, requestOpts);
 
-  let res: Response;
-  try {
-    res = await fetch(url, options);
-  } catch (err: unknown) {
-    clearTimeout(timeoutId);
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error('Request timed out. Please check your network connection.');
-    }
-    throw new Error('Unable to connect to air quality server. Please verify your internet connection.');
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  // Graceful silent refresh on 401 Unauthorized for protected endpoints
   if (
     res.status === 401 &&
     cleanEndpoint !== '/auth/login' &&
@@ -101,27 +112,29 @@ export async function apiRequest<T>(
   ) {
     const newToken = await executeTokenRefresh();
     if (newToken) {
-      headers.set('Authorization', `Bearer ${newToken}`);
-      options.headers = headers;
-      try {
-        res = await fetch(url, options);
-      } catch {
-        throw new Error('Session renewal failed during request retry.');
-      }
+      const retryHeaders = new Headers(headers);
+      retryHeaders.set('Authorization', `Bearer ${newToken}`);
+      res = await fetchWithTimeout(url, { ...requestOpts, headers: retryHeaders });
     }
   }
 
   if (!res.ok) {
-    let errorDetail = 'Request failed';
+    let errorMessage = `HTTP error! status: ${res.status}`;
     try {
-      const errorJson = await res.json();
-      errorDetail = errorJson.detail || errorJson.message || errorDetail;
+      const errData: { detail?: string; message?: string } = await res.json();
+      if (typeof errData.detail === 'string') {
+        errorMessage = errData.detail;
+      } else if (typeof errData.message === 'string') {
+        errorMessage = errData.message;
+      }
     } catch {
-      // fallback to status text
-      errorDetail = res.statusText || errorDetail;
+      errorMessage = res.statusText || errorMessage;
     }
-    throw new Error(errorDetail);
+    throw new ApiError(errorMessage, res.status);
   }
 
-  return res.json() as Promise<T>;
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  return (await res.json()) as T;
 }

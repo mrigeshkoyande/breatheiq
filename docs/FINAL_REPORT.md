@@ -1,7 +1,7 @@
 # BreatheIQ Final Verification Report
 
-Generated: 2026-11-24T22:12:00+05:30
-Branch: complete/100
+Generated: 2026-11-25T20:08:00+05:30
+Branch: refactor/eval-100 (merged to main)
 
 ---
 
@@ -32,11 +32,15 @@ Branch: complete/100
 | Test Suite / Quality Gate | Tool / Script | Real Result | Status |
 |---|---|---|---|
 | Master Quality Gate | `python scripts/check_all.py` | 8/8 gates passed | PASS |
-| Backend Pytest Suite | `python -m pytest backend/tests` | 75 passed, 0 failed in 3.6s | PASS |
-| Frontend Unit Tests | `npm --prefix frontend test` | 25 passed, 0 failed in 0.8s | PASS |
-| Live Deployment Smoke Test | `python scripts/smoke_live.py http://127.0.0.1:10000` | 32 passed, 0 failed in 0.4s | PASS |
+| Backend Lint & Strict Mypy | `ruff check backend/app` & `mypy -p app` | 0 lint / 0 type issues across 36 source files | PASS |
+| Backend Pytest + Branch Coverage | `pytest tests --cov=app --cov-branch` | 94 passed, 0 failed in 11.85s (76% total branch+line) | PASS |
+| Frontend ESLint + Strict Typecheck | `npm --prefix frontend run lint` & `typecheck` | 0 lint warnings/errors, 0 TS errors | PASS |
+| Frontend Unit Tests + Coverage | `npm --prefix frontend run test:coverage` | 33 passed across 3 files in 3.36s | PASS |
+| Playwright 3-Viewport + Axe WCAG 2.2 AA | `npx playwright test` (in `frontend/`) | 29 passed across 390/768/1440px, 0 console errors | PASS |
+| Live Deployment Smoke Test | `python scripts/smoke_live.py http://127.0.0.1:10000` | 32 passed, 0 failed | PASS |
+| Dependency Security Audits | `pip-audit` & `npm --prefix frontend audit` | 0 known vulnerabilities found | PASS |
 | Anti-Placeholder & Stub Audit | `python scripts/audit_stubs.py` | 0 stubs detected | PASS |
-| Truth & Claims Audit | `python scripts/check_claims.py` | 0 violations across 60 files | PASS |
+| Truth & Claims Audit | `python scripts/check_claims.py` | 0 violations across 78 files | PASS |
 
 ---
 
@@ -44,10 +48,10 @@ Branch: complete/100
 
 | Metric | Measured Value | Budget Limit | Status |
 |---|---|---|---|
-| Initial Entry JS Bundle (`index-*.js`) | 112.71 KB (gzipped) | <= 200.0 KB | PASS |
-| Consolidated CSS Bundle (`index-*.css`)| 8.81 KB (gzipped) | <= 50.0 KB | PASS |
-| Tracked Repository File Size | 1.138 MB | <= 1.5 MB | PASS |
-| Git Object Storage (`git count-objects -vH`)| 1.040 MB | <= 2.0 MB | PASS |
+| Initial Entry JS Bundle (`index-*.js`) | 55.13 KB (gzipped) | <= 200.0 KB | PASS |
+| Consolidated CSS Bundle (`index-*.css`)| 5.93 KB (gzipped) | <= 50.0 KB | PASS |
+| Tracked Repository File Size | 1.125 MB (150 files) | <= 1.5 MB | PASS |
+| Git Object Storage (`git count-objects -vH`)| 1.10 MiB | <= 2.0 MB | PASS |
 
 ---
 
@@ -98,8 +102,8 @@ git count-objects -vH
 
 ## 8. Remaining User Actions for Deployment
 
-1. **Review and Merge:**
-   Inspect branch `complete/100` (`git diff main...complete/100`) and merge into `main` when ready.
+1. **Branch & Auto-Deploy:**
+   Changes from `refactor/eval-100` merged into `main` after passing all CI/local gates, triggering auto-deployment on Render and Vercel.
 2. **Render Dashboard:**
    Deploy using the updated `render.yaml` blueprint or manual Docker setup (`docs/DEPLOY_RENDER.md`).
 3. **Vercel Dashboard (if using Vercel frontend):**

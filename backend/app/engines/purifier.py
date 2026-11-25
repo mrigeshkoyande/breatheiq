@@ -1,20 +1,31 @@
-"""
-backend/app/engines/purifier.py
-CADR-based Air Purifier Sizing & Reduction Dynamics Engine.
-Calculates required Clean Air Delivery Rate (m³/h and CFM) and single-zone decay kinetics
-for residential rooms and sensitive household profiles.
-"""
+"""CADR-based Air Purifier Sizing & Single-Zone Decay Kinetics Engine."""
 
 import math
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict
+
+SQFT_PER_M2 = 10.7639
+CUFT_PER_M3 = 35.3147
+CFM_PER_M3H = 0.588578
+NATURAL_DEPOSITION_PER_HOUR = 0.2
+OUTDOOR_LEAKAGE_FRACTION = 0.15
+
 
 class DecayPoint(BaseModel):
+    """Modeled indoor PM2.5 value at a minute offset."""
+
+    model_config = ConfigDict(extra="forbid")
+
     minute: int
     pm25_concentration: float
     reduction_pct: float
 
+
 class PurifierSizingResult(BaseModel):
+    """Required CADR capacity and 60-minute concentration decay profile."""
+
+    model_config = ConfigDict(extra="forbid")
+
     room_area_m2: float
     room_area_sqft: float
     room_volume_m3: float
@@ -24,64 +35,61 @@ class PurifierSizingResult(BaseModel):
     required_cadr_cfm: float
     time_to_50pct_min: float
     time_to_80pct_min: float
-    decay_curve: List[DecayPoint]
+    decay_curve: list[DecayPoint]
     recommended_device_class: str
     diy_corsi_rosenthal_comparable: bool
     limitations: str
     provenance: str = "ESTIMATED_PHYSICAL_MODEL"
 
+
 def calculate_purifier_sizing(
     length_m: float,
     width_m: float,
     height_m: float = 2.7,
-    target_ach: float = 5.0,  # 3.0 for standard, 5.0 for smog/vulnerable
+    target_ach: float = 5.0,
     initial_pm25: float = 120.0,
     outdoor_pm25: float = 180.0,
-    filter_efficiency: float = 0.99  # Standard True HEPA H13
+    filter_efficiency: float = 0.99,
 ) -> PurifierSizingResult:
-    """
-    Computes required CADR and dynamic particulate decay curve.
-    Uses standard single-zone mass balance model with room air infiltration and natural deposition.
-    """
+    """Compute required CADR and single-zone particulate decay curve."""
     if length_m <= 0 or width_m <= 0 or height_m <= 0:
         raise ValueError("Room dimensions must be positive numbers.")
+    if target_ach <= 0 or filter_efficiency <= 0:
+        raise ValueError("Target ACH and filter efficiency must be positive.")
 
     area_m2 = round(length_m * width_m, 2)
-    area_sqft = round(area_m2 * 10.7639, 1)
+    area_sqft = round(area_m2 * SQFT_PER_M2, 1)
     volume_m3 = round(area_m2 * height_m, 2)
-    volume_cuft = round(volume_m3 * 35.3147, 1)
+    volume_cuft = round(volume_m3 * CUFT_PER_M3, 1)
 
-    # Required CADR = Volume (m3) * ACH
     required_cadr_m3h = round(volume_m3 * target_ach, 1)
-    required_cadr_cfm = round(required_cadr_m3h * 0.588578, 1)
+    required_cadr_cfm = round(required_cadr_m3h * CFM_PER_M3H, 1)
 
-    # Decay rate (per hour): k = lambda_deposition (0.2) + lambda_infiltration (0.2) + ACH_clean
-    # Clean air effective exchange rate:
     ach_clean = (required_cadr_m3h / volume_m3) * filter_efficiency
-    k_total_per_hour = 0.2 + ach_clean
+    k_total_per_hour = NATURAL_DEPOSITION_PER_HOUR + ach_clean
     k_per_minute = k_total_per_hour / 60.0
 
-    # Minutes to 50% reduction: t50 = ln(2) / k
     t_50 = round(math.log(2) / k_per_minute, 1)
-    # Minutes to 80% reduction: t80 = ln(5) / k
     t_80 = round(math.log(5) / k_per_minute, 1)
 
-    # Generate 60-minute decay trajectory
-    decay_curve = []
-    baseline_outdoor_leakage = 0.15 * outdoor_pm25  # Infiltration floor in typical residential sealing
+    decay_curve: list[DecayPoint] = []
+    baseline_outdoor_leakage = OUTDOOR_LEAKAGE_FRACTION * outdoor_pm25
 
-    for m in range(0, 61, 5):
-        # Exponential concentration decay towards steady-state
-        decay_factor = math.exp(-k_per_minute * m)
-        conc = max(baseline_outdoor_leakage, (initial_pm25 - baseline_outdoor_leakage) * decay_factor + baseline_outdoor_leakage)
-        red_pct = round(((initial_pm25 - conc) / initial_pm25) * 100, 1)
-        decay_curve.append(DecayPoint(
-            minute=m,
-            pm25_concentration=round(conc, 1),
-            reduction_pct=red_pct
-        ))
+    for minute in range(0, 61, 5):
+        decay_factor = math.exp(-k_per_minute * minute)
+        conc = max(
+            baseline_outdoor_leakage,
+            (initial_pm25 - baseline_outdoor_leakage) * decay_factor + baseline_outdoor_leakage,
+        )
+        red_pct = round(((initial_pm25 - conc) / initial_pm25) * 100, 1) if initial_pm25 > 0 else 0.0
+        decay_curve.append(
+            DecayPoint(
+                minute=minute,
+                pm25_concentration=round(conc, 1),
+                reduction_pct=red_pct,
+            )
+        )
 
-    # Determine recommended equipment category
     if required_cadr_m3h <= 250:
         device_class = "Compact Bedroom HEPA (200-300 m³/h CADR)"
         diy_comp = False
@@ -112,5 +120,5 @@ def calculate_purifier_sizing(
         recommended_device_class=device_class,
         diy_corsi_rosenthal_comparable=diy_comp,
         limitations=limitations,
-        provenance="ESTIMATED_PHYSICAL_MODEL"
+        provenance="ESTIMATED_PHYSICAL_MODEL",
     )

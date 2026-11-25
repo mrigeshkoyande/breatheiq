@@ -1,187 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  TrendingUp,
-  Leaf,
-  ShieldCheck,
-  Download,
-  Calendar,
-  Sparkles,
-  RefreshCw,
-  Clock,
-  ArrowRight
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { apiRequest } from '../services/api';
+import { Leaf, Sliders } from 'lucide-react';
+import { useImpactLedger } from '../api/hooks';
+import { AppShell } from '../components/layout/AppShell';
+import { Badge } from '../components/ui/Badge';
+import { buttonStyles } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
 
 export const ImpactPage: React.FC = () => {
-  const { user } = useAuth();
-  const [impactData, setImpactData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchImpact = async () => {
-      setLoading(true);
-      try {
-        const data = await apiRequest('/user/impact');
-        setImpactData(data);
-      } catch {
-        // Handled
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchImpact();
-  }, []);
-
-  const handleExport = () => {
-    if (!impactData) return;
-    const blob = new Blob([JSON.stringify(impactData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `breatheiq_impact_ledger_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const { data: impactData, isLoading, error, refetch } = useImpactLedger();
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col font-sans">
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity" title="BreatheIQ Home">
-              <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 rounded-lg" />
-              <span className="font-extrabold text-lg tracking-tight text-[#0F766E]">BreatheIQ</span>
-            </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <span className="text-xs font-bold text-[#182A29]">Impact Ledger</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs">
-            <Link
-              to="/app/impact/what-if"
-              className="text-[#0F766E] font-bold hover:underline"
-            >
-              What-If Simulator →
-            </Link>
-            <Link
-              to="/app/dashboard"
-              className="px-3 py-1 rounded-lg border border-[#CBD5E1] text-[#334155] hover:bg-[#F1F5F9]"
-            >
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <AppShell
+      title="Personal Impact Ledger"
+      headerRight={
+        <Link to="/app/impact/what-if" className={buttonStyles({ size: 'sm', variant: 'secondary' })}>
+          <Sliders className="w-4 h-4" aria-hidden="true" />
+          What-If Builder
+        </Link>
+      }
+    >
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black text-[#182A29]">Personal & Household Impact Ledger</h1>
-            <p className="text-xs text-[#64748B] mt-1">
-              Verifiable inhaled particulate dosage averted and carbon emissions mitigated through active choices.
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <Leaf className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              Personal Impact & Avoided Exposure Ledger
+            </h1>
+            <p className="text-sm text-[#475569]">
+              Cumulative particulate intake and transit emissions avoided via daily choices.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={handleExport}
-            className="text-xs font-bold px-4 py-2 rounded-xl border border-[#0F766E] text-[#0F766E] hover:bg-[#DDF5EC]/40 flex items-center gap-2 transition self-start sm:self-auto"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export Impact Data (JSON)</span>
-          </button>
+          <Badge badgeType="ESTIMATED" />
         </div>
 
-        {loading ? (
-          <div className="py-20 flex justify-center items-center gap-2 text-xs font-bold text-[#0F766E]">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Calculating Inhaled Dosages...</span>
-          </div>
-        ) : impactData ? (
+        {isLoading && <LoadingSkeleton lines={4} label="Loading impact ledger..." />}
+        {error && (
+          <ErrorBanner
+            message={error instanceof Error ? error.message : 'Unable to fetch impact history.'}
+            onRetry={() => void refetch()}
+          />
+        )}
+
+        {impactData && !isLoading && (
           <>
-            {/* Bento Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-2">
-                <span className="text-[11px] font-bold text-[#64748B] uppercase">Averted PM2.5 Inhaled</span>
-                <span className="text-3xl font-black text-[#0F766E] block">
+            <div className="grid sm:grid-cols-3 gap-4">
+              <Card>
+                <div className="text-xs font-bold uppercase text-[#475569]">Averted PM2.5 Dose</div>
+                <div className="text-3xl font-extrabold mt-1 text-[#0F766E]">
                   {impactData.total_averted_pm25_mg} mg
-                </span>
-                <span className="text-[11px] text-[#64748B]">Saved across indoor filtration & transit</span>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-2">
-                <span className="text-[11px] font-bold text-[#64748B] uppercase">Averted Vehicular CO2</span>
-                <span className="text-3xl font-black text-[#2F9E62] block">
+                </div>
+              </Card>
+              <Card>
+                <div className="text-xs font-bold uppercase text-[#475569]">Avoided CO2</div>
+                <div className="text-3xl font-extrabold mt-1">
                   {impactData.total_averted_co2_kg} kg
-                </span>
-                <span className="text-[11px] text-[#64748B]">Via electric metro & clean commuting</span>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-2">
-                <span className="text-[11px] font-bold text-[#64748B] uppercase">AQI-Hours Avoided</span>
-                <span className="text-3xl font-black text-[#0284C7] block">
-                  {impactData.total_aqi_hours_avoided}
-                </span>
-                <span className="text-[11px] text-[#64748B]">Cumulative exposure score reduction</span>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-2">
-                <span className="text-[11px] font-bold text-[#64748B] uppercase">Clean-Air Active Streak</span>
-                <span className="text-3xl font-black text-[#D97706] block">
-                  {impactData.clean_air_streak_days} Days
-                </span>
-                <span className="text-[11px] text-[#64748B]">Consecutive days following daily routine</span>
-              </div>
+                </div>
+              </Card>
+              <Card>
+                <div className="text-xs font-bold uppercase text-[#475569]">Active Streak</div>
+                <div className="text-3xl font-extrabold mt-1">
+                  {impactData.clean_air_streak_days} days
+                </div>
+              </Card>
             </div>
 
-            {/* Time Series History Table */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-4">
-              <h2 className="text-base font-black text-[#182A29]">Daily Impact Log History</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F8FAF7] text-[#64748B] font-bold border-b border-[#E2E8F0]">
-                    <tr>
-                      <th className="p-3">Date</th>
-                      <th className="p-3">Averted PM2.5 (µg)</th>
-                      <th className="p-3">CO2 Averted (kg)</th>
-                      <th className="p-3">AQI-Hours</th>
-                      <th className="p-3">Action Details</th>
-                      <th className="p-3">Provenance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E8F0] text-[#3E4947]">
-                    {impactData.history.map((log: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-[#F8FAF7]/50">
-                        <td className="p-3 font-semibold">{log.date_str}</td>
-                        <td className="p-3 font-mono font-bold text-[#0F766E]">{log.averted_pm25_dose_ug} µg</td>
-                        <td className="p-3 font-mono">{log.averted_co2_kg} kg</td>
-                        <td className="p-3">{log.aqi_hours_avoided}</td>
-                        <td className="p-3 text-[#64748B]">{log.notes || 'Routine adherence'}</td>
-                        <td className="p-3">
-                          <span className="text-[10px] bg-[#DDF5EC] text-[#0F766E] font-bold px-2 py-0.5 rounded-full">
-                            ESTIMATED
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <Card className="space-y-3">
+              <h2 className="font-bold text-lg">Daily Ledger History</h2>
+              <div className="space-y-2.5">
+                {impactData.history.map((log) => (
+                  <div
+                    key={log.id}
+                    className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm"
+                  >
+                    <div>
+                      <div className="font-bold">{log.date_str}</div>
+                      {log.notes && <div className="text-xs text-[#475569]">{log.notes}</div>}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs font-bold text-[#0F766E]">
+                      <span>{log.averted_pm25_dose_ug} µg PM2.5 averted</span>
+                      <span>{log.averted_co2_kg} kg CO2 saved</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-
-            {/* Sourced Methodology Callout */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-2 text-xs">
-              <span className="font-bold text-[#0F766E] block">Sourced Calculation Methodology</span>
-              <p className="text-[#64748B] leading-relaxed">
-                Inhaled particulate dosage is derived from USEPA Exposure Factors Handbook Chapter 6 (Adult resting volume: 0.50 m³/h; active transit volume: 0.83 m³/h).
-                Transit emission baselines follow ARAI vehicular factors (180 g CO2/km for solo car travel vs 18 g CO2/km for metro rail).
-              </p>
-            </div>
+            </Card>
           </>
-        ) : null}
-      </main>
-    </div>
+        )}
+      </div>
+    </AppShell>
   );
 };

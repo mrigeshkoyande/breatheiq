@@ -1,46 +1,42 @@
-"""
-backend/app/api/v1/endpoints/community.py
-Air Watch Community Pollution Reports & Civic Verification Endpoints.
-"""
+"""Air Watch Community Pollution Reports & Civic Verification Endpoints."""
 
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, update
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_current_user
-from app.models.auth import User
+from app.api.deps import get_current_user, get_db
+from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.models.app_data import CommunityReport
+from app.models.auth import User
+from app.schemas.app_schemas import CommunityReportResponse, ReportCreateSchema
 
 router = APIRouter(prefix="/community", tags=["Community Air Watch"])
 
-class ReportCreateSchema(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    report_type: str = Field(..., example="construction_dust")  # stubble_burning, construction_dust, garbage_burning, industrial_plume, traffic_congestion
-    severity: str = Field("moderate", example="severe")  # moderate, severe, hazardous
-    location_name: str = Field(..., example="SV Road & Linking Road Junction, Andheri")
-    latitude: float = Field(19.0760)
-    longitude: float = Field(72.8777)
-    description: Optional[str] = Field("", example="Heavy unpaved road dust with no water sprinkling.")
 
-@router.get("/reports")
+@router.get("/reports", response_model=list[CommunityReportResponse])
 async def list_community_reports(
-    report_type: Optional[str] = None,
-    severity: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
-):
-    query = select(CommunityReport).where(CommunityReport.status != "REJECTED").order_by(CommunityReport.created_at.desc())
+    db: Annotated[AsyncSession, Depends(get_db)],
+    report_type: Annotated[str | None, Query(max_length=50)] = None,
+    severity: Annotated[str | None, Query(max_length=32)] = None,
+) -> list[CommunityReportResponse]:
+    """List verified and unverified community smog hazard reports."""
+    query = (
+        select(CommunityReport)
+        .where(CommunityReport.status != "REJECTED")
+        .order_by(CommunityReport.created_at.desc())
+    )
     if report_type:
         query = query.where(CommunityReport.report_type == report_type)
     if severity:
         query = query.where(CommunityReport.severity == severity)
 
     res = await db.execute(query.limit(50))
-    reports = res.scalars().all()
+    reports = list(res.scalars().all())
 
-    if not reports:
-        # Seed realistic initial community reports
+    if not reports and (settings.DEMO_MODE or settings.ENVIRONMENT in ("development", "demo", "testing")):
         seed = [
             CommunityReport(
                 user_id=1,
@@ -49,9 +45,9 @@ async def list_community_reports(
                 location_name="SV Road Metro Construction Corridor, Andheri West",
                 latitude=19.1190,
                 longitude=72.8470,
-                description="Excavation site active without mandatory green dust barrier mesh. Visible particulate plume.",
+                description="Excavation site active without mandatory green dust barrier mesh.",
                 upvote_count=8,
-                status="UNVERIFIED"
+                status="UNVERIFIED",
             ),
             CommunityReport(
                 user_id=1,
@@ -60,9 +56,9 @@ async def list_community_reports(
                 location_name="Deonar Peripheral Corridor, Chembur",
                 latitude=19.0620,
                 longitude=72.9210,
-                description="Biomass and plastic waste smoldering on vacant lot. Acrid smoke entering residential towers.",
+                description="Biomass and plastic waste smoldering on vacant lot.",
                 upvote_count=14,
-                status="VERIFIED"
+                status="VERIFIED",
             ),
             CommunityReport(
                 user_id=1,
@@ -71,24 +67,29 @@ async def list_community_reports(
                 location_name="Western Express Highway Kalanagar Junction",
                 latitude=19.0600,
                 longitude=72.8520,
-                description="Stalled commercial trucks causing severe evening twilight diesel idling.",
+                description="Stalled commercial trucks causing evening diesel idling.",
                 upvote_count=5,
-                status="UNVERIFIED"
-            )
+                status="UNVERIFIED",
+            ),
         ]
         db.add_all(seed)
         await db.commit()
         res = await db.execute(query.limit(50))
-        reports = res.scalars().all()
+        reports = list(res.scalars().all())
 
-    return reports
+    return [CommunityReportResponse.model_validate(item) for item in reports]
 
-@router.post("/reports")
+
+@router.post("/reports", response_model=CommunityReportResponse)
+@limiter.limit("15/minute")
 async def create_community_report(
+    request: Request,
     req: ReportCreateSchema,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user)
-):
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> CommunityReportResponse:
+    """Submit a new citizen air hazard report."""
+    _ = request
     report = CommunityReport(
         user_id=user.id,
         report_type=req.report_type,
@@ -98,19 +99,21 @@ async def create_community_report(
         longitude=req.longitude,
         description=req.description,
         upvote_count=1,
-        status="UNVERIFIED"
+        status="UNVERIFIED",
     )
     db.add(report)
     await db.commit()
     await db.refresh(report)
-    return report
+    return CommunityReportResponse.model_validate(report)
 
-@router.post("/reports/{report_id}/verify")
+
+@router.post("/reports/{report_id}/verify", response_model=CommunityReportResponse)
 async def upvote_community_report(
     report_id: int,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user)
-):
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+) -> CommunityReportResponse:
+    """Confirm and upvote a community air hazard observation."""
     res = await db.execute(select(CommunityReport).where(CommunityReport.id == report_id))
     report = res.scalars().first()
     if not report:
@@ -118,4 +121,4 @@ async def upvote_community_report(
     report.upvote_count += 1
     await db.commit()
     await db.refresh(report)
-    return report
+    return CommunityReportResponse.model_validate(report)

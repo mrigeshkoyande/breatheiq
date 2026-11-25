@@ -1,168 +1,182 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Check, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
+import { Button, buttonStyles } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { SkipLink } from '../components/layout/SkipLink';
 
 export const SignupPage: React.FC = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
-
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const hasMinLen = password.length >= 8;
+  const hasDigit = /\d/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const strengthScore = [hasMinLen, hasDigit, hasUpper].filter(Boolean).length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+    setError('');
+    if (!fullName.trim()) {
+      setError('Full name is required.');
+      return;
+    }
+    if (!hasMinLen) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
     try {
-      await signup(email, password, fullName);
-      navigate('/app/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+      await signup(email.trim(), password, fullName.trim());
+      navigate('/onboarding');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Registration failed.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] flex flex-col justify-between">
-      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white/70 backdrop-blur-md">
-        <Link to="/" className="flex items-center gap-3">
-          <img src="/logo-mark.webp" alt="BreatheIQ Mark" className="w-8 h-8 rounded-lg" />
-          <div className="flex flex-col">
-            <span className="font-heading font-bold text-lg leading-none text-[#182A29]">
-              Breathe<span className="text-[#0F766E]">IQ</span>
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#64748B]">
-              Environmental Sanctuary
-            </span>
-          </div>
+    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+      <SkipLink />
+      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 backdrop-blur-md">
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
+          <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
         </Link>
-        <Link to="/login" className="text-xs font-semibold text-[#0F766E] hover:underline">
-          Already registered? Sign In
-        </Link>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[#475569] hidden sm:inline">Already registered?</span>
+          <Link to="/login" className={buttonStyles({ variant: 'outline', size: 'sm' })}>
+            Sign In
+          </Link>
+        </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 lg:p-10">
-        <div className="w-full max-w-5xl bg-white rounded-3xl border border-[#E2E8F0] shadow-elevated overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-          {/* Left Column */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#E9FEFB] via-[#DDF2F0] to-[#A8ECE5] p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#E2E8F0] text-[10px] font-bold text-[#0F766E] uppercase tracking-wider mb-6">
-                <span className="w-2 h-2 rounded-full bg-[#2F9E62] animate-pulse" />
-                Join Clean Air Movement
-              </div>
-              <h2 className="font-heading font-bold text-2xl text-[#182A29]">
-                Protect your family from winter smog
-              </h2>
-              <p className="text-sm text-[#0F766E] font-medium mt-2">
-                Hyper-local CPCB air monitoring, Window Oracle ventilation forecasts & CleanRoute navigation.
-              </p>
-            </div>
-
-            <div className="space-y-3 my-6 text-xs text-[#3E4947]">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                <span>Deterministic CPCB NAQI algorithm</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                <span>AirTwin vulnerability profiles</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#2F9E62]" />
-                <span>Public health advisories without medical claims</span>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-[#64748B]">
-              BreatheIQ respects data privacy. All environmental telemetry is grounded in official station and meteorological feeds.
+      <main id="main-content" className="flex-1 flex items-center justify-center p-4 py-10">
+        <div className="max-w-4xl w-full grid md:grid-cols-2 gap-8 items-center">
+          <div className="hidden md:flex flex-col gap-5 pr-6">
+            <p className="text-3xl font-extrabold tracking-tight leading-tight">
+              Create Your Family Clean Air Profile.
             </p>
+            <p className="text-[#475569] leading-relaxed">
+              Configure household corridors, respiratory vulnerability weights for children and
+              seniors, and room purifier CADR budgets in under two minutes.
+            </p>
+            <ul className="space-y-2.5 text-sm text-[#334155]">
+              {[
+                'Hourly Window Oracle aeration schedules',
+                'True HEPA CADR & indoor decay sizing',
+                'CPCB NAQI-grounded Copilot guidance',
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[#DDF5EC] text-[#0F766E] flex items-center justify-center shrink-0">
+                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Right Column: Registration Form */}
-          <div className="lg:col-span-7 p-8 lg:p-12 flex flex-col justify-center">
-            <div className="max-w-md w-full mx-auto space-y-6">
-              <div>
-                <h1 className="font-heading font-bold text-2xl text-[#182A29]">
-                  Create your account
-                </h1>
-                <p className="text-sm text-[#64748B] mt-1">
-                  Start monitoring clean air for your home and family
-                </p>
+          <Card elevated className="p-6 sm:p-8">
+            <div className="mb-5">
+              <h1 className="text-2xl font-bold tracking-tight mb-1">Create Account</h1>
+              <p className="text-sm text-[#475569]">Set up personalized winter smog protection.</p>
+            </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium"
+              >
+                {error}
               </div>
+            )}
 
-              {error && (
-                <div className="p-3 bg-[#FDECEC] border border-[#F4A8A8] rounded-xl flex items-center gap-2.5 text-xs text-[#DC5252] font-medium">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+              <Input
+                label="Full Name"
+                type="text"
+                placeholder="Priya Sharma"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                autoComplete="name"
+              />
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+              <div className="space-y-1.5">
                 <Input
-                  id="signup-fullname"
-                  name="full_name"
-                  label="Full Name"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g., Priya Sharma"
-                  required
-                />
-
-                <Input
-                  id="signup-email"
-                  name="email"
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                />
-
-                <Input
-                  id="signup-password"
-                  name="password"
                   label="Password"
                   type="password"
+                  placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  helperText="Use a secure password with 8+ characters."
                   required
+                  autoComplete="new-password"
                 />
-
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? 'Creating Account...' : 'Complete Registration'}
-                </Button>
-              </form>
-
-              <div className="pt-4 text-center border-t border-[#E2E8F0] text-xs text-[#64748B]">
-                Already have an account?{' '}
-                <Link to="/login" className="font-semibold text-[#0F766E] hover:underline">
-                  Sign in
-                </Link>
+                <div
+                  className="grid grid-cols-3 gap-1.5"
+                  role="group"
+                  aria-label="Password strength indicator"
+                >
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`h-1.5 rounded-full ${
+                        strengthScore >= step
+                          ? strengthScore === 3
+                            ? 'bg-[#2F9E62]'
+                            : 'bg-[#F59E0B]'
+                          : 'bg-[#E2E8F0]'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="Re-enter password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+              <Button type="submit" disabled={loading} className="w-full h-11">
+                {loading ? (
+                  'Creating account...'
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" aria-hidden="true" />
+                    Create Account
+                  </span>
+                )}
+              </Button>
+            </form>
+          </Card>
         </div>
       </main>
-
-      <footer className="py-4 text-center text-xs text-[#64748B]">
-        BreatheIQ &copy; 2026. Challenge 6 — Urban Air Quality Assistant.
-      </footer>
     </div>
   );
 };

@@ -1,30 +1,41 @@
+"""Cryptographic helpers for passwords, JWT access/refresh tokens, and token hashing."""
+
 import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
+
 from app.core.config import settings
 
-# OWASP Password Storage Cheat Sheet recommendation for Argon2id
+# OWASP Password Storage Cheat Sheet parameters for Argon2id
 ph = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=1, hash_len=32, salt_len=16)
 
+
 def hash_password(password: str) -> str:
+    """Hash a plaintext password using Argon2id."""
     return ph.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its stored Argon2id hash without raising."""
     try:
         return ph.verify(hashed_password, plain_password)
-    except (VerifyMismatchError, Exception):
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
         return False
+
 
 def hash_token(token: str) -> str:
     """SHA-256 hash for secure storage of refresh and one-time token JTIs."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-def create_access_token(user_id: int, role: str, expires_delta: Optional[timedelta] = None) -> str:
-    now = datetime.now(timezone.utc)
+
+def create_access_token(user_id: int, role: str, expires_delta: timedelta | None = None) -> str:
+    """Issue a short-lived signed JWT access token."""
+    now = datetime.now(UTC)
     exp = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     payload = {
         "sub": str(user_id),
@@ -36,10 +47,11 @@ def create_access_token(user_id: int, role: str, expires_delta: Optional[timedel
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
+
 def create_refresh_token(user_id: int, family_id: str) -> tuple[str, str, datetime]:
-    """Generates raw refresh token, its jti_hash, and expiry date."""
+    """Generate a raw refresh JWT, its stored jti_hash, and expiry timestamp."""
     jti = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expires_at = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     payload = {
         "sub": str(user_id),
@@ -52,9 +64,11 @@ def create_refresh_token(user_id: int, family_id: str) -> tuple[str, str, dateti
     raw_token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return raw_token, hash_token(jti), expires_at
 
+
 def create_one_time_token(user_id: int, purpose: str, expires_minutes: int = 30) -> tuple[str, str, datetime]:
+    """Generate a single-use token for email verification or password reset."""
     jti = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expires_at = now + timedelta(minutes=expires_minutes)
     payload = {
         "sub": str(user_id),
@@ -67,5 +81,10 @@ def create_one_time_token(user_id: int, purpose: str, expires_minutes: int = 30)
     raw_token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return raw_token, hash_token(jti), expires_at
 
-def decode_token(token: str) -> Dict[str, Any]:
-    return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+
+def decode_token(token: str) -> dict[str, Any]:
+    """Decode and verify JWT signature and expiry claims."""
+    decoded: dict[str, Any] = jwt.decode(
+        token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+    )
+    return decoded

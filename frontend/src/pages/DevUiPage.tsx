@@ -1,73 +1,65 @@
 import React from 'react';
-import { Button } from '../components/ui/Button';
+import { Link } from 'react-router-dom';
+import { AqiBadge } from '../components/ui/AqiBadge';
+import { Badge } from '../components/ui/Badge';
+import { Button, buttonStyles } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Badge, SourceBadgeType } from '../components/ui/Badge';
-import { AqiBadge, CpcbCategory } from '../components/ui/AqiBadge';
 import { Input } from '../components/ui/Input';
+import { PublicHeader } from '../components/layout/PublicHeader';
+import { SkipLink } from '../components/layout/SkipLink';
 
 export const DevUiPage: React.FC = () => {
-  const badgeTypes: SourceBadgeType[] = ['LIVE', 'MODELED', 'FORECAST', 'ESTIMATED', 'USER-REPORTED', 'DEMO'];
-  const cpcbCategories: { cat: CpcbCategory; aqi: number }[] = [
-    { cat: 'Good', aqi: 35 },
-    { cat: 'Satisfactory', aqi: 75 },
-    { cat: 'Moderate', aqi: 145 },
-    { cat: 'Poor', aqi: 242 },
-    { cat: 'Very Poor', aqi: 340 },
-    { cat: 'Severe', aqi: 460 },
-  ];
-
+  const sampleCategories = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe'] as const;
   return (
-    <div className="min-h-screen bg-[#F8FAF7] p-8 lg:p-12 space-y-12 max-w-6xl mx-auto">
-      <div>
-        <h1 className="font-heading font-bold text-3xl text-[#182A29]">
-          BreatheIQ Atmospheric Precision — Component Sandbox (/dev/ui)
-        </h1>
-        <p className="text-sm text-[#64748B] mt-1">
-          Visual verification harness for shared tokens, buttons, cards, CPCB AQI chips, and data attribution badges.
-        </p>
-      </div>
-
-      {/* Buttons */}
-      <Card className="space-y-4">
-        <h2 className="font-heading font-bold text-lg text-[#182A29]">Buttons & Actions</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="primary">Primary Action</Button>
-          <Button variant="secondary">Secondary Mint</Button>
-          <Button variant="outline">Outline Border</Button>
-          <Button variant="ghost">Ghost Action</Button>
-          <Button variant="danger">Emergency Alert</Button>
-          <Button variant="primary" disabled>Disabled State</Button>
+    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29]">
+      <SkipLink />
+      <PublicHeader />
+      <main id="main-content" className="max-w-5xl mx-auto px-4 py-10 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold">BreatheIQ Design System Primitives</h1>
+            <p className="text-sm text-[#475569] mt-1">
+              Accessible token reference with dual-channel AQI indicators and provenance badges.
+            </p>
+          </div>
+          <Link to="/" className={buttonStyles({ variant: 'outline', size: 'sm' })}>
+            Back Home
+          </Link>
         </div>
-      </Card>
 
-      {/* CPCB Scale */}
-      <Card className="space-y-4">
-        <h2 className="font-heading font-bold text-lg text-[#182A29]">Official CPCB NAQI Categories</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          {cpcbCategories.map(({ cat, aqi }) => (
-            <AqiBadge key={cat} category={cat} aqi={aqi} />
-          ))}
-        </div>
-      </Card>
+        <Card className="space-y-4">
+          <h2 className="font-bold text-lg">CPCB AQI Badges (Non-Color + Text + Score)</h2>
+          <div className="flex flex-wrap gap-3">
+            {sampleCategories.map((cat, idx) => (
+              <AqiBadge key={cat} aqi={30 + idx * 80} category={cat} />
+            ))}
+          </div>
+        </Card>
 
-      {/* Data Source Provenance Badges */}
-      <Card className="space-y-4">
-        <h2 className="font-heading font-bold text-lg text-[#182A29]">Data Source & Telemetry Provenance Badges</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          {badgeTypes.map((type) => (
-            <Badge key={type} badgeType={type} />
-          ))}
-        </div>
-      </Card>
+        <Card className="space-y-4">
+          <h2 className="font-bold text-lg">Telemetry Provenance Badges</h2>
+          <div className="flex flex-wrap gap-3">
+            {(['LIVE', 'MODELED', 'FORECAST', 'ESTIMATED', 'USER-REPORTED', 'DEMO'] as const).map((b) => (
+              <Badge key={b} badgeType={b} />
+            ))}
+          </div>
+        </Card>
 
-      {/* Form Controls */}
-      <Card className="space-y-4">
-        <h2 className="font-heading font-bold text-lg text-[#182A29]">Form Inputs & States</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input label="Station Name" placeholder="e.g., Andheri West CPCB" />
-          <Input label="With Validation Error" error="Station telemetry offline" value="Invalid ID" readOnly />
-        </div>
-      </Card>
+        <Card className="space-y-4">
+          <h2 className="font-bold text-lg">Buttons & Form Controls</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="primary">Primary</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="outline">Outline</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="danger">Danger</Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4 pt-2">
+            <Input label="Standard Field" placeholder="Enter corridor name" helperText="Example: Andheri West" />
+            <Input label="Validation Error" defaultValue="invalid" error="Must be a valid coordinate" />
+          </div>
+        </Card>
+      </main>
     </div>
   );
 };
