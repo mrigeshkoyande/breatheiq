@@ -77,6 +77,19 @@ def _build_demo_forecast_point(city_info: CityConfig, target_time: datetime) -> 
     }
 
 
+def _build_demo_pollutants(city_info: CityConfig, hour: int) -> dict[str, float]:
+    """Compute diurnal pollutant concentrations for ``city_info`` at UTC ``hour``."""
+    diurnal = _demo_diurnal_multiplier(hour)
+    return {
+        "pm25": round(city_info["base_pm25"] * diurnal, 1),
+        "pm10": round(city_info["base_pm10"] * diurnal, 1),
+        "no2": round(city_info["base_no2"] * (1.1 if 7 <= hour <= 20 else 0.8), 1),
+        "so2": city_info["base_so2"],
+        "co": round(city_info["base_co"] * diurnal, 2),
+        "o3": round(city_info["base_o3"] * (1.4 if 12 <= hour <= 16 else 0.6), 1),
+    }
+
+
 class DemoAirDataProvider(AirDataProvider):
     """Deterministic offline fallback modeling urban diurnal winter smog curves."""
 
@@ -86,18 +99,7 @@ class DemoAirDataProvider(AirDataProvider):
         """Compute current synthetic diurnal telemetry for offline and demo mode."""
         city_info = match_city(lat, lon, city_name)
         now = datetime.now(UTC)
-        hour = now.hour
-        diurnal = _demo_diurnal_multiplier(hour)
-        pm25 = round(city_info["base_pm25"] * diurnal, 1)
-        pm10 = round(city_info["base_pm10"] * diurnal, 1)
-        no2 = round(city_info["base_no2"] * (1.1 if 7 <= hour <= 20 else 0.8), 1)
-        so2 = city_info["base_so2"]
-        co = round(city_info["base_co"] * diurnal, 2)
-        o3 = round(city_info["base_o3"] * (1.4 if 12 <= hour <= 16 else 0.6), 1)
-        naqi_res = calculate_cpcb_naqi(
-            {"pm25": pm25, "pm10": pm10, "no2": no2, "so2": so2, "co": co, "o3": o3}
-        )
-
+        concs = _build_demo_pollutants(city_info, now.hour)
         return AirDataPayload(
             city=city_info["city"],
             location_name=f"{city_info['city']} Central Monitoring Corridor",
@@ -107,17 +109,12 @@ class DemoAirDataProvider(AirDataProvider):
             source="DEMO",
             confidence_score=0.85,
             station_id="DEMO-CAAQMS-01",
-            pm25=pm25,
-            pm10=pm10,
-            no2=no2,
-            so2=so2,
-            co=co,
-            o3=o3,
             temperature_c=city_info["temp_c"],
             relative_humidity_pct=city_info["humidity"],
             wind_speed_ms=city_info["wind_speed"],
-            boundary_layer_height_m=950.0 if 12 <= hour <= 15 else 280.0,
-            naqi=naqi_res,
+            boundary_layer_height_m=950.0 if 12 <= now.hour <= 15 else 280.0,
+            naqi=calculate_cpcb_naqi(concs),
+            **concs,
         )
 
     async def get_forecast(self, lat: float, lon: float, hours: int = 48) -> list[dict[str, Any]]:

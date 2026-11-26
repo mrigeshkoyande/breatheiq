@@ -18,15 +18,15 @@ from app.db.seed_data import DEMO_TASKS
 from app.models.app_data import ImpactLog, RoutineTask, SmogAlertNotification, SmogAlertRule
 
 
-async def seed_routine_and_alerts(session: AsyncSession, user_id: int) -> None:
-    """Seed daily adaptive routine tasks, alert rule, notification, and 7-day impact logs."""
+async def _seed_today_tasks(session: AsyncSession, user_id: int) -> None:
+    """Insert missing daily routine tasks for ``user_id``."""
     today_str = date.today().isoformat()
     res_tasks = await session.execute(
         select(RoutineTask).where(RoutineTask.user_id == user_id, RoutineTask.date_str == today_str)
     )
-    existing_tasks = {t.title for t in res_tasks.scalars().all()}
+    existing = {t.title for t in res_tasks.scalars().all()}
     for title, slot, category, done, desc in DEMO_TASKS:
-        if title not in existing_tasks:
+        if title not in existing:
             session.add(
                 RoutineTask(
                     user_id=user_id,
@@ -39,21 +39,26 @@ async def seed_routine_and_alerts(session: AsyncSession, user_id: int) -> None:
                 )
             )
 
-    if (
-        not (await session.execute(select(SmogAlertRule).where(SmogAlertRule.user_id == user_id)))
+
+async def _seed_default_alerts(session: AsyncSession, user_id: int) -> None:
+    """Seed initial SmogShield alert rule and demo notification when missing."""
+    has_rule = (
+        (await session.execute(select(SmogAlertRule).where(SmogAlertRule.user_id == user_id)))
         .scalars()
         .first()
-    ):
+    )
+    if not has_rule:
         session.add(SmogAlertRule(user_id=user_id, aqi_threshold=200, target_member="All Members"))
-    if (
-        not (
+    has_notif = (
+        (
             await session.execute(
                 select(SmogAlertNotification).where(SmogAlertNotification.user_id == user_id)
             )
         )
         .scalars()
         .first()
-    ):
+    )
+    if not has_notif:
         session.add(
             SmogAlertNotification(
                 user_id=user_id,
@@ -65,6 +70,11 @@ async def seed_routine_and_alerts(session: AsyncSession, user_id: int) -> None:
             )
         )
 
+
+async def seed_routine_and_alerts(session: AsyncSession, user_id: int) -> None:
+    """Seed daily adaptive routine tasks, alert rule, notification, and 7-day impact logs."""
+    await _seed_today_tasks(session, user_id)
+    await _seed_default_alerts(session, user_id)
     await seed_impact_history(session, user_id)
 
 

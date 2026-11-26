@@ -121,32 +121,25 @@ def _select_dominant_pollutant(sub_indices: dict[str, SubIndexResult]) -> tuple[
     return dominant_sub.sub_index, dominant_sub.pollutant
 
 
+def _insufficient_pollutant_count(
+    sub_indices: dict[str, SubIndexResult], count: int, has_particulate: bool
+) -> NAQIResult:
+    """Build CPCB invalid response when fewer than 3 pollutants are present."""
+    missing = MIN_REQUIRED_POLLUTANTS - count
+    extra = "" if has_particulate else " At least one particulate (PM2.5 or PM10) is also required."
+    return _build_incomplete_naqi(
+        sub_indices,
+        "Data insufficient for official NAQI calculation (minimum 3 pollutants required per CPCB standards).",
+        f"Monitored {count} pollutants; requires at least {missing} more.{extra}",
+    )
+
+
 def calculate_cpcb_naqi(readings: dict[str, float]) -> NAQIResult:
-    """Compute composite statutory CPCB NAQI from raw pollutant concentrations.
-
-    Complexity:
-        Time ``O(P * B)`` where ``P`` is the number of readings and ``B=6`` is
-        brackets per pollutant; Space ``O(P)`` for computed sub-indices.
-
-    Args:
-        readings: Mapping of pollutant names (`pm25`, `pm10`, `no2`, `so2`, `co`,
-            `o3`, `nh3`, `pb`) to measured concentrations.
-
-    Returns:
-        Composite ``NAQIResult`` with sub-indices, dominant pollutant, and advisory.
-    """
+    """Compute composite statutory CPCB NAQI from raw concentrations (Time O(P*B), Space O(P))."""
     sub_indices, has_particulate = _compute_sub_indices(readings)
     count = len(sub_indices)
     if count < MIN_REQUIRED_POLLUTANTS:
-        missing = MIN_REQUIRED_POLLUTANTS - count
-        extra = (
-            "" if has_particulate else " At least one particulate (PM2.5 or PM10) is also required."
-        )
-        return _build_incomplete_naqi(
-            sub_indices,
-            "Data insufficient for official NAQI calculation (minimum 3 pollutants required per CPCB standards).",
-            f"Monitored {count} pollutants; requires at least {missing} more.{extra}",
-        )
+        return _insufficient_pollutant_count(sub_indices, count, has_particulate)
     if not has_particulate:
         return _build_incomplete_naqi(
             sub_indices,

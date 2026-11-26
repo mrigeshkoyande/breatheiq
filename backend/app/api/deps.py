@@ -53,42 +53,35 @@ def _extract_access_user_id(token: str) -> int:
         raise AuthenticationError("Could not validate credentials") from exc
 
 
+def _unauthorized(detail: str) -> HTTPException:
+    """Create standardized HTTP 401 Bearer challenge exception."""
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+async def _fetch_user_by_id(db: AsyncSession, user_id: int) -> User | None:
+    """Retrieve user row by primary key from active DB session."""
+    return (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+
+
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Security(security_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
-    """Validate Bearer access JWT and re-verify active user state from the database.
-
-    Args:
-        credentials: Parsed HTTP Bearer token credentials.
-        db: Active async database session.
-
-    Returns:
-        Active persisted ``User`` row matching the token subject.
-
-    Raises:
-        HTTPException: 401 on missing/invalid token or 403 on disabled account.
-    """
+    """Validate Bearer access JWT and re-verify active user state from the database."""
     if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+        raise _unauthorized("Authentication required")
     try:
         user_id = _extract_access_user_id(credentials.credentials)
     except AuthenticationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=exc.detail,
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
+        raise _unauthorized(exc.detail) from exc
 
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
+    user = await _fetch_user_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise _unauthorized("User not found")
     if not user.is_active:
         raise AuthorizationError("Inactive user account")
     return user
@@ -107,8 +100,7 @@ async def get_current_user_optional(
         logger.debug("Optional token ignored: %s", exc.detail)
         return None
 
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
+    user = await _fetch_user_by_id(db, user_id)
     return user if user and user.is_active else None
 
 

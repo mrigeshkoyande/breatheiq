@@ -79,6 +79,16 @@ def _classify_device_class(required_cadr_m3h: float) -> tuple[str, bool]:
     return "High-Capacity Dual-Filter or Multiple Distributed Units (500+ m³/h CADR)", True
 
 
+def _validate_sizing_inputs(
+    length_m: float, width_m: float, height_m: float, target_ach: float, filter_efficiency: float
+) -> None:
+    """Validate positive physical room dimensions, ACH, and filtration efficiency."""
+    if length_m <= 0 or width_m <= 0 or height_m <= 0:
+        raise DomainValidationError("Room dimensions must be positive numbers.")
+    if target_ach <= 0 or filter_efficiency <= 0:
+        raise DomainValidationError("Target ACH and filter efficiency must be positive.")
+
+
 def calculate_purifier_sizing(
     length_m: float,
     width_m: float,
@@ -88,40 +98,15 @@ def calculate_purifier_sizing(
     outdoor_pm25: float = 180.0,
     filter_efficiency: float = 0.99,
 ) -> PurifierSizingResult:
-    """Compute required CADR and single-zone particulate decay curve.
-
-    Complexity:
-        Time ``O(M)`` and Space ``O(M)`` for ``M=13`` 5-minute intervals over 60 minutes.
-
-    Args:
-        length_m: Room length in meters (> 0).
-        width_m: Room width in meters (> 0).
-        height_m: Ceiling height in meters (> 0).
-        target_ach: Target clean air changes per hour (> 0).
-        initial_pm25: Starting indoor PM2.5 (µg/m³).
-        outdoor_pm25: Ambient outdoor PM2.5 (µg/m³).
-        filter_efficiency: HEPA filtration efficiency fraction (0 < e <= 1).
-
-    Returns:
-        Calculated ``PurifierSizingResult`` with CADR capacity and 60-minute curve.
-
-    Raises:
-        DomainValidationError: If dimensions, target ACH, or efficiency are non-positive.
-    """
-    if length_m <= 0 or width_m <= 0 or height_m <= 0:
-        raise DomainValidationError("Room dimensions must be positive numbers.")
-    if target_ach <= 0 or filter_efficiency <= 0:
-        raise DomainValidationError("Target ACH and filter efficiency must be positive.")
-
+    """Compute required CADR and single-zone particulate decay curve (Time/Space O(M))."""
+    _validate_sizing_inputs(length_m, width_m, height_m, target_ach, filter_efficiency)
     area_m2 = round(length_m * width_m, 2)
     volume_m3 = round(area_m2 * height_m, 2)
     required_cadr_m3h = round(volume_m3 * target_ach, 1)
-    k_total_per_hour = (
+    k_per_min = (
         NATURAL_DEPOSITION_PER_HOUR + (required_cadr_m3h / volume_m3) * filter_efficiency
-    )
-    k_per_minute = k_total_per_hour / 60.0
+    ) / 60.0
     device_class, diy_comp = _classify_device_class(required_cadr_m3h)
-
     return PurifierSizingResult(
         room_area_m2=area_m2,
         room_area_sqft=round(area_m2 * SQFT_PER_M2, 1),
@@ -130,9 +115,9 @@ def calculate_purifier_sizing(
         target_ach=target_ach,
         required_cadr_m3h=required_cadr_m3h,
         required_cadr_cfm=round(required_cadr_m3h * CFM_PER_M3H, 1),
-        time_to_50pct_min=round(math.log(2) / k_per_minute, 1),
-        time_to_80pct_min=round(math.log(5) / k_per_minute, 1),
-        decay_curve=_build_decay_curve(k_per_minute, initial_pm25, outdoor_pm25),
+        time_to_50pct_min=round(math.log(2) / k_per_min, 1),
+        time_to_80pct_min=round(math.log(5) / k_per_min, 1),
+        decay_curve=_build_decay_curve(k_per_min, initial_pm25, outdoor_pm25),
         recommended_device_class=device_class,
         diy_corsi_rosenthal_comparable=diy_comp,
         limitations=PURIFIER_LIMITATIONS_NOTE,

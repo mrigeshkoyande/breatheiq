@@ -97,34 +97,46 @@ async def _seed_members(session: AsyncSession, user_id: int, household_id: int) 
             existing[name].household_id = household_id
 
 
+async def _create_seeded_room(
+    session: AsyncSession,
+    user_id: int,
+    household_id: int,
+    spec: tuple[str, float, float, float, bool, float, float],
+) -> None:
+    """Create a demo monitored room and its initial AirTwin reading."""
+    r_name, length_m, width_m, height_m, has_purifier, cadr, pm25_val = spec
+    room = Room(
+        user_id=user_id,
+        household_id=household_id,
+        name=r_name,
+        length_m=length_m,
+        width_m=width_m,
+        height_m=height_m,
+        has_purifier=has_purifier,
+        purifier_cadr=cadr,
+    )
+    session.add(room)
+    await session.flush()
+    session.add(
+        RoomReading(
+            room_id=room.id,
+            pm25=pm25_val,
+            co2=620.0,
+            temperature_c=24.5,
+            humidity_pct=52.0,
+            source="AirTwin Sensor",
+        )
+    )
+
+
 async def _seed_rooms(session: AsyncSession, user_id: int, household_id: int) -> None:
     """Seed monitored rooms and initial AirTwin readings idempotently."""
     res = await session.execute(select(Room).where(Room.user_id == user_id))
     existing = {r.name: r for r in res.scalars().all()}
-    for r_name, length_m, width_m, height_m, has_purifier, cadr, pm25_val in DEMO_ROOMS:
+    for spec in DEMO_ROOMS:
+        r_name = spec[0]
         if r_name not in existing:
-            room = Room(
-                user_id=user_id,
-                household_id=household_id,
-                name=r_name,
-                length_m=length_m,
-                width_m=width_m,
-                height_m=height_m,
-                has_purifier=has_purifier,
-                purifier_cadr=cadr,
-            )
-            session.add(room)
-            await session.flush()
-            session.add(
-                RoomReading(
-                    room_id=room.id,
-                    pm25=pm25_val,
-                    co2=620.0,
-                    temperature_c=24.5,
-                    humidity_pct=52.0,
-                    source="AirTwin Sensor",
-                )
-            )
+            await _create_seeded_room(session, user_id, household_id, spec)
         elif existing[r_name].household_id != household_id:
             existing[r_name].household_id = household_id
 

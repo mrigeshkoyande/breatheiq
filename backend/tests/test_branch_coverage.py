@@ -14,6 +14,7 @@ from app.core.config import Settings, settings
 from app.core.rate_limit import get_client_key
 from app.core.security import (
     create_access_token,
+    create_one_time_token,
     create_refresh_token,
     hash_token,
 )
@@ -21,7 +22,7 @@ from app.db.session import get_db
 from app.engines import impact_data
 from app.engines.naqi import calculate_cpcb_naqi
 from app.engines.ventilation_rules import boundary_layer_modifier, pm25_base_score
-from app.main import _domain_error_handler, _rate_limit_handler, app, lifespan
+from app.main import _domain_error_handler, _rate_limit_handler, app, build_app, lifespan
 from app.models.auth import RefreshToken, User
 from app.services.air_cities import match_city
 from app.services.air_data import AirDataService
@@ -451,3 +452,122 @@ async def test_session_get_db_streaming_limit_and_spa_routing(client):
         headers=hdrs,
     )
     assert role_upd.status_code == 200 and role_upd.json()["role"] == "moderator"
+
+
+@pytest.mark.asyncio
+async def test_security_headers_prod_cors_admin_guards_and_audit_trail(client, monkeypatch):
+    # Security headers include strict CSP directives, COOP, and cross-domain policy
+    health_res = await client.get("/healthz")
+    assert health_res.status_code == 200
+    assert health_res.headers["X-Permitted-Cross-Domain-Policies"] == "none"
+    assert health_res.headers["Cross-Origin-Opener-Policy"] == "same-origin"
+    csp = health_res.headers["Content-Security-Policy"]
+    assert "object-src 'none'" in csp
+    assert "base-uri 'self'" in csp
+    assert "form-action 'self'" in csp
+
+    # Untrusted Vercel origin is rejected even outside production; preview regex disabled in prod
+    with pytest.raises(Exception, match="Cross-origin cookie request rejected"):
+        validate_csrf_origin(_make_request([(b"origin", b"https://evil-attacker.vercel.app")]))
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    with pytest.raises(Exception, match="Cross-origin cookie request rejected"):
+        validate_csrf_origin(_make_request([(b"origin", b"https://breatheiq-preview.vercel.app")]))
+    monkeypatch.undo()
+
+    # Production FastAPI build disables Swagger/ReDoc docs and preview Vercel CORS regex
+    prod_app = build_app("production")
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=prod_app), base_url="http://testserver"
+    ) as prod_client:
+        docs_res = await prod_client.get("/docs")
+        assert docs_res.status_code == 404
+        cors_prod = await prod_client.options(
+            "/healthz",
+            headers={
+                "Origin": "https://breatheiq-preview.vercel.app",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert "access-control-allow-origin" not in cors_prod.headers
+
+    staging_app = build_app("staging")
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=staging_app), base_url="http://testserver"
+    ) as staging_client:
+        cors_ok = await staging_client.options(
+            "/healthz",
+            headers={
+                "Origin": "https://breatheiq-preview.vercel.app",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert (
+            cors_ok.headers.get("access-control-allow-origin")
+            == "https://breatheiq-preview.vercel.app"
+        )
+
+    # Admin cannot self-suspend or self-demote
+    admin_login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@breatheiq.org", "password": "Password123!"},
+    )
+    admin_data = admin_login.json()
+    hdrs = {"Authorization": f"Bearer {admin_data['access_token']}"}
+    admin_id = admin_data["user"]["id"]
+    self_suspend = await client.patch(
+        f"/api/v1/admin/users/{admin_id}/status",
+        json={"is_active": False},
+        headers=hdrs,
+    )
+    assert self_suspend.status_code == 400
+    assert "suspend or demote" in self_suspend.json()["detail"].lower()
+
+    self_demote = await client.patch(
+        f"/api/v1/admin/users/{admin_id}/status",
+        json={"role": "user"},
+        headers=hdrs,
+    )
+    assert self_demote.status_code == 400
+
+    # Admin actions & email verification write AuditLog entries
+    users = (await client.get("/api/v1/admin/users", headers=hdrs)).json()
+    regular = next(u for u in users if u["email"] == "user@breatheiq.org")
+    await client.patch(
+        f"/api/v1/admin/users/{regular['id']}/status",
+        json={"is_active": True},
+        headers=hdrs,
+    )
+    queue = (await client.get("/api/v1/admin/moderation/queue", headers=hdrs)).json()
+    if queue:
+        await client.patch(
+            f"/api/v1/admin/moderation/{queue[0]['id']}",
+            json={"action": "VERIFY"},
+            headers=hdrs,
+        )
+
+    verify_jwt, verify_hash, _ = create_one_time_token(regular["id"], "verify_email", 30)
+    db_gen = app.dependency_overrides[get_db]()
+    session = await anext(db_gen)
+    from app.models.auth import OneTimeToken
+
+    session.add(
+        OneTimeToken(
+            user_id=regular["id"],
+            jti_hash=verify_hash,
+            purpose="verify_email",
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
+        )
+    )
+    await session.commit()
+    verify_res = await client.post("/api/v1/auth/verify-email", json={"token": verify_jwt})
+    assert verify_res.status_code == 200
+
+    logs_res = await client.get("/api/v1/admin/audit-logs?limit=25", headers=hdrs)
+    assert logs_res.status_code == 200
+    actions = {entry["action"] for entry in logs_res.json()}
+    assert "ADMIN_USER_STATUS_UPDATED" in actions
+    assert "AUTH_EMAIL_VERIFIED" in actions
+    if queue:
+        assert "MODERATION_REPORT_UPDATED" in actions
+    with contextlib.suppress(StopAsyncIteration):
+        await anext(db_gen)

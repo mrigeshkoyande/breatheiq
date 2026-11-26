@@ -78,6 +78,21 @@ async def signup(
     )
 
 
+async def _check_not_locked(db: AsyncSession, email: str, now: datetime) -> LoginAttempt | None:
+    """Load login attempt tracker and reject requests during active lockout window."""
+    attempt = (
+        (await db.execute(select(LoginAttempt).where(LoginAttempt.email == email)))
+        .scalars()
+        .first()
+    )
+    if attempt and attempt.locked_until and ensure_utc(attempt.locked_until) > now:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Account temporarily locked due to repeated failed attempts. Try again later.",
+        )
+    return attempt
+
+
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
 async def login(
@@ -89,25 +104,13 @@ async def login(
     """Authenticate user with Argon2id, lockout tracking, and rotating refresh cookie."""
     normalized_email = payload.email.lower()
     now = datetime.now(UTC)
-    attempt = (
-        (await db.execute(select(LoginAttempt).where(LoginAttempt.email == normalized_email)))
-        .scalars()
-        .first()
-    )
-    if attempt and attempt.locked_until and ensure_utc(attempt.locked_until) > now:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Account temporarily locked due to repeated failed attempts. Try again later.",
-        )
-
+    attempt = await _check_not_locked(db, normalized_email, now)
     user = (await db.execute(select(User).where(User.email == normalized_email))).scalars().first()
     if not user or not verify_password(payload.password, user.hashed_password):
         await record_failed_login(db, normalized_email, user, attempt, request)
         raise AuthenticationError("Invalid credentials. Please verify your email and password.")
-
     if not user.is_active:
         raise AuthorizationError("Account is disabled. Please contact support.")
-
     if attempt is not None:
         attempt.failed_count = 0
         attempt.locked_until = None
@@ -115,6 +118,33 @@ async def login(
     return await issue_session_tokens(
         db, user, request, response, "AUTH_LOGIN_SUCCESS", "Login successful"
     )
+
+
+async def _validate_refresh_record(
+    db: AsyncSession, raw_token: str, request: Request, response: Response
+) -> tuple[RefreshToken, User, str]:
+    """Validate rotating refresh cookie record and detect family compromise."""
+    user_id, family_id, jti = parse_refresh_claims(raw_token)
+    now = datetime.now(UTC)
+    record = (
+        (await db.execute(select(RefreshToken).where(RefreshToken.jti_hash == hash_token(jti))))
+        .scalars()
+        .first()
+    )
+    if not record or record.revoked_at is not None:
+        await revoke_family_on_reuse(db, user_id, family_id, request, response)
+        raise AuthenticationError("Session security compromise detected. Please log in again.")
+    if ensure_utc(record.expires_at) < now:
+        record.revoked_at = now
+        await db.commit()
+        response.delete_cookie("breatheiq_refresh", path="/")
+        raise AuthenticationError("Session expired")
+    record.revoked_at = now
+    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    if not user or not user.is_active:
+        await db.commit()
+        raise AuthenticationError("User account inactive")
+    return record, user, family_id
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -128,31 +158,7 @@ async def refresh_tokens(
     validate_csrf_origin(request)
     if not breatheiq_refresh:
         raise AuthenticationError("Refresh token required")
-
-    user_id, family_id, jti = parse_refresh_claims(breatheiq_refresh)
-    now = datetime.now(UTC)
-    token_record = (
-        (await db.execute(select(RefreshToken).where(RefreshToken.jti_hash == hash_token(jti))))
-        .scalars()
-        .first()
-    )
-
-    if not token_record or token_record.revoked_at is not None:
-        await revoke_family_on_reuse(db, user_id, family_id, request, response)
-        raise AuthenticationError("Session security compromise detected. Please log in again.")
-
-    if ensure_utc(token_record.expires_at) < now:
-        token_record.revoked_at = now
-        await db.commit()
-        response.delete_cookie("breatheiq_refresh", path="/")
-        raise AuthenticationError("Session expired")
-
-    token_record.revoked_at = now
-    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
-    if not user or not user.is_active:
-        await db.commit()
-        raise AuthenticationError("User account inactive")
-
+    _, user, family_id = await _validate_refresh_record(db, breatheiq_refresh, request, response)
     return await issue_session_tokens(db, user, request, response, "", "", family_id=family_id)
 
 
@@ -167,14 +173,10 @@ async def logout(
     validate_csrf_origin(request)
     if breatheiq_refresh:
         try:
-            decoded = decode_token(breatheiq_refresh)
-            jti = decoded.get("jti")
+            jti = decode_token(breatheiq_refresh).get("jti")
             if isinstance(jti, str) and jti:
-                await db.execute(
-                    update(RefreshToken)
-                    .where(RefreshToken.jti_hash == hash_token(jti))
-                    .values(revoked_at=datetime.now(UTC))
-                )
+                stmt = update(RefreshToken).where(RefreshToken.jti_hash == hash_token(jti))
+                await db.execute(stmt.values(revoked_at=datetime.now(UTC)))
                 await db.commit()
         except jwt.PyJWTError as exc:
             logger.debug("Ignoring malformed refresh cookie during logout: %s", type(exc).__name__)
@@ -189,11 +191,8 @@ async def logout_all(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> MessageResponse:
     """Revoke all refresh sessions belonging to the authenticated user."""
-    await db.execute(
-        update(RefreshToken)
-        .where(RefreshToken.user_id == current_user.id)
-        .values(revoked_at=datetime.now(UTC))
-    )
+    stmt = update(RefreshToken).where(RefreshToken.user_id == current_user.id)
+    await db.execute(stmt.values(revoked_at=datetime.now(UTC)))
     await db.commit()
     response.delete_cookie("breatheiq_refresh", path="/")
     return MessageResponse(message="All active sessions revoked")

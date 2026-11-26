@@ -17,7 +17,7 @@ from app.core.security import create_access_token, create_refresh_token, decode_
 from app.models.auth import AuditLog, LoginAttempt, OneTimeToken, RefreshToken, User
 from app.schemas.auth import TokenResponse, UserResponse
 
-VERCEL_ORIGIN_PATTERN = re.compile(r"^https://[a-zA-Z0-9-]+\.vercel\.app$")
+VERCEL_ORIGIN_PATTERN = re.compile(r"^https://breatheiq(?:-[a-zA-Z0-9-]+)?\.vercel\.app$")
 SECONDS_PER_DAY = SECONDS_PER_HOUR * 24
 
 
@@ -56,13 +56,26 @@ def validate_csrf_origin(request: Request) -> None:
     normalized = origin.rstrip("/")
     expected_host = str(request.base_url).rstrip("/")
     allowed = set(settings.ALLOWED_ORIGINS) if isinstance(settings.ALLOWED_ORIGINS, list) else set()
-    if (
-        normalized == expected_host
-        or normalized in allowed
-        or VERCEL_ORIGIN_PATTERN.match(normalized)
-    ):
+    is_preview_origin = settings.ENVIRONMENT != "production" and VERCEL_ORIGIN_PATTERN.match(
+        normalized
+    )
+    if normalized == expected_host or normalized in allowed or is_preview_origin:
         return
     raise AuthorizationError("Cross-origin cookie request rejected")
+
+
+def _build_refresh_record(
+    user_id: int, family_id: str, jti_h: str, expires_at: datetime, request: Request
+) -> RefreshToken:
+    """Construct a persisted ``RefreshToken`` entity for the caller request."""
+    return RefreshToken(
+        user_id=user_id,
+        family_id=family_id,
+        jti_hash=jti_h,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+        expires_at=expires_at,
+    )
 
 
 async def issue_session_tokens(
@@ -77,16 +90,7 @@ async def issue_session_tokens(
     """Create and persist a refresh token family entry, set cookie, and return access JWT."""
     resolved_family = family_id or str(uuid.uuid4())
     raw_refresh, jti_h, expires_at = create_refresh_token(user.id, resolved_family)
-    db.add(
-        RefreshToken(
-            user_id=user.id,
-            family_id=resolved_family,
-            jti_hash=jti_h,
-            user_agent=request.headers.get("user-agent"),
-            ip_address=request.client.host if request.client else None,
-            expires_at=expires_at,
-        )
-    )
+    db.add(_build_refresh_record(user.id, resolved_family, jti_h, expires_at, request))
     if audit_action:
         log_audit(db, user.id, audit_action, request, audit_detail)
     await db.commit()

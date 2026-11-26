@@ -28,7 +28,7 @@ async def gather_telemetry_context(req: CopilotChatRequest) -> tuple[str, str, d
         air_data_service.get_current_air_quality(lat, lon, city),
         air_data_service.get_forecast(lat, lon, hours=24),
     )
-    oracle_out = evaluate_window_oracle(forecast_series)
+    oracle = evaluate_window_oracle(forecast_series)
     context_data: dict[str, Any] = {
         "city": air_payload.city,
         "aqi": air_payload.naqi.aqi or 150,
@@ -41,9 +41,9 @@ async def gather_telemetry_context(req: CopilotChatRequest) -> tuple[str, str, d
         "wind_speed": air_payload.wind_speed_ms,
         "source": air_payload.source,
         "timestamp": air_payload.timestamp_utc,
-        "best_window_start": oracle_out.best_window_start,
-        "best_window_end": oracle_out.best_window_end,
-        "current_action": oracle_out.current_action,
+        "best_window_start": oracle.best_window_start,
+        "best_window_end": oracle.best_window_end,
+        "current_action": oracle.current_action,
     }
     return city, air_payload.source, context_data
 
@@ -67,6 +67,15 @@ def _build_gemini_prompt(city: str, user_message: str, context_data: dict[str, A
     return f"{system_instruction}\n\n{prompt}"
 
 
+async def _post_gemini(request: Request, url: str, payload: dict[str, Any]) -> httpx.Response:
+    """Send Gemini HTTP request using shared pooled client when available."""
+    shared_client: httpx.AsyncClient | None = getattr(request.app.state, "http_client", None)
+    if shared_client is not None:
+        return await shared_client.post(url, json=payload, timeout=6.0)
+    async with httpx.AsyncClient(timeout=6.0) as local_client:
+        return await local_client.post(url, json=payload)
+
+
 async def fetch_gemini_reply(
     request: Request,
     city: str,
@@ -77,19 +86,12 @@ async def fetch_gemini_reply(
     """Invoke Google Gemini REST API server-side when ``GEMINI_API_KEY`` is set."""
     if not settings.GEMINI_API_KEY:
         return None, 0
-
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={settings.GEMINI_API_KEY}"
     payload = {
         "contents": [{"parts": [{"text": _build_gemini_prompt(city, user_message, context_data)}]}]
     }
-    shared_client: httpx.AsyncClient | None = getattr(request.app.state, "http_client", None)
-
     try:
-        if shared_client is not None:
-            res = await shared_client.post(url, json=payload, timeout=6.0)
-        else:
-            async with httpx.AsyncClient(timeout=6.0) as local_client:
-                res = await local_client.post(url, json=payload)
+        res = await _post_gemini(request, url, payload)
         if res.status_code != 200:
             return None, 0
         data = res.json()

@@ -1,18 +1,14 @@
 """Administrative & Moderation Endpoints protected by DB-backed role checks."""
 
-import logging
-import time
 from typing import Annotated, Any
 
-import httpx
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_role
-from app.core.config import settings
 from app.core.constants import MAX_PAGE_LIMIT
-from app.core.exceptions import ResourceNotFoundError
+from app.core.exceptions import DomainValidationError, ResourceNotFoundError
 from app.models.app_data import CommunityReport
 from app.models.auth import AuditLog, User
 from app.models.copilot import AITrace
@@ -23,32 +19,15 @@ from app.schemas.app_schemas import (
     ModerationAction,
     UserStatusUpdate,
 )
+from app.services.admin_probes import build_integrations_report, probe_open_meteo
+from app.services.auth_service import log_audit
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["Administration & Moderation"])
-OPENMETEO_PROBE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=19.07&longitude=72.87&current=pm2_5"
 
 
 def _escape_like(term: str) -> str:
     """Escape SQL LIKE wildcard characters to prevent wildcard injection."""
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-
-
-async def _probe_open_meteo(request: Request) -> tuple[str, int]:
-    """Measure Open-Meteo endpoint reachability and response latency in ms."""
-    start = time.time()
-    shared_client: httpx.AsyncClient | None = getattr(request.app.state, "http_client", None)
-    try:
-        if shared_client is not None:
-            resp = await shared_client.get(OPENMETEO_PROBE_URL, timeout=2.0)
-        else:
-            async with httpx.AsyncClient(timeout=2.0) as local_client:
-                resp = await local_client.get(OPENMETEO_PROBE_URL)
-        latency = int((time.time() - start) * 1000)
-        return ("HEALTHY" if resp.status_code == 200 else "DEGRADED"), latency
-    except httpx.HTTPError as exc:
-        logger.warning("Open-Meteo health probe unavailable: %s", exc)
-        return "OFFLINE_DEMO_FALLBACK", int((time.time() - start) * 1000)
 
 
 @router.get("/users")
@@ -79,14 +58,25 @@ async def list_users(
     ]
 
 
+def _guard_self_demotion(admin_user: User, user_id: int, req: UserStatusUpdate) -> None:
+    """Prevent administrators from suspending or demoting their own account."""
+    demoting_role = req.role is not None and req.role != admin_user.role
+    if user_id == admin_user.id and (req.is_active is False or demoting_role):
+        raise DomainValidationError(
+            "Cannot suspend or demote your own administrator account.", status_code=400
+        )
+
+
 @router.patch("/users/{user_id}/status")
 async def update_user_status(
     user_id: int,
     req: UserStatusUpdate,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _admin_user: Annotated[User, Depends(require_role("admin"))],
+    admin_user: Annotated[User, Depends(require_role("admin"))],
 ) -> dict[str, Any]:
     """Update account activation state or role (admin only)."""
+    _guard_self_demotion(admin_user, user_id, req)
     user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
     if not user:
         raise ResourceNotFoundError("User not found")
@@ -94,6 +84,8 @@ async def update_user_status(
         user.is_active = req.is_active
     if req.role is not None:
         user.role = req.role
+    details = f"Updated user_id={user.id} active={user.is_active} role={user.role}"
+    log_audit(db, admin_user.id, "ADMIN_USER_STATUS_UPDATED", request, details)
     await db.commit()
     return {
         "message": "User updated",
@@ -121,8 +113,9 @@ async def get_moderation_queue(
 async def moderate_report(
     report_id: int,
     req: ModerationAction,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _admin_user: Annotated[User, Depends(require_role("admin", "moderator"))],
+    admin_user: Annotated[User, Depends(require_role("admin", "moderator"))],
 ) -> dict[str, Any]:
     """Verify or reject a pending community smog report."""
     report = (
@@ -135,6 +128,13 @@ async def moderate_report(
     normalized = req.action.upper()
     if normalized in ("VERIFY", "REJECT"):
         report.status = "VERIFIED" if normalized == "VERIFY" else "REJECTED"
+    log_audit(
+        db,
+        admin_user.id,
+        "MODERATION_REPORT_UPDATED",
+        request,
+        f"Report #{report.id} -> {report.status}",
+    )
     await db.commit()
     return {"message": f"Report status updated to {report.status}", "id": report.id}
 
@@ -169,30 +169,5 @@ async def check_integrations_health(
     _admin_user: Annotated[User, Depends(require_role("admin", "moderator"))],
 ) -> list[dict[str, Any]]:
     """Probe external integrations and report current degraded/ready states."""
-    om_status, om_latency = await _probe_open_meteo(request)
-    return [
-        {
-            "service": "Open-Meteo Air Quality (Global CAMS Grid)",
-            "status": om_status,
-            "latency_ms": om_latency,
-            "mode": "Primary Environmental Model",
-        },
-        {
-            "service": "OpenAQ CAAQMS Ground Station Feed",
-            "status": "CONFIGURED" if settings.OPENAQ_API_KEY else "PUBLIC_TIER",
-            "latency_ms": 12,
-            "mode": "Ground Station Ingestion",
-        },
-        {
-            "service": f"Google Gemini API ({settings.GEMINI_MODEL})",
-            "status": "READY" if settings.GEMINI_API_KEY else "CATEGORY_TEMPLATE_FALLBACK",
-            "latency_ms": 8,
-            "mode": "Grounded Assistant Copilot",
-        },
-        {
-            "service": "Local Database (PostgreSQL / SQLite Async Engine)",
-            "status": "HEALTHY",
-            "latency_ms": 1,
-            "mode": "Persistent Tenant Store",
-        },
-    ]
+    om_status, om_latency = await probe_open_meteo(request)
+    return build_integrations_report(om_status, om_latency)

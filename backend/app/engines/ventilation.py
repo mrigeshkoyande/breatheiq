@@ -58,26 +58,26 @@ def score_hour(
     return clamped, rec, rationale
 
 
-def _build_fallback_slot(today_iso: str, hour: int) -> HourlyVentilationSlot:
-    """Construct one hourly diurnal heuristic fallback slot."""
+def _fallback_tier(hour: int) -> tuple[int, str, str]:
+    """Return diurnal heuristic score, recommendation tag, and rationale for clock hour."""
     if 12 <= hour <= 15:
-        score, rec, rat = (
+        return (
             65,
             "VENTILATE_BRIEFLY",
             "Heuristic midday solar heating window. Inversion layer typically ascends during early afternoon.",
         )
-    elif 6 <= hour <= 9 or 18 <= hour <= 22:
-        score, rec, rat = (
+    if 6 <= hour <= 9 or 18 <= hour <= 22:
+        return (
             15,
             "SEAL",
             "Heuristic peak inversion window. Low boundary layer and rush-hour emissions trap pollutants.",
         )
-    else:
-        score, rec, rat = (
-            35,
-            "PURIFY",
-            "Nighttime/mid-morning baseline. Keep windows closed and run purifiers.",
-        )
+    return (35, "PURIFY", "Nighttime/mid-morning baseline. Keep windows closed and run purifiers.")
+
+
+def _build_fallback_slot(today_iso: str, hour: int) -> HourlyVentilationSlot:
+    """Construct one hourly diurnal heuristic fallback slot."""
+    score, rec, rat = _fallback_tier(hour)
     return HourlyVentilationSlot(
         hour_iso=f"{today_iso}T{hour:02d}:00:00Z",
         hour_local=f"{hour:02d}:00",
@@ -143,30 +143,23 @@ def _parse_forecast_slot(entry: dict[str, Any], today_iso: str) -> HourlyVentila
     )
 
 
+def _compute_best_window_end(best_start: str) -> str:
+    """Compute end clock HH:00 string adding default ventilation window duration."""
+    if ":" not in best_start:
+        return "15:00"
+    end_hour = (int(best_start.split(":")[0]) + DEFAULT_BEST_WINDOW_DURATION_H) % HOURS_PER_DAY
+    return f"{end_hour:02d}:00"
+
+
 def evaluate_window_oracle(hourly_data: list[dict[str, Any]] | None = None) -> WindowOracleOutput:
-    """Evaluate 24-hour ventilation suitability from forecast slots or fallback rules.
-
-    Complexity:
-        Time ``O(H)`` and Space ``O(H)`` where ``H`` is the number of forecast hours.
-
-    Args:
-        hourly_data: Sequence of hourly forecast readings or ``None``/empty list.
-
-    Returns:
-        Evaluated ``WindowOracleOutput`` identifying peak cross-ventilation window.
-    """
+    """Evaluate 24-hour ventilation suitability from forecast slots or fallback (Time/Space O(H))."""
     if not hourly_data:
         return _build_rule_fallback()
-
     today_iso = datetime.now(UTC).date().isoformat()
     slots = [_parse_forecast_slot(entry, today_iso) for entry in hourly_data]
     best_slot = max(slots, key=lambda slot: slot.aeration_score)
     best_start = best_slot.hour_local
-    best_end = (
-        f"{(int(best_start.split(':')[0]) + DEFAULT_BEST_WINDOW_DURATION_H) % HOURS_PER_DAY:02d}:00"
-        if ":" in best_start
-        else "15:00"
-    )
+    best_end = _compute_best_window_end(best_start)
     return WindowOracleOutput(
         is_forecast_driven=True,
         summary_advisory=(

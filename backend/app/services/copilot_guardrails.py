@@ -178,20 +178,16 @@ def validate_and_correct_response(
     """Enforce medical boundary disclaimer, AQI numerical consistency, and source citation."""
     flags: list[str] = []
     text = raw_text
-
     if any(term in text.lower() for term in MEDICAL_KEYWORDS):
         flags.append("MEDICAL_DISCLAIMER_ATTACHED")
         if "guidance only" not in text.lower():
             text += f"\n\n{MEDICAL_DISCLAIMER_TEXT}"
-
     real_aqi = context.get("aqi")
     if isinstance(real_aqi, (int, float)):
         text = _correct_aqi_drift(text, real_aqi, flags)
-
     timestamp = str(context.get("timestamp", "Current"))
     badge_str = f"[{source}: {city} · {timestamp[:16] if 'T' in timestamp else timestamp}]"
     if badge_str not in text:
         text += f"\n\n{badge_str}"
         flags.append("SOURCE_CITATION_ATTACHED")
-
     return text, flags

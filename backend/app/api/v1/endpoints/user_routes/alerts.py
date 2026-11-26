@@ -15,52 +15,62 @@ from app.schemas.app_schemas import AlertRuleCreateSchema, AlertRuleResponse, No
 router = APIRouter()
 
 
-@router.get("/alerts")
-async def get_alerts_and_rules(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_current_user)],
-) -> dict[str, Any]:
-    """Fetch user's smog alert threshold rules and alert notification feed."""
+async def _ensure_default_rules(db: AsyncSession, user_id: int) -> list[SmogAlertRule]:
+    """Load caller's alert rules or seed a starter threshold rule on first access."""
     rules = list(
-        (await db.execute(select(SmogAlertRule).where(SmogAlertRule.user_id == user.id)))
+        (await db.execute(select(SmogAlertRule).where(SmogAlertRule.user_id == user_id)))
         .scalars()
         .all()
     )
-    if not rules:
-        default_rule = SmogAlertRule(
-            user_id=user.id, aqi_threshold=200, target_member="All Members"
-        )
-        db.add(default_rule)
-        await db.commit()
-        await db.refresh(default_rule)
-        rules = [default_rule]
+    if rules:
+        return rules
+    default_rule = SmogAlertRule(user_id=user_id, aqi_threshold=200, target_member="All Members")
+    db.add(default_rule)
+    await db.commit()
+    await db.refresh(default_rule)
+    return [default_rule]
 
+
+async def _ensure_default_notifications(
+    db: AsyncSession, user_id: int
+) -> list[SmogAlertNotification]:
+    """Load caller's notifications or seed an initial twilight warning card."""
     notifs = list(
         (
             await db.execute(
                 select(SmogAlertNotification)
-                .where(SmogAlertNotification.user_id == user.id)
+                .where(SmogAlertNotification.user_id == user_id)
                 .order_by(SmogAlertNotification.created_at.desc())
             )
         )
         .scalars()
         .all()
     )
-    if not notifs:
-        sample_notif = SmogAlertNotification(
-            user_id=user.id,
-            title="Twilight Smog Surge Warning",
-            message="Monitoring corridor crossed AQI 245 (Poor) during nocturnal inversion.",
-            aqi_at_trigger=245,
-            pollutant_driver="PM2.5 (118 µg/m³)",
-            reason_why="Surface radiation cooling trapped exhaust below shallow mixing height.",
-            is_read=False,
-        )
-        db.add(sample_notif)
-        await db.commit()
-        await db.refresh(sample_notif)
-        notifs = [sample_notif]
+    if notifs:
+        return notifs
+    sample_notif = SmogAlertNotification(
+        user_id=user_id,
+        title="Twilight Smog Surge Warning",
+        message="Monitoring corridor crossed AQI 245 (Poor) during nocturnal inversion.",
+        aqi_at_trigger=245,
+        pollutant_driver="PM2.5 (118 µg/m³)",
+        reason_why="Surface radiation cooling trapped exhaust below shallow mixing height.",
+        is_read=False,
+    )
+    db.add(sample_notif)
+    await db.commit()
+    await db.refresh(sample_notif)
+    return [sample_notif]
 
+
+@router.get("/alerts")
+async def get_alerts_and_rules(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> dict[str, Any]:
+    """Fetch user's smog alert threshold rules and alert notification feed."""
+    rules = await _ensure_default_rules(db, user.id)
+    notifs = await _ensure_default_notifications(db, user.id)
     return {
         "rules": [AlertRuleResponse.model_validate(r) for r in rules],
         "notifications": [NotificationResponse.model_validate(n) for n in notifs],

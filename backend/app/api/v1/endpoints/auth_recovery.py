@@ -80,8 +80,10 @@ async def reset_password(
 
 
 @router.post("/verify-email", response_model=MessageResponse)
+@limiter.limit("10/minute")
 async def verify_email(
     payload: VerifyEmailRequest,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> MessageResponse:
     """Verify user email via single-use signed JWT token."""
@@ -89,5 +91,6 @@ async def verify_email(
     user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
     if user:
         user.is_verified = True
+        log_audit(db, user.id, "AUTH_EMAIL_VERIFIED", request, "Verified account email")
     await db.commit()
     return MessageResponse(message="Email address successfully verified.")

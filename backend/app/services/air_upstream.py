@@ -61,10 +61,9 @@ class OpenAQAndMeteoProvider(AirDataProvider):
             return None, None
         return parse_openaq_measurements(latest.json().get("results", []), name)
 
-    async def _query_current_upstream(
-        self, client: httpx.AsyncClient, lat: float, lon: float, city_name: str | None
-    ) -> AirDataPayload | None:
-        """Fetch current Open-Meteo AQ, Weather, and OpenAQ telemetry concurrently."""
+    @staticmethod
+    def _current_urls(lat: float, lon: float) -> tuple[str, str]:
+        """Build Open-Meteo current air-quality and weather query URLs."""
         aq_url = (
             "https://air-quality-api.open-meteo.com/v1/air-quality"
             f"?latitude={lat}&longitude={lon}"
@@ -72,30 +71,40 @@ class OpenAQAndMeteoProvider(AirDataProvider):
         )
         wx_url = (
             "https://api.open-meteo.com/v1/forecast"
-            f"?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
+            f"?latitude={lat}&longitude={lon}"
+            "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
         )
+        return aq_url, wx_url
+
+    async def _query_current_upstream(
+        self, client: httpx.AsyncClient, lat: float, lon: float, city_name: str | None
+    ) -> AirDataPayload | None:
+        """Fetch current Open-Meteo AQ, Weather, and OpenAQ telemetry concurrently."""
+        aq_url, wx_url = self._current_urls(lat, lon)
         aq_res, wx_res, openaq_res = await asyncio.gather(
             client.get(aq_url),
             client.get(wx_url),
             self._fetch_openaq_pm25(client, lat, lon),
             return_exceptions=True,
         )
-        if not (
+        ok = (
             isinstance(aq_res, httpx.Response)
             and isinstance(wx_res, httpx.Response)
             and aq_res.status_code == 200
             and wx_res.status_code == 200
-        ):
+        )
+        if not ok:
             return None
-        openaq_pm25, openaq_station = openaq_res if isinstance(openaq_res, tuple) else (None, None)
+        assert isinstance(aq_res, httpx.Response) and isinstance(wx_res, httpx.Response)
+        pm25, station = openaq_res if isinstance(openaq_res, tuple) else (None, None)
         return build_current_payload(
             lat,
             lon,
             city_name,
             aq_res.json().get("current", {}),
             wx_res.json().get("current", {}),
-            openaq_pm25,
-            openaq_station,
+            pm25,
+            station,
         )
 
     async def get_current(

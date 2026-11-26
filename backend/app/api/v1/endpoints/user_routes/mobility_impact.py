@@ -45,6 +45,24 @@ async def cleanroute_navigator(req: CleanRouteRequest) -> dict[str, Any]:
     )
 
 
+async def _seed_initial_impact_logs(db: AsyncSession, user_id: int) -> None:
+    """Provision starter 7-day baseline impact records for new users."""
+    today = date.today()
+    seed_logs = [
+        ImpactLog(
+            user_id=user_id,
+            date_str=(today - timedelta(days=i)).isoformat(),
+            averted_pm25_dose_ug=SEED_BASE_AVERTED_PM25_UG + (i * SEED_STEP_AVERTED_PM25_UG),
+            averted_co2_kg=SEED_BASE_AVERTED_CO2_KG + (i * SEED_STEP_AVERTED_CO2_KG),
+            aqi_hours_avoided=SEED_BASE_AQI_HOURS + (i * SEED_STEP_AQI_HOURS),
+            notes="Metro commute + domestic HEPA purification",
+        )
+        for i in range(SEED_IMPACT_DAYS)
+    ]
+    db.add_all(seed_logs)
+    await db.commit()
+
+
 @router.get("/impact")
 async def get_impact_ledger(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -53,22 +71,8 @@ async def get_impact_ledger(
     """Return user's personal exposure and CO2 reduction ledger."""
     stmt = select(ImpactLog).where(ImpactLog.user_id == user.id).order_by(ImpactLog.date_str.desc())
     logs = list((await db.execute(stmt)).scalars().all())
-
     if not logs:
-        today = date.today()
-        seed_logs = [
-            ImpactLog(
-                user_id=user.id,
-                date_str=(today - timedelta(days=i)).isoformat(),
-                averted_pm25_dose_ug=SEED_BASE_AVERTED_PM25_UG + (i * SEED_STEP_AVERTED_PM25_UG),
-                averted_co2_kg=SEED_BASE_AVERTED_CO2_KG + (i * SEED_STEP_AVERTED_CO2_KG),
-                aqi_hours_avoided=SEED_BASE_AQI_HOURS + (i * SEED_STEP_AQI_HOURS),
-                notes="Metro commute + domestic HEPA purification",
-            )
-            for i in range(SEED_IMPACT_DAYS)
-        ]
-        db.add_all(seed_logs)
-        await db.commit()
+        await _seed_initial_impact_logs(db, user.id)
         logs = list((await db.execute(stmt)).scalars().all())
 
     return {

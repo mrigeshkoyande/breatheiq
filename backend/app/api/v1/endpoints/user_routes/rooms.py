@@ -32,6 +32,33 @@ async def _get_owned_room(db: AsyncSession, room_id: int, user_id: int) -> Room:
     return room
 
 
+async def _seed_default_rooms(db: AsyncSession, user_id: int) -> list[Room]:
+    """Provision starter household rooms on first access."""
+    defaults = [
+        Room(
+            user_id=user_id,
+            name="Living Room",
+            length_m=5.0,
+            width_m=4.0,
+            height_m=2.7,
+            has_purifier=True,
+            purifier_cadr=350.0,
+        ),
+        Room(
+            user_id=user_id,
+            name="Master Bedroom",
+            length_m=4.2,
+            width_m=3.6,
+            height_m=2.7,
+            has_purifier=True,
+            purifier_cadr=250.0,
+        ),
+    ]
+    db.add_all(defaults)
+    await db.commit()
+    return list((await db.execute(select(Room).where(Room.user_id == user_id))).scalars().all())
+
+
 @router.get("/rooms", response_model=list[RoomResponse])
 async def list_rooms(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -40,31 +67,7 @@ async def list_rooms(
     """List rooms configured for the caller's household."""
     rooms = list((await db.execute(select(Room).where(Room.user_id == user.id))).scalars().all())
     if not rooms:
-        defaults = [
-            Room(
-                user_id=user.id,
-                name="Living Room",
-                length_m=5.0,
-                width_m=4.0,
-                height_m=2.7,
-                has_purifier=True,
-                purifier_cadr=350.0,
-            ),
-            Room(
-                user_id=user.id,
-                name="Master Bedroom",
-                length_m=4.2,
-                width_m=3.6,
-                height_m=2.7,
-                has_purifier=True,
-                purifier_cadr=250.0,
-            ),
-        ]
-        db.add_all(defaults)
-        await db.commit()
-        rooms = list(
-            (await db.execute(select(Room).where(Room.user_id == user.id))).scalars().all()
-        )
+        rooms = await _seed_default_rooms(db, user.id)
     return [RoomResponse.model_validate(r) for r in rooms]
 
 
@@ -95,6 +98,22 @@ async def delete_room(
     return {"message": "Room removed"}
 
 
+async def _seed_initial_reading(db: AsyncSession, room_id: int) -> RoomReading:
+    """Create initial manual baseline reading when room history is empty."""
+    initial = RoomReading(
+        room_id=room_id,
+        pm25=28.0,
+        co2=620.0,
+        temperature_c=25.5,
+        humidity_pct=58.0,
+        source="Manual",
+    )
+    db.add(initial)
+    await db.commit()
+    await db.refresh(initial)
+    return initial
+
+
 @router.get("/rooms/{room_id}/readings", response_model=list[RoomReadingResponse])
 async def get_room_readings(
     room_id: int,
@@ -103,31 +122,15 @@ async def get_room_readings(
 ) -> list[RoomReadingResponse]:
     """Retrieve indoor sensor/manual readings for an owned room."""
     await _get_owned_room(db, room_id, user.id)
-    readings = list(
-        (
-            await db.execute(
-                select(RoomReading)
-                .where(RoomReading.room_id == room_id)
-                .order_by(RoomReading.timestamp.desc())
-                .limit(20)
-            )
-        )
-        .scalars()
-        .all()
+    stmt = (
+        select(RoomReading)
+        .where(RoomReading.room_id == room_id)
+        .order_by(RoomReading.timestamp.desc())
+        .limit(20)
     )
+    readings = list((await db.execute(stmt)).scalars().all())
     if not readings:
-        initial = RoomReading(
-            room_id=room_id,
-            pm25=28.0,
-            co2=620.0,
-            temperature_c=25.5,
-            humidity_pct=58.0,
-            source="Manual",
-        )
-        db.add(initial)
-        await db.commit()
-        await db.refresh(initial)
-        readings = [initial]
+        readings = [await _seed_initial_reading(db, room_id)]
     return [RoomReadingResponse.model_validate(r) for r in readings]
 
 

@@ -90,6 +90,16 @@ def get_emission_factors_metadata() -> dict[str, Any]:
     }
 
 
+def _resolve_inhalation_rate(activity_level: str) -> tuple[float, str]:
+    """Return minute-ventilation rate (m3/h) and citation source for an activity level."""
+    factors = load_factors()
+    inhalation_map = factors.get("inhalation_rates", DEFAULT_FACTORS["inhalation_rates"])
+    entry = inhalation_map.get(activity_level, DEFAULT_FACTORS["inhalation_rates"]["adult_resting"])
+    return float(entry.get("m3_per_hour", 0.50)), str(
+        entry.get("source", "Standard Exposure Factors")
+    )
+
+
 def calculate_inhalation_dosage(
     outdoor_pm25: float,
     mitigated_pm25: float,
@@ -97,23 +107,11 @@ def calculate_inhalation_dosage(
     activity_level: str = "adult_resting",
 ) -> InhalationImpact:
     """Compute inhaled PM2.5 dosage (ug) = minute ventilation * concentration * hours."""
-    factors = load_factors()
-    inhalation_map = factors.get("inhalation_rates", DEFAULT_FACTORS["inhalation_rates"])
-    inhalation_data = inhalation_map.get(
-        activity_level, DEFAULT_FACTORS["inhalation_rates"]["adult_resting"]
-    )
-    rate = float(inhalation_data.get("m3_per_hour", 0.50))
-    source = str(inhalation_data.get("source", "Standard Exposure Factors"))
-
+    rate, source = _resolve_inhalation_rate(activity_level)
     unprotected_dose = rate * outdoor_pm25 * duration_hours
     actual_dose = rate * mitigated_pm25 * duration_hours
     averted_dose = max(0.0, unprotected_dose - actual_dose)
-    efficiency = (
-        round(((unprotected_dose - actual_dose) / unprotected_dose) * 100, 1)
-        if unprotected_dose > 0
-        else 0.0
-    )
-
+    efficiency = round((averted_dose / unprotected_dose) * 100, 1) if unprotected_dose > 0 else 0.0
     return InhalationImpact(
         activity_type=activity_level,
         inhalation_rate_m3h=rate,
@@ -134,8 +132,7 @@ def calculate_transit_emission_savings(
     baseline_mode: str = "petrol_car_solo",
 ) -> TransitImpact:
     """Compute CO2 and tailpipe particulate savings vs baseline car transit."""
-    factors = load_factors()
-    transits = factors.get("transit_emissions", DEFAULT_FACTORS["transit_emissions"])
+    transits = load_factors().get("transit_emissions", DEFAULT_FACTORS["transit_emissions"])
     base = transits.get(baseline_mode, DEFAULT_FACTORS["transit_emissions"]["petrol_car_solo"])
     chosen = transits.get(chosen_mode, DEFAULT_FACTORS["transit_emissions"]["electric_metro"])
     delta_co2_g = max(
@@ -145,7 +142,6 @@ def calculate_transit_emission_savings(
         0.0, (float(base["pm25_g_per_km"]) - float(chosen["pm25_g_per_km"])) * distance_km
     )
     co2_kg = round(delta_co2_g / 1000.0, 3)
-
     return TransitImpact(
         baseline_mode=baseline_mode,
         chosen_mode=chosen_mode,
@@ -166,10 +162,7 @@ def calculate_cumulative_impact(
 ) -> HouseholdImpactSummary:
     """Combine indoor dosage mitigation and transit emission savings into daily impact."""
     inhalation = calculate_inhalation_dosage(
-        outdoor_pm25=outdoor_pm25,
-        mitigated_pm25=indoor_purified_pm25,
-        duration_hours=indoor_hours,
-        activity_level="adult_resting",
+        outdoor_pm25, indoor_purified_pm25, indoor_hours, "adult_resting"
     )
     transit = (
         calculate_transit_emission_savings(transit_distance_km, chosen_mode=transit_mode)
@@ -177,14 +170,12 @@ def calculate_cumulative_impact(
         else None
     )
     aqi_delta = max(0.0, (outdoor_pm25 - indoor_purified_pm25) * AQI_POINTS_PER_UGM3_PM25)
-
+    cigs_avoided = round(inhalation.averted_inhaled_dose_ug / CIGARETTE_EQUIVALENT_UG, 1)
     return HouseholdImpactSummary(
         daily_averted_pm25_dose_ug=inhalation.averted_inhaled_dose_ug,
         daily_co2_averted_kg=transit.co2_averted_kg if transit else 0.0,
         aqi_hours_avoided=round(aqi_delta * indoor_hours, 1),
-        equivalent_unfiltered_cigarettes_avoided=round(
-            inhalation.averted_inhaled_dose_ug / CIGARETTE_EQUIVALENT_UG, 1
-        ),
+        equivalent_unfiltered_cigarettes_avoided=cigs_avoided,
         inhalation_detail=inhalation,
         transit_detail=transit,
         methodology=IMPACT_METHODOLOGY_NOTE,

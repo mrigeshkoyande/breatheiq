@@ -55,6 +55,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(self), microphone=()"
+        response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self'; "
@@ -62,6 +64,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; "
             "connect-src 'self' https://*.vercel.app https://*.onrender.com https://fonts.googleapis.com https://fonts.gstatic.com; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
             "frame-ancestors 'none'"
         )
         if settings.ENVIRONMENT in ("demo", "production"):
@@ -111,42 +116,56 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncGenerator[None, None]:
         await http_client.aclose()
 
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="Atmospheric Intelligence and Urban Air Quality Assistant API",
-    version="1.0.0",
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+def _cors_preview_regex(env: str) -> str | None:
+    """Allow scoped Vercel preview origins only outside production."""
+    return None if env == "production" else r"^https://breatheiq(?:-[a-zA-Z0-9-]+)?\.vercel\.app$"
 
-app.state.limiter = limiter
-app.state.http_client = None
-app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
-app.add_exception_handler(BreatheIQError, _domain_error_handler)
 
-app.add_middleware(RequestSizeLimitMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
-if settings.ALLOWED_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
-        allow_origin_regex=r"^https://.*\.vercel\.app$",
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type"],
+def _register_middlewares(fastapi_app: FastAPI, env: str) -> None:
+    """Attach size-limit, security-header, and CORS middlewares."""
+    fastapi_app.add_middleware(RequestSizeLimitMiddleware)
+    fastapi_app.add_middleware(SecurityHeadersMiddleware)
+    if settings.ALLOWED_ORIGINS:
+        fastapi_app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.ALLOWED_ORIGINS,
+            allow_origin_regex=_cors_preview_regex(env),
+            allow_credentials=True,
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type"],
+        )
+
+
+def _register_routers(fastapi_app: FastAPI) -> None:
+    """Register health and API v1 route modules."""
+    fastapi_app.include_router(health.router)
+    api_v1_prefix = "/api/v1"
+    for mod in (air_quality, auth, engines, copilot, user_flow, community, admin):
+        fastapi_app.include_router(mod.router, prefix=api_v1_prefix)
+
+
+def build_app(environment: str | None = None) -> FastAPI:
+    """Construct configured FastAPI application instance."""
+    env = environment if environment is not None else settings.ENVIRONMENT
+    disable_docs = env == "production"
+    fastapi_app = FastAPI(
+        title=settings.PROJECT_NAME,
+        description="Atmospheric Intelligence and Urban Air Quality Assistant API",
+        version="1.0.0",
+        lifespan=lifespan,
+        docs_url=None if disable_docs else "/docs",
+        redoc_url=None if disable_docs else "/redoc",
     )
+    fastapi_app.state.limiter = limiter
+    fastapi_app.state.http_client = None
+    fastapi_app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+    fastapi_app.add_exception_handler(BreatheIQError, _domain_error_handler)
+    _register_middlewares(fastapi_app, env)
+    _register_routers(fastapi_app)
+    return fastapi_app
 
-app.include_router(health.router)
 
-API_V1_PREFIX = "/api/v1"
-app.include_router(auth.router, prefix=API_V1_PREFIX)
-app.include_router(air_quality.router, prefix=API_V1_PREFIX)
-app.include_router(engines.router, prefix=API_V1_PREFIX)
-app.include_router(copilot.router, prefix=API_V1_PREFIX)
-app.include_router(user_flow.router, prefix=API_V1_PREFIX)
-app.include_router(community.router, prefix=API_V1_PREFIX)
-app.include_router(admin.router, prefix=API_V1_PREFIX)
+app = build_app()
 
 FRONTEND_DIST = os.environ.get("FRONTEND_DIST") or os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
