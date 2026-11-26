@@ -53,7 +53,8 @@ export function useCities() {
 export function useCurrentAirQuality(city: string) {
   return useQuery({
     queryKey: queryKeys.currentAir(city),
-    queryFn: () => apiRequest<AirDataPayload>(`/air-quality/current?city=${encodeURIComponent(city)}`),
+    queryFn: () =>
+      apiRequest<AirDataPayload>(`/air-quality/current?city=${encodeURIComponent(city)}`),
     staleTime: 60_000,
   });
 }
@@ -98,7 +99,9 @@ export function useHousehold() {
 export function useSaveHousehold() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Pick<Household, 'name' | 'city' | 'neighborhood' | 'latitude' | 'longitude'>) =>
+    mutationFn: (
+      payload: Pick<Household, 'name' | 'city' | 'neighborhood' | 'latitude' | 'longitude'>
+    ) =>
       apiRequest<Household>('/user/household', {
         method: 'POST',
         body: JSON.stringify(payload),

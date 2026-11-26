@@ -42,7 +42,10 @@ export const ForgotPasswordPage: React.FC = () => {
           <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
           <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
         </Link>
-        <Link to="/login" className="text-sm font-medium text-[#475569] hover:text-[#0F766E] flex items-center gap-1.5">
+        <Link
+          to="/login"
+          className="text-sm font-medium text-[#475569] hover:text-[#0F766E] flex items-center gap-1.5"
+        >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           Back to Sign In
         </Link>
@@ -73,7 +76,10 @@ export const ForgotPasswordPage: React.FC = () => {
                 </p>
               </div>
               {error && (
-                <div role="alert" className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium">
+                <div
+                  role="alert"
+                  className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium"
+                >
                   {error}
                 </div>
               )}

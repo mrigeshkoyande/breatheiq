@@ -66,7 +66,11 @@ export const BentoCapabilitiesSection: React.FC = () => {
       <Card className="p-6 sm:p-8 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-bold">Tailored Protection Profiles</h2>
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Audience protection tabs">
+          <div
+            className="flex flex-wrap gap-2"
+            role="tablist"
+            aria-label="Audience protection tabs"
+          >
             {(Object.keys(AUDIENCE_DETAILS) as AudienceKey[]).map((key) => (
               <button
                 key={key}
@@ -100,7 +104,8 @@ export const BentoCapabilitiesSection: React.FC = () => {
 
       <footer className="border-t border-[#E2E8F0] pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#475569]">
         <div>
-          <strong>BreatheIQ</strong> · CPCB NAQI & Open-Meteo / OpenAQ Provenance · Guidance only, not medical advice.
+          <strong>BreatheIQ</strong> · CPCB NAQI & Open-Meteo / OpenAQ Provenance · Guidance only,
+          not medical advice.
         </div>
         <div className="flex items-center gap-5 font-medium">
           <Link to="/explore" className="hover:text-[#0F766E]">

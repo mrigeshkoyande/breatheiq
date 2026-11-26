@@ -15,7 +15,10 @@ export const ImpactPage: React.FC = () => {
     <AppShell
       title="Personal Impact Ledger"
       headerRight={
-        <Link to="/app/impact/what-if" className={buttonStyles({ size: 'sm', variant: 'secondary' })}>
+        <Link
+          to="/app/impact/what-if"
+          className={buttonStyles({ size: 'sm', variant: 'secondary' })}
+        >
           <Sliders className="w-4 h-4" aria-hidden="true" />
           What-If Builder
         </Link>

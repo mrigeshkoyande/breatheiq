@@ -23,7 +23,10 @@ export const HomePage: React.FC = () => {
   const city = household?.city || 'Mumbai';
   const { data: currentAir } = useCurrentAirQuality(city);
   const { data: rooms = [], isLoading, error, refetch } = useRooms();
-  const { data: oracle } = useWindowOracle(household?.latitude ?? 19.076, household?.longitude ?? 72.8777);
+  const { data: oracle } = useWindowOracle(
+    household?.latitude ?? 19.076,
+    household?.longitude ?? 72.8777
+  );
 
   const [roomName, setRoomName] = useState('');
   const [lengthM, setLengthM] = useState('4.5');
@@ -94,7 +97,9 @@ export const HomePage: React.FC = () => {
 
         {(error || actionError) && (
           <ErrorBanner
-            message={actionError || (error instanceof Error ? error.message : 'Failed to load rooms.')}
+            message={
+              actionError || (error instanceof Error ? error.message : 'Failed to load rooms.')
+            }
             onRetry={() => void refetch()}
           />
         )}
@@ -109,7 +114,10 @@ export const HomePage: React.FC = () => {
               <Badge badgeType={oracle?.is_forecast_driven ? 'FORECAST' : 'ESTIMATED'} />
             </div>
             <p className="text-sm text-[#334155]">
-              Best window: <strong>{oracle?.best_window_start || '12:00'} - {oracle?.best_window_end || '15:00'}</strong>{' '}
+              Best window:{' '}
+              <strong>
+                {oracle?.best_window_start || '12:00'} - {oracle?.best_window_end || '15:00'}
+              </strong>{' '}
               ({oracle?.current_action || 'PURIFY'})
             </p>
             <h3 className="font-bold text-sm pt-2 border-t border-[#E2E8F0]">Registered Rooms</h3>
@@ -184,13 +192,44 @@ export const HomePage: React.FC = () => {
               }}
               className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end"
             >
-              <Input label="Length (m)" type="number" step="0.1" min="1" value={lengthM} onChange={(e) => setLengthM(e.target.value)} />
-              <Input label="Width (m)" type="number" step="0.1" min="1" value={widthM} onChange={(e) => setWidthM(e.target.value)} />
-              <Input label="Height (m)" type="number" step="0.1" min="1.5" value={heightM} onChange={(e) => setHeightM(e.target.value)} />
-              <Input label="Target ACH" type="number" step="0.5" min="1" max="12" value={targetAch} onChange={(e) => setTargetAch(e.target.value)} />
+              <Input
+                label="Length (m)"
+                type="number"
+                step="0.1"
+                min="1"
+                value={lengthM}
+                onChange={(e) => setLengthM(e.target.value)}
+              />
+              <Input
+                label="Width (m)"
+                type="number"
+                step="0.1"
+                min="1"
+                value={widthM}
+                onChange={(e) => setWidthM(e.target.value)}
+              />
+              <Input
+                label="Height (m)"
+                type="number"
+                step="0.1"
+                min="1.5"
+                value={heightM}
+                onChange={(e) => setHeightM(e.target.value)}
+              />
+              <Input
+                label="Target ACH"
+                type="number"
+                step="0.5"
+                min="1"
+                max="12"
+                value={targetAch}
+                onChange={(e) => setTargetAch(e.target.value)}
+              />
               <div className="col-span-2 sm:col-span-4">
                 <Button type="submit" disabled={sizingMutation.isPending} className="w-full">
-                  {sizingMutation.isPending ? 'Calculating Decay...' : 'Calculate Required CADR & Decay Curve'}
+                  {sizingMutation.isPending
+                    ? 'Calculating Decay...'
+                    : 'Calculate Required CADR & Decay Curve'}
                 </Button>
               </div>
             </form>
@@ -200,23 +239,34 @@ export const HomePage: React.FC = () => {
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="p-3 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA]">
                     <div className="text-xs font-bold text-[#0F766E]">Required CADR</div>
-                    <div className="text-xl font-extrabold">{sizingResult.required_cadr_m3h} m³/h</div>
-                    <div className="text-[11px] text-[#475569]">{sizingResult.required_cadr_cfm} CFM</div>
+                    <div className="text-xl font-extrabold">
+                      {sizingResult.required_cadr_m3h} m³/h
+                    </div>
+                    <div className="text-[11px] text-[#475569]">
+                      {sizingResult.required_cadr_cfm} CFM
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <div className="text-xs font-bold text-[#475569]">50% Reduction</div>
-                    <div className="text-xl font-extrabold">{sizingResult.time_to_50pct_min} min</div>
+                    <div className="text-xl font-extrabold">
+                      {sizingResult.time_to_50pct_min} min
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <div className="text-xs font-bold text-[#475569]">80% Reduction</div>
-                    <div className="text-xl font-extrabold">{sizingResult.time_to_80pct_min} min</div>
+                    <div className="text-xl font-extrabold">
+                      {sizingResult.time_to_80pct_min} min
+                    </div>
                   </div>
                 </div>
                 <p className="text-xs text-[#334155]">
                   <strong>Device Class:</strong> {sizingResult.recommended_device_class}
                 </p>
                 <div className="flex items-start gap-2 text-xs text-[#475569]">
-                  <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" aria-hidden="true" />
+                  <ShieldAlert
+                    className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <span>{sizingResult.limitations}</span>
                 </div>
               </div>

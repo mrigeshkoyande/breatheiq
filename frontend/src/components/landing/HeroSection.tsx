@@ -41,9 +41,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </h1>
 
         <p className="text-base sm:text-lg text-[#475569] leading-relaxed max-w-2xl">
-          Generic weather apps report a single AQI index and stop there. BreatheIQ pairs CPCB
-          NAQI telemetry with boundary-layer aeration windows, CADR purifier sizing, and
-          CleanRoute commute comparisons backed by Google Gemini 2.5 Flash.
+          Generic weather apps report a single AQI index and stop there. BreatheIQ pairs CPCB NAQI
+          telemetry with boundary-layer aeration windows, CADR purifier sizing, and CleanRoute
+          commute comparisons backed by Google Gemini 2.5 Flash.
         </p>
 
         <div className="flex flex-wrap gap-3">
@@ -56,24 +56,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </Link>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-2" role="group" aria-label="Preview city corridor">
-          {(cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']).map(
-            (city) => (
-              <button
-                key={city}
-                type="button"
-                aria-pressed={selectedCity.toLowerCase() === city.toLowerCase()}
-                onClick={() => onSelectCity(city)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  selectedCity.toLowerCase() === city.toLowerCase()
-                    ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                    : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
-                }`}
-              >
-                {city}
-              </button>
-            )
-          )}
+        <div
+          className="flex flex-wrap items-center gap-2 pt-2"
+          role="group"
+          aria-label="Preview city corridor"
+        >
+          {(cities.length > 0
+            ? cities.map((c) => c.city)
+            : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']
+          ).map((city) => (
+            <button
+              key={city}
+              type="button"
+              aria-pressed={selectedCity.toLowerCase() === city.toLowerCase()}
+              onClick={() => onSelectCity(city)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                selectedCity.toLowerCase() === city.toLowerCase()
+                  ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                  : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
+              }`}
+            >
+              {city}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -125,7 +130,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
             <div className="p-2.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
               <div className="text-[#475569]">Dominant</div>
-              <div className="font-bold mt-0.5">{airPayload?.naqi.dominant_pollutant ?? 'PM25'}</div>
+              <div className="font-bold mt-0.5">
+                {airPayload?.naqi.dominant_pollutant ?? 'PM25'}
+              </div>
             </div>
           </div>
 

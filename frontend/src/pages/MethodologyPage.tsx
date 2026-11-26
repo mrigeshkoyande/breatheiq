@@ -58,7 +58,10 @@ export const MethodologyPage: React.FC = () => {
       <SkipLink />
       <PublicHeader />
 
-      <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-10 space-y-8">
+      <main
+        id="main-content"
+        className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-10 space-y-8"
+      >
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E]">
             <BookOpen className="w-4 h-4" aria-hidden="true" />
@@ -98,9 +101,15 @@ export const MethodologyPage: React.FC = () => {
                   {breakpointsTable.categories.map((cat) => {
                     const theme = getNaqiTheme(cat.category as CpcbCategory);
                     return (
-                      <div key={cat.category} className="p-2.5 rounded-lg border border-[#E2E8F0] bg-white flex items-center justify-between">
+                      <div
+                        key={cat.category}
+                        className="p-2.5 rounded-lg border border-[#E2E8F0] bg-white flex items-center justify-between"
+                      >
                         <span className={`font-bold flex items-center gap-2 ${theme.text}`}>
-                          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme.bg}`} aria-hidden="true" />
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme.bg}`}
+                            aria-hidden="true"
+                          />
                           {cat.category}
                         </span>
                         <span className="text-[#475569]">
@@ -127,12 +136,54 @@ export const MethodologyPage: React.FC = () => {
 
             <form onSubmit={(e) => void handleCalculate(e)} className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <Input label="PM2.5 (µg/m³)" type="number" step="0.1" min="0" value={pm25} onChange={(e) => setPm25(e.target.value)} />
-                <Input label="PM10 (µg/m³)" type="number" step="0.1" min="0" value={pm10} onChange={(e) => setPm10(e.target.value)} />
-                <Input label="NO2 (µg/m³)" type="number" step="0.1" min="0" value={no2} onChange={(e) => setNo2(e.target.value)} />
-                <Input label="SO2 (µg/m³)" type="number" step="0.1" min="0" value={so2} onChange={(e) => setSo2(e.target.value)} />
-                <Input label="CO (mg/m³)" type="number" step="0.1" min="0" value={co} onChange={(e) => setCo(e.target.value)} />
-                <Input label="O3 (µg/m³)" type="number" step="0.1" min="0" value={o3} onChange={(e) => setO3(e.target.value)} />
+                <Input
+                  label="PM2.5 (µg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={pm25}
+                  onChange={(e) => setPm25(e.target.value)}
+                />
+                <Input
+                  label="PM10 (µg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={pm10}
+                  onChange={(e) => setPm10(e.target.value)}
+                />
+                <Input
+                  label="NO2 (µg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={no2}
+                  onChange={(e) => setNo2(e.target.value)}
+                />
+                <Input
+                  label="SO2 (µg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={so2}
+                  onChange={(e) => setSo2(e.target.value)}
+                />
+                <Input
+                  label="CO (mg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={co}
+                  onChange={(e) => setCo(e.target.value)}
+                />
+                <Input
+                  label="O3 (µg/m³)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={o3}
+                  onChange={(e) => setO3(e.target.value)}
+                />
               </div>
               <Button type="submit" disabled={calculating} className="w-full">
                 {calculating ? 'Computing CPCB Sub-Indices...' : 'Calculate CPCB NAQI'}
@@ -140,13 +191,19 @@ export const MethodologyPage: React.FC = () => {
             </form>
 
             {calcResult && (
-              <div className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] space-y-3" aria-live="polite">
+              <div
+                className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] space-y-3"
+                aria-live="polite"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-base">
                     Composite Score: {calcResult.aqi ?? 'Insufficient Data'}
                   </span>
                   {calcResult.category && calcResult.category !== 'Incomplete Data' && (
-                    <AqiBadge aqi={calcResult.aqi ?? 0} category={calcResult.category as CpcbCategory} />
+                    <AqiBadge
+                      aqi={calcResult.aqi ?? 0}
+                      category={calcResult.category as CpcbCategory}
+                    />
                   )}
                 </div>
                 <p className="text-xs text-[#475569]">{calcResult.health_advisory}</p>
@@ -158,7 +215,9 @@ export const MethodologyPage: React.FC = () => {
 
             <div className="text-xs text-[#475569] flex items-center gap-2 pt-1">
               <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
-              <span>Advisory only — follows public CPCB/WHO guidance and is not medical advice.</span>
+              <span>
+                Advisory only — follows public CPCB/WHO guidance and is not medical advice.
+              </span>
             </div>
           </Card>
         </div>

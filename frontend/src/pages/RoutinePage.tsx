@@ -77,7 +77,9 @@ export const RoutinePage: React.FC = () => {
 
         {(error || actionError) && (
           <ErrorBanner
-            message={actionError || (error instanceof Error ? error.message : 'Error loading routine.')}
+            message={
+              actionError || (error instanceof Error ? error.message : 'Error loading routine.')
+            }
             onRetry={() => void refetch()}
           />
         )}
@@ -102,7 +104,10 @@ export const RoutinePage: React.FC = () => {
               />
             </div>
             <div className="sm:col-span-2 flex flex-col gap-1.5">
-              <label htmlFor="routine-slot" className="text-xs font-semibold uppercase text-[#334155]">
+              <label
+                htmlFor="routine-slot"
+                className="text-xs font-semibold uppercase text-[#334155]"
+              >
                 Time Slot
               </label>
               <select
@@ -117,7 +122,10 @@ export const RoutinePage: React.FC = () => {
               </select>
             </div>
             <div className="sm:col-span-2 flex flex-col gap-1.5">
-              <label htmlFor="routine-cat" className="text-xs font-semibold uppercase text-[#334155]">
+              <label
+                htmlFor="routine-cat"
+                className="text-xs font-semibold uppercase text-[#334155]"
+              >
                 Category
               </label>
               <select
@@ -152,7 +160,9 @@ export const RoutinePage: React.FC = () => {
           {isLoading ? (
             <LoadingSkeleton lines={4} label="Loading daily tasks..." />
           ) : tasks.length === 0 ? (
-            <p className="text-sm text-[#475569] py-4">No tasks scheduled yet. Add an action above.</p>
+            <p className="text-sm text-[#475569] py-4">
+              No tasks scheduled yet. Add an action above.
+            </p>
           ) : (
             <div className="space-y-2.5">
               {tasks.map((task) => (
@@ -172,9 +182,15 @@ export const RoutinePage: React.FC = () => {
                     className="flex items-start gap-3 text-left flex-1 min-w-0"
                   >
                     {task.is_completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#2F9E62] shrink-0 mt-0.5" aria-hidden="true" />
+                      <CheckCircle2
+                        className="w-5 h-5 text-[#2F9E62] shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
                     ) : (
-                      <Circle className="w-5 h-5 text-[#475569] shrink-0 mt-0.5" aria-hidden="true" />
+                      <Circle
+                        className="w-5 h-5 text-[#475569] shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
                     )}
                     <div className="min-w-0">
                       <div

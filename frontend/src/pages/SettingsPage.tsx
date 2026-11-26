@@ -98,7 +98,9 @@ export const SettingsPage: React.FC = () => {
             <SettingsIcon className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
             Account, Language & Data Controls
           </h1>
-          <p className="text-sm text-[#475569]">Manage your persisted profile, password, and display language.</p>
+          <p className="text-sm text-[#475569]">
+            Manage your persisted profile, password, and display language.
+          </p>
         </div>
 
         {errorMsg && <ErrorBanner message={errorMsg} />}
@@ -115,7 +117,10 @@ export const SettingsPage: React.FC = () => {
                 required
               />
               {profileSaved && (
-                <div className="flex items-center gap-2 text-xs font-bold text-[#1E6F44]" role="status">
+                <div
+                  className="flex items-center gap-2 text-xs font-bold text-[#1E6F44]"
+                  role="status"
+                >
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                   Profile saved to database.
                 </div>
@@ -188,7 +193,8 @@ export const SettingsPage: React.FC = () => {
           <div>
             <h2 className="font-bold text-base text-[#991B1B]">Permanent Account Deletion</h2>
             <p className="text-xs text-[#475569]">
-              Deletes your user record, refresh sessions, rooms, family profiles, and impact history.
+              Deletes your user record, refresh sessions, rooms, family profiles, and impact
+              history.
             </p>
           </div>
           <Button type="button" variant="danger" onClick={() => setShowDeleteConfirm(true)}>

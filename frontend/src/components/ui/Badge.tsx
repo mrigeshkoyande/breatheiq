@@ -1,7 +1,8 @@
 import React from 'react';
 import { cn } from './Button';
 
-export type SourceBadgeType = 'LIVE' | 'MODELED' | 'FORECAST' | 'ESTIMATED' | 'USER-REPORTED' | 'DEMO';
+export type SourceBadgeType =
+  'LIVE' | 'MODELED' | 'FORECAST' | 'ESTIMATED' | 'USER-REPORTED' | 'DEMO';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   badgeType: SourceBadgeType;

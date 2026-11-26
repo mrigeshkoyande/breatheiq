@@ -14,12 +14,7 @@ export const AirQualityPage: React.FC = () => {
   const [cityOverride, setCityOverride] = useState<string | null>(null);
   const selectedCity = cityOverride ?? household?.city ?? 'Mumbai';
 
-  const {
-    data: airData,
-    isLoading,
-    error,
-    refetch,
-  } = useCurrentAirQuality(selectedCity);
+  const { data: airData, isLoading, error, refetch } = useCurrentAirQuality(selectedCity);
 
   const category: CpcbCategory =
     airData?.naqi.category && airData.naqi.category !== 'Incomplete Data'
@@ -40,27 +35,30 @@ export const AirQualityPage: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Select city">
-            {(cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']).map(
-              (c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-pressed={selectedCity.toLowerCase() === c.toLowerCase()}
-                  onClick={() => setCityOverride(c)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${
-                    selectedCity.toLowerCase() === c.toLowerCase()
-                      ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                      : 'bg-white text-[#334155] border-[#CBD5E1]'
-                  }`}
-                >
-                  {c}
-                </button>
-              )
-            )}
+            {(cities.length > 0
+              ? cities.map((c) => c.city)
+              : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']
+            ).map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={selectedCity.toLowerCase() === c.toLowerCase()}
+                onClick={() => setCityOverride(c)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${
+                  selectedCity.toLowerCase() === c.toLowerCase()
+                    ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                    : 'bg-white text-[#334155] border-[#CBD5E1]'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
           </div>
         </div>
 
-        {isLoading && <LoadingSkeleton lines={5} label="Loading atmospheric pollutant telemetry..." />}
+        {isLoading && (
+          <LoadingSkeleton lines={5} label="Loading atmospheric pollutant telemetry..." />
+        )}
         {error && (
           <ErrorBanner
             message={error instanceof Error ? error.message : 'Unable to fetch air telemetry.'}
@@ -93,7 +91,10 @@ export const AirQualityPage: React.FC = () => {
                   { label: 'CO', value: `${airData.co} mg/m³` },
                   { label: 'O3', value: `${airData.o3} µg/m³` },
                 ].map((p) => (
-                  <div key={p.label} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                  <div
+                    key={p.label}
+                    className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
+                  >
                     <div className="text-xs font-bold text-[#475569]">{p.label}</div>
                     <div className="text-base font-extrabold mt-1">{p.value}</div>
                   </div>

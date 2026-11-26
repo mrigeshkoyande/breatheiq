@@ -43,7 +43,8 @@ export const RoutesPage: React.FC = () => {
     },
   });
 
-  const activeRoute = routeResult?.routes.find((r) => r.id === selectedRouteId) ?? routeResult?.routes[0];
+  const activeRoute =
+    routeResult?.routes.find((r) => r.id === selectedRouteId) ?? routeResult?.routes[0];
 
   return (
     <AppShell title="CleanRoute Commute Navigator">
@@ -55,7 +56,8 @@ export const RoutesPage: React.FC = () => {
               CleanRoute Multimodal Exposure Navigator
             </h1>
             <p className="text-sm text-[#475569]">
-              Compare inhaled PM2.5 dosage and ARAI/DMRC CO2 savings across {city} transit corridors.
+              Compare inhaled PM2.5 dosage and ARAI/DMRC CO2 savings across {city} transit
+              corridors.
             </p>
           </div>
           <Badge badgeType={routeResult?.source || 'ESTIMATED'} />
@@ -72,10 +74,20 @@ export const RoutesPage: React.FC = () => {
             className="grid sm:grid-cols-12 gap-3 items-end"
           >
             <div className="sm:col-span-4">
-              <Input label="Origin" value={origin} onChange={(e) => setOrigin(e.target.value)} required />
+              <Input
+                label="Origin"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                required
+              />
             </div>
             <div className="sm:col-span-4">
-              <Input label="Destination" value={destination} onChange={(e) => setDestination(e.target.value)} required />
+              <Input
+                label="Destination"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                required
+              />
             </div>
             <div className="sm:col-span-2">
               <Input
@@ -99,7 +111,11 @@ export const RoutesPage: React.FC = () => {
 
         {routeResult && (
           <div className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4" role="radiogroup" aria-label="Commute route options">
+            <div
+              className="grid md:grid-cols-3 gap-4"
+              role="radiogroup"
+              aria-label="Commute route options"
+            >
               {routeResult.routes.map((route) => {
                 const selected = activeRoute?.id === route.id;
                 return (
@@ -123,7 +139,8 @@ export const RoutesPage: React.FC = () => {
                       {route.inhaled_dose_ug} µg
                     </div>
                     <div className="text-xs text-[#475569]">
-                      {route.travel_time_min} min · {route.average_pm25} µg/m³ · {route.co2_emissions_kg} kg CO2
+                      {route.travel_time_min} min · {route.average_pm25} µg/m³ ·{' '}
+                      {route.co2_emissions_kg} kg CO2
                     </div>
                     <p className="text-xs text-[#334155] pt-1">{route.advisory}</p>
                   </button>

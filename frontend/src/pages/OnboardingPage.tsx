@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Bell, CheckCircle2, MapPin, ShieldAlert, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  CheckCircle2,
+  MapPin,
+  ShieldAlert,
+  Users,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCities, useSaveHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
@@ -96,7 +104,10 @@ export const OnboardingPage: React.FC = () => {
     }
   };
 
-  const availableCities = cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune'];
+  const availableCities =
+    cities.length > 0
+      ? cities.map((c) => c.city)
+      : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune'];
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
@@ -138,7 +149,9 @@ export const OnboardingPage: React.FC = () => {
           </div>
         </div>
 
-        {errorMsg && <ErrorBanner message={errorMsg} onRetry={() => void handleCompleteOnboarding()} />}
+        {errorMsg && (
+          <ErrorBanner message={errorMsg} onRetry={() => void handleCompleteOnboarding()} />
+        )}
 
         <Card elevated className="p-6 sm:p-8 space-y-6">
           {step === 1 && (
@@ -155,10 +168,11 @@ export const OnboardingPage: React.FC = () => {
                     type="button"
                     aria-pressed={city === c}
                     onClick={() => setCity(c)}
-                    className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${city === c
-                      ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
-                      : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
-                      }`}
+                    className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                      city === c
+                        ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
+                        : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
+                    }`}
                   >
                     {c}
                   </button>
@@ -223,7 +237,10 @@ export const OnboardingPage: React.FC = () => {
                   placeholder="e.g. Aarav"
                 />
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="onb-age" className="text-xs font-semibold uppercase tracking-wider text-[#334155]">
+                  <label
+                    htmlFor="onb-age"
+                    className="text-xs font-semibold uppercase tracking-wider text-[#334155]"
+                  >
                     Age Tier
                   </label>
                   <select
@@ -239,7 +256,10 @@ export const OnboardingPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="onb-sens" className="text-xs font-semibold uppercase tracking-wider text-[#334155]">
+                  <label
+                    htmlFor="onb-sens"
+                    className="text-xs font-semibold uppercase tracking-wider text-[#334155]"
+                  >
                     Sensitivity
                   </label>
                   <select
@@ -283,7 +303,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="onb-threshold" className="flex justify-between text-sm font-semibold">
+                <label
+                  htmlFor="onb-threshold"
+                  className="flex justify-between text-sm font-semibold"
+                >
                   <span>Trigger High-Priority Smog Alert At</span>
                   <span className="text-[#0F766E]">{aqiThreshold} NAQI</span>
                 </label>
@@ -322,11 +345,20 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <Button type="button" variant="outline" onClick={() => setStep(2)} disabled={saving}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                  disabled={saving}
+                >
                   <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                   Back
                 </Button>
-                <Button type="button" onClick={() => void handleCompleteOnboarding()} disabled={saving}>
+                <Button
+                  type="button"
+                  onClick={() => void handleCompleteOnboarding()}
+                  disabled={saving}
+                >
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                   {saving ? 'Saving Household...' : 'Finish & Open Dashboard'}
                 </Button>

@@ -41,7 +41,10 @@ export const ExplorePage: React.FC = () => {
       <SkipLink />
       <PublicHeader />
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8 space-y-8">
+      <main
+        id="main-content"
+        className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8 space-y-8"
+      >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E] mb-1">
@@ -93,7 +96,9 @@ export const ExplorePage: React.FC = () => {
         {airLoading && <LoadingSkeleton lines={4} label="Fetching metropolitan air telemetry..." />}
         {airError && (
           <ErrorBanner
-            message={airError instanceof Error ? airError.message : 'Unable to fetch city telemetry.'}
+            message={
+              airError instanceof Error ? airError.message : 'Unable to fetch city telemetry.'
+            }
             onRetry={() => void refetchAir()}
           />
         )}
@@ -123,7 +128,10 @@ export const ExplorePage: React.FC = () => {
                   { label: 'CO', value: `${currentAir.co} mg/m³` },
                   { label: 'O3', value: `${currentAir.o3} µg/m³` },
                 ].map((item) => (
-                  <div key={item.label} className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
+                  <div
+                    key={item.label}
+                    className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
+                  >
                     <div className="text-xs font-bold text-[#475569]">{item.label}</div>
                     <div className="text-lg font-extrabold mt-1">{item.value}</div>
                   </div>
@@ -132,7 +140,9 @@ export const ExplorePage: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA] text-sm text-[#182A29]">
                 <strong>Advisory:</strong> {currentAir.naqi.health_advisory}{' '}
-                <span className="text-[#475569]">(Public health guidance only — not medical advice.)</span>
+                <span className="text-[#475569]">
+                  (Public health guidance only — not medical advice.)
+                </span>
               </div>
             </Card>
 
@@ -180,8 +190,13 @@ export const ExplorePage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     {forecast.slice(0, 6).map((slot) => (
-                      <div key={slot.time} className="p-2 rounded-lg bg-[#F8FAF7] border border-[#E2E8F0] text-center">
-                        <div className="text-[#475569]">{slot.time.split('T')[1]?.slice(0, 5) || '--'}</div>
+                      <div
+                        key={slot.time}
+                        className="p-2 rounded-lg bg-[#F8FAF7] border border-[#E2E8F0] text-center"
+                      >
+                        <div className="text-[#475569]">
+                          {slot.time.split('T')[1]?.slice(0, 5) || '--'}
+                        </div>
                         <div className="font-bold text-[#182A29]">{slot.pm25}</div>
                       </div>
                     ))}

@@ -143,12 +143,13 @@ export const SignupPage: React.FC = () => {
                   {[1, 2, 3].map((step) => (
                     <div
                       key={step}
-                      className={`h-1.5 rounded-full ${strengthScore >= step
-                        ? strengthScore === 3
-                          ? 'bg-[#2F9E62]'
-                          : 'bg-[#F59E0B]'
-                        : 'bg-[#E2E8F0]'
-                        }`}
+                      className={`h-1.5 rounded-full ${
+                        strengthScore >= step
+                          ? strengthScore === 3
+                            ? 'bg-[#2F9E62]'
+                            : 'bg-[#F59E0B]'
+                          : 'bg-[#E2E8F0]'
+                      }`}
                     />
                   ))}
                 </div>

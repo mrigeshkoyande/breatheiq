@@ -116,7 +116,11 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {headerRight}
 
-              <div className="inline-flex items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAF7] p-0.5" role="group" aria-label="Language switcher">
+              <div
+                className="inline-flex items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAF7] p-0.5"
+                role="group"
+                aria-label="Language switcher"
+              >
                 {(['en', 'hi', 'mr'] as SupportedLang[]).map((code) => (
                   <button
                     key={code}
@@ -124,7 +128,9 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
                     onClick={() => setLang(code)}
                     aria-pressed={lang === code}
                     className={`px-2 py-1 text-[11px] font-bold uppercase rounded-md transition-colors ${
-                      lang === code ? 'bg-[#0F766E] text-white' : 'text-[#475569] hover:text-[#182A29]'
+                      lang === code
+                        ? 'bg-[#0F766E] text-white'
+                        : 'text-[#475569] hover:text-[#182A29]'
                     }`}
                   >
                     {code}
@@ -148,7 +154,11 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
           </div>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="flex-1 w-full pb-20 lg:pb-10 focus:outline-none">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 w-full pb-20 lg:pb-10 focus:outline-none"
+        >
           {children}
         </main>
 

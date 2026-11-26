@@ -47,7 +47,8 @@ export const LandingPage: React.FC = () => {
     },
     {
       gap: 'Opaque AI chat responses risk invented pollutant claims',
-      solution: 'Server-side Gemini 2.5 Flash validated against retrieved station & model telemetry',
+      solution:
+        'Server-side Gemini 2.5 Flash validated against retrieved station & model telemetry',
     },
   ];
 
@@ -75,7 +76,9 @@ export const LandingPage: React.FC = () => {
         {airError && (
           <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-4">
             <ErrorBanner
-              message={airError instanceof Error ? airError.message : 'Unable to load city preview.'}
+              message={
+                airError instanceof Error ? airError.message : 'Unable to load city preview.'
+              }
               onRetry={() => void refetchAir()}
             />
           </div>
@@ -140,7 +143,10 @@ export const LandingPage: React.FC = () => {
 
         {/* Final Call to Action */}
         <section className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
-          <Card elevated className="p-6 sm:p-8 bg-[#0F766E] text-white border-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <Card
+            elevated
+            className="p-6 sm:p-8 bg-[#0F766E] text-white border-0 flex flex-col md:flex-row md:items-center justify-between gap-6"
+          >
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#DDF5EC]">
                 <ShieldAlert className="w-4 h-4" aria-hidden="true" />

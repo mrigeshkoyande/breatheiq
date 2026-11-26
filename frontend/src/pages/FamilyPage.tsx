@@ -63,7 +63,8 @@ export const FamilyPage: React.FC = () => {
               Family AirTwin Vulnerability Profiles
             </h1>
             <p className="text-sm text-[#475569]">
-              Household exposure protection ({impact?.total_averted_pm25_mg ?? 0} mg cumulative PM2.5 averted).
+              Household exposure protection ({impact?.total_averted_pm25_mg ?? 0} mg cumulative
+              PM2.5 averted).
             </p>
           </div>
           <Badge badgeType="ESTIMATED" />
@@ -71,7 +72,10 @@ export const FamilyPage: React.FC = () => {
 
         {(error || actionError) && (
           <ErrorBanner
-            message={actionError || (error instanceof Error ? error.message : 'Unable to load family profiles.')}
+            message={
+              actionError ||
+              (error instanceof Error ? error.message : 'Unable to load family profiles.')
+            }
             onRetry={() => void refetch()}
           />
         )}
@@ -167,7 +171,9 @@ export const FamilyPage: React.FC = () => {
 
         <div className="text-xs text-[#475569] flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
-          <span>Vulnerability weights guide daily scheduling only and are not clinical advice.</span>
+          <span>
+            Vulnerability weights guide daily scheduling only and are not clinical advice.
+          </span>
         </div>
       </div>
 

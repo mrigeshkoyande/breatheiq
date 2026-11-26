@@ -82,7 +82,10 @@ export const ResetPasswordPage: React.FC = () => {
                 </p>
               </div>
               {error && (
-                <div role="alert" className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium">
+                <div
+                  role="alert"
+                  className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium"
+                >
                   {error}
                 </div>
               )}

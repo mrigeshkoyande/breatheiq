@@ -9,7 +9,14 @@ import { PublicHeader } from '../components/layout/PublicHeader';
 import { SkipLink } from '../components/layout/SkipLink';
 
 export const DevUiPage: React.FC = () => {
-  const sampleCategories = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe'] as const;
+  const sampleCategories = [
+    'Good',
+    'Satisfactory',
+    'Moderate',
+    'Poor',
+    'Very Poor',
+    'Severe',
+  ] as const;
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29]">
       <SkipLink />
@@ -39,9 +46,11 @@ export const DevUiPage: React.FC = () => {
         <Card className="space-y-4">
           <h2 className="font-bold text-lg">Telemetry Provenance Badges</h2>
           <div className="flex flex-wrap gap-3">
-            {(['LIVE', 'MODELED', 'FORECAST', 'ESTIMATED', 'USER-REPORTED', 'DEMO'] as const).map((b) => (
-              <Badge key={b} badgeType={b} />
-            ))}
+            {(['LIVE', 'MODELED', 'FORECAST', 'ESTIMATED', 'USER-REPORTED', 'DEMO'] as const).map(
+              (b) => (
+                <Badge key={b} badgeType={b} />
+              )
+            )}
           </div>
         </Card>
 
@@ -55,8 +64,16 @@ export const DevUiPage: React.FC = () => {
             <Button variant="danger">Danger</Button>
           </div>
           <div className="grid sm:grid-cols-2 gap-4 pt-2">
-            <Input label="Standard Field" placeholder="Enter corridor name" helperText="Example: Andheri West" />
-            <Input label="Validation Error" defaultValue="invalid" error="Must be a valid coordinate" />
+            <Input
+              label="Standard Field"
+              placeholder="Enter corridor name"
+              helperText="Example: Andheri West"
+            />
+            <Input
+              label="Validation Error"
+              defaultValue="invalid"
+              error="Must be a valid coordinate"
+            />
           </div>
         </Card>
       </main>

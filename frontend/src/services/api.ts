@@ -4,7 +4,10 @@ let inMemoryToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
 
 export const SESSION_HINT_KEY = 'breatheiq_has_session';
+const REQUEST_TIMEOUT_MS = 15_000;
+const NO_RETRY_ENDPOINTS = new Set(['/auth/login', '/auth/refresh', '/auth/signup']);
 
+/** Typed HTTP error preserving backend status codes for UI error handling. */
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -14,102 +17,106 @@ export class ApiError extends Error {
   }
 }
 
-export const setAccessToken = (token: string | null) => {
+/** Store short-lived access JWT strictly in memory. */
+export const setAccessToken = (token: string | null): void => {
   inMemoryToken = token;
 };
 
-export const getAccessToken = () => inMemoryToken;
+/** Read current in-memory access JWT. */
+export const getAccessToken = (): string | null => inMemoryToken;
 
-const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '');
-const BASE_URL =
-  rawBase === '' || rawBase === '/api/v1'
-    ? '/api/v1'
-    : rawBase.endsWith('/api/v1')
-    ? rawBase
-    : rawBase.endsWith('/api')
-    ? `${rawBase}/v1`
-    : `${rawBase}/api/v1`;
+function resolveApiBaseUrl(): string {
+  const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '');
+  if (rawBase === '' || rawBase === '/api/v1') return '/api/v1';
+  if (rawBase.endsWith('/api/v1')) return rawBase;
+  return rawBase.endsWith('/api') ? `${rawBase}/v1` : `${rawBase}/api/v1`;
+}
+
+const BASE_URL = resolveApiBaseUrl();
+
+function clearSessionState(): null {
+  setAccessToken(null);
+  try {
+    localStorage.removeItem(SESSION_HINT_KEY);
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+  }
+  return null;
+}
 
 async function executeTokenRefresh(): Promise<string | null> {
-  if (refreshPromise) {
-    return refreshPromise;
-  }
-
+  if (refreshPromise) return refreshPromise;
   refreshPromise = (async () => {
     try {
       const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
       });
-
-      if (refreshRes.ok) {
-        const refreshData: AuthResponse = await refreshRes.json();
-        setAccessToken(refreshData.access_token);
-        localStorage.setItem(SESSION_HINT_KEY, 'true');
-        return refreshData.access_token;
-      }
-      setAccessToken(null);
-      localStorage.removeItem(SESSION_HINT_KEY);
-      return null;
-    } catch {
-      setAccessToken(null);
-      localStorage.removeItem(SESSION_HINT_KEY);
-      return null;
+      if (!refreshRes.ok) return clearSessionState();
+      const refreshData: AuthResponse = await refreshRes.json();
+      setAccessToken(refreshData.access_token);
+      localStorage.setItem(SESSION_HINT_KEY, 'true');
+      return refreshData.access_token;
+    } catch (err: unknown) {
+      if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+      return clearSessionState();
     } finally {
       refreshPromise = null;
     }
   })();
-
   return refreshPromise;
 }
 
 async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    return await fetch(url, {
-      ...options,
-      signal: options.signal ?? controller.signal,
-    });
+    return await fetch(url, { ...options, signal: options.signal ?? controller.signal });
   } catch (err: unknown) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error('Request timed out. Please check your network connection.');
     }
-    throw new Error('Unable to connect to air quality server. Please verify your internet connection.');
+    throw new Error(
+      'Unable to connect to air quality server. Please verify your internet connection.'
+    );
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-export async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${BASE_URL}${cleanEndpoint}`;
-  const headers = new Headers(options.headers || {});
+async function parseErrorMessage(res: Response): Promise<string> {
+  const fallback = `HTTP error! status: ${res.status}`;
+  try {
+    const errData: { detail?: string; message?: string } = await res.json();
+    if (typeof errData.detail === 'string') return errData.detail;
+    if (typeof errData.message === 'string') return errData.message;
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+    return res.statusText || fallback;
+  }
+  return fallback;
+}
 
+function buildRequestHeaders(options: RequestInit): Headers {
+  const headers = new Headers(options.headers || {});
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
   if (inMemoryToken) {
     headers.set('Authorization', `Bearer ${inMemoryToken}`);
   }
+  return headers;
+}
 
-  const requestOpts: RequestInit = {
-    ...options,
-    credentials: 'include',
-    headers,
-  };
+/** Execute typed API request with single-flight token refresh and standardized error mapping. */
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${BASE_URL}${cleanEndpoint}`;
+  const headers = buildRequestHeaders(options);
+  const requestOpts: RequestInit = { ...options, credentials: 'include', headers };
 
   let res = await fetchWithTimeout(url, requestOpts);
-
-  if (
-    res.status === 401 &&
-    cleanEndpoint !== '/auth/login' &&
-    cleanEndpoint !== '/auth/refresh' &&
-    cleanEndpoint !== '/auth/signup'
-  ) {
+  if (res.status === 401 && !NO_RETRY_ENDPOINTS.has(cleanEndpoint)) {
     const newToken = await executeTokenRefresh();
     if (newToken) {
       const retryHeaders = new Headers(headers);
@@ -119,22 +126,7 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    let errorMessage = `HTTP error! status: ${res.status}`;
-    try {
-      const errData: { detail?: string; message?: string } = await res.json();
-      if (typeof errData.detail === 'string') {
-        errorMessage = errData.detail;
-      } else if (typeof errData.message === 'string') {
-        errorMessage = errData.message;
-      }
-    } catch {
-      errorMessage = res.statusText || errorMessage;
-    }
-    throw new ApiError(errorMessage, res.status);
+    throw new ApiError(await parseErrorMessage(res), res.status);
   }
-
-  if (res.status === 204) {
-    return undefined as T;
-  }
-  return (await res.json()) as T;
+  return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }

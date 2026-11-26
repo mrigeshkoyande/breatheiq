@@ -125,7 +125,8 @@ export const AssistantPage: React.FC = () => {
               Grounded Atmospheric Copilot
             </h1>
             <p className="text-xs text-[#475569]">
-              Safety-validated responses citing retrieved {city} telemetry · Public health guidance only.
+              Safety-validated responses citing retrieved {city} telemetry · Public health guidance
+              only.
             </p>
           </div>
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] bg-[#DDF5EC] px-3 py-1 rounded-full">
@@ -215,7 +216,11 @@ export const AssistantPage: React.FC = () => {
               placeholder={`Ask about ${city} smog, windows, purifiers, or commutes...`}
               className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
             />
-            <Button type="submit" disabled={sending || !input.trim()} aria-label="Send message to Copilot">
+            <Button
+              type="submit"
+              disabled={sending || !input.trim()}
+              aria-label="Send message to Copilot"
+            >
               <Send className="w-4 h-4" aria-hidden="true" />
               <span className="hidden sm:inline">{sending ? 'Sending...' : 'Send'}</span>
             </Button>

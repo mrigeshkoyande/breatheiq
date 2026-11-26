@@ -15,22 +15,53 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function readSessionHint(): boolean {
+  try {
+    return localStorage.getItem(SESSION_HINT_KEY) === 'true';
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+    return false;
+  }
+}
+
+function writeSessionHint(enabled: boolean): void {
+  try {
+    if (enabled) {
+      localStorage.setItem(SESSION_HINT_KEY, 'true');
+    } else {
+      localStorage.removeItem(SESSION_HINT_KEY);
+    }
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+  }
+}
+
+function commitSession(res: AuthResponse, setUser: (u: User | null) => void): void {
+  setAccessToken(res.access_token);
+  setUser(res.user);
+  writeSessionHint(true);
+}
+
+function clearSession(setUser: (u: User | null) => void): void {
+  setAccessToken(null);
+  setUser(null);
+  writeSessionHint(false);
+}
+
+/** Provides in-memory JWT session state and silent refresh cookie synchronization. */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [hasHint] = useState(() => localStorage.getItem(SESSION_HINT_KEY) === 'true');
+  const [hasHint] = useState(readSessionHint);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(hasHint);
   const queryClient = useQueryClient();
 
-  const refreshAuth = useCallback(async () => {
+  const refreshAuth = useCallback(async (): Promise<void> => {
     try {
       const res = await apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' });
-      setAccessToken(res.access_token);
-      setUser(res.user);
-      localStorage.setItem(SESSION_HINT_KEY, 'true');
-    } catch {
-      setAccessToken(null);
-      setUser(null);
-      localStorage.removeItem(SESSION_HINT_KEY);
+      commitSession(res, setUser);
+    } catch (err: unknown) {
+      if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+      clearSession(setUser);
     } finally {
       setLoading(false);
     }
@@ -41,16 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let active = true;
     apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' })
       .then((res) => {
-        if (!active) return;
-        setAccessToken(res.access_token);
-        setUser(res.user);
-        localStorage.setItem(SESSION_HINT_KEY, 'true');
+        if (active) commitSession(res, setUser);
       })
-      .catch(() => {
-        if (!active) return;
-        setAccessToken(null);
-        setUser(null);
-        localStorage.removeItem(SESSION_HINT_KEY);
+      .catch((err: unknown) => {
+        if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+        if (active) clearSession(setUser);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -60,51 +86,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [hasHint]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     const res = await apiRequest<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    setAccessToken(res.access_token);
-    setUser(res.user);
-    localStorage.setItem(SESSION_HINT_KEY, 'true');
+    commitSession(res, setUser);
     queryClient.clear();
   };
 
-  const signup = async (email: string, password: string, fullName?: string) => {
+  const signup = async (email: string, password: string, fullName?: string): Promise<void> => {
     const res = await apiRequest<AuthResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ email, password, full_name: fullName }),
     });
-    setAccessToken(res.access_token);
-    setUser(res.user);
-    localStorage.setItem(SESSION_HINT_KEY, 'true');
+    commitSession(res, setUser);
     queryClient.clear();
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await apiRequest('/auth/logout', { method: 'POST' });
     } finally {
-      setAccessToken(null);
-      setUser(null);
-      localStorage.removeItem(SESSION_HINT_KEY);
+      clearSession(setUser);
       queryClient.clear();
     }
   };
 
-  const setUserProfile = useCallback((updated: User) => {
+  const setUserProfile = useCallback((updated: User): void => {
     setUser(updated);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshAuth, setUserProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, refreshAuth, setUserProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+/** Returns the active authentication context; must be called inside `<AuthProvider>`. */
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

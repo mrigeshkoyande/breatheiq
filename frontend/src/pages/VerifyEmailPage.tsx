@@ -51,7 +51,10 @@ export const VerifyEmailPage: React.FC = () => {
         <Card elevated className="max-w-md w-full p-8 text-center space-y-5">
           {status === 'loading' && (
             <div className="space-y-3" role="status" aria-live="polite">
-              <MailCheck className="w-12 h-12 text-[#0F766E] mx-auto animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+              <MailCheck
+                className="w-12 h-12 text-[#0F766E] mx-auto animate-pulse motion-reduce:animate-none"
+                aria-hidden="true"
+              />
               <h1 className="text-xl font-bold">Verifying Email</h1>
               <p className="text-sm text-[#475569]">{message}</p>
             </div>
@@ -74,7 +77,10 @@ export const VerifyEmailPage: React.FC = () => {
               <h1 className="text-2xl font-bold">Verification Failed</h1>
               <p className="text-sm text-[#B91C1C]">{message}</p>
               <div className="pt-2">
-                <Link to="/login" className={buttonStyles({ variant: 'outline', className: 'w-full' })}>
+                <Link
+                  to="/login"
+                  className={buttonStyles({ variant: 'outline', className: 'w-full' })}
+                >
                   Return to Sign In
                 </Link>
               </div>

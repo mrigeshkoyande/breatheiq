@@ -105,10 +105,21 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         </p>
 
         <div className="flex items-center justify-end gap-3 pt-2">
-          <Button ref={cancelBtnRef} type="button" variant="outline" onClick={onCancel} disabled={loading}>
+          <Button
+            ref={cancelBtnRef}
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={loading}
+          >
             {cancelLabel}
           </Button>
-          <Button type="button" variant={variant} onClick={() => void onConfirm()} disabled={loading}>
+          <Button
+            type="button"
+            variant={variant}
+            onClick={() => void onConfirm()}
+            disabled={loading}
+          >
             {loading ? 'Processing...' : confirmLabel}
           </Button>
         </div>

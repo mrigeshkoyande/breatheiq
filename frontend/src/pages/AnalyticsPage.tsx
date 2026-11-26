@@ -26,7 +26,8 @@ export const AnalyticsPage: React.FC = () => {
               24-Hour Inversion & Particulate Curves
             </h1>
             <p className="text-sm text-[#475569]">
-              Boundary layer depth and hourly PM2.5 dispersion forecast for {household?.city || 'Mumbai'}.
+              Boundary layer depth and hourly PM2.5 dispersion forecast for{' '}
+              {household?.city || 'Mumbai'}.
             </p>
           </div>
           <Badge badgeType="FORECAST" />
@@ -44,13 +45,17 @@ export const AnalyticsPage: React.FC = () => {
           <>
             <div className="grid sm:grid-cols-3 gap-4">
               <Card>
-                <div className="text-xs font-bold uppercase text-[#475569]">Peak Forecast PM2.5</div>
+                <div className="text-xs font-bold uppercase text-[#475569]">
+                  Peak Forecast PM2.5
+                </div>
                 <div className="text-2xl font-extrabold mt-1">
                   {Math.max(...forecast.map((f) => f.pm25))} µg/m³
                 </div>
               </Card>
               <Card>
-                <div className="text-xs font-bold uppercase text-[#475569]">Optimal Aeration Window</div>
+                <div className="text-xs font-bold uppercase text-[#475569]">
+                  Optimal Aeration Window
+                </div>
                 <div className="text-2xl font-extrabold mt-1 text-[#0F766E]">
                   {oracle?.best_window_start
                     ? `${oracle.best_window_start} - ${oracle.best_window_end}`
@@ -68,14 +73,20 @@ export const AnalyticsPage: React.FC = () => {
             <Card className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-lg">Hourly PM2.5 Trajectory (µg/m³)</h2>
-                <span className="text-xs text-[#475569]">First 12 hours shown with mixing height</span>
+                <span className="text-xs text-[#475569]">
+                  First 12 hours shown with mixing height
+                </span>
               </div>
               <div className="space-y-2.5" role="list" aria-label="Hourly PM2.5 forecast breakdown">
                 {forecast.slice(0, 12).map((slot) => {
                   const pct = Math.min(100, Math.round((slot.pm25 / maxPm25) * 100));
                   const hourLabel = slot.time.split('T')[1]?.slice(0, 5) || slot.time.slice(0, 5);
                   return (
-                    <div key={slot.time} role="listitem" className="grid grid-cols-12 items-center gap-3 text-xs">
+                    <div
+                      key={slot.time}
+                      role="listitem"
+                      className="grid grid-cols-12 items-center gap-3 text-xs"
+                    >
                       <span className="col-span-2 sm:col-span-1 font-bold text-[#334155]">
                         {hourLabel}
                       </span>

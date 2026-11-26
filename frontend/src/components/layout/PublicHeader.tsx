@@ -19,7 +19,10 @@ export const PublicHeader: React.FC = () => {
         aria-label="Primary Navigation"
         className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md border border-[#E2E8F0] rounded-2xl px-4 lg:px-6 py-2.5 flex items-center justify-between shadow-sm"
       >
-        <Link to="/" className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-[#0F766E] rounded-lg px-1">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-[#0F766E] rounded-lg px-1"
+        >
           <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
           <span className="font-bold text-lg tracking-tight text-[#182A29]">BreatheIQ</span>
         </Link>
@@ -31,7 +34,9 @@ export const PublicHeader: React.FC = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={active ? 'text-[#0F766E] font-bold' : 'hover:text-[#0F766E] transition-colors'}
+                className={
+                  active ? 'text-[#0F766E] font-bold' : 'hover:text-[#0F766E] transition-colors'
+                }
               >
                 {item.label}
               </Link>
@@ -55,7 +60,11 @@ export const PublicHeader: React.FC = () => {
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((prev) => !prev)}
         >
-          {mobileOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
+          {mobileOpen ? (
+            <X className="w-5 h-5" aria-hidden="true" />
+          ) : (
+            <Menu className="w-5 h-5" aria-hidden="true" />
+          )}
         </button>
       </nav>
 

@@ -89,30 +89,41 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 const LANG_STORAGE_KEY = 'breatheiq_lang';
 
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLangState] = useState<SupportedLang>(() => {
-    try {
-      const saved = localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'en' || saved === 'hi' || saved === 'mr') {
-        return saved;
-      }
-    } catch {
-      return 'en';
+function readStoredLanguage(): SupportedLang {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === 'en' || saved === 'hi' || saved === 'mr') {
+      return saved;
     }
-    return 'en';
-  });
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) {
+      console.debug('[i18n] Unable to read saved language:', err.message);
+    }
+  }
+  return 'en';
+}
+
+function writeStoredLanguage(lang: SupportedLang): void {
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+  } catch (err: unknown) {
+    if (err instanceof Error && import.meta.env.DEV) {
+      console.debug('[i18n] Unable to save language preference:', err.message);
+    }
+  }
+}
+
+/** Provides localized UI copy (EN/HI/MR) and syncs `<html lang>`. */
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [lang, setLangState] = useState<SupportedLang>(readStoredLanguage);
 
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = (next: SupportedLang) => {
+  const setLang = (next: SupportedLang): void => {
     setLangState(next);
-    try {
-      localStorage.setItem(LANG_STORAGE_KEY, next);
-    } catch {
-      // Ignore storage quota errors in restricted browsing modes
-    }
+    writeStoredLanguage(next);
   };
 
   const t = (key: string): string => TRANSLATIONS[lang][key] ?? TRANSLATIONS.en[key] ?? key;

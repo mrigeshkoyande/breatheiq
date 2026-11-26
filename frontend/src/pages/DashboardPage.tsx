@@ -117,7 +117,11 @@ export const DashboardPage: React.FC = () => {
       headerRight={
         <Link
           to="/app/assistant"
-          className={buttonStyles({ size: 'sm', variant: 'secondary', className: 'hidden sm:inline-flex' })}
+          className={buttonStyles({
+            size: 'sm',
+            variant: 'secondary',
+            className: 'hidden sm:inline-flex',
+          })}
         >
           <Bot className="w-4 h-4" aria-hidden="true" />
           {t('dash.askCopilot')}
@@ -133,23 +137,29 @@ export const DashboardPage: React.FC = () => {
             <p className="text-sm text-[#475569] mt-0.5">{t('dash.medicalDisclaimer')}</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('dash.corridorSelector')}>
-            {(cities.length > 0 ? cities.map((c) => c.city) : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']).map(
-              (cityName) => (
-                <button
-                  key={cityName}
-                  type="button"
-                  aria-pressed={activeCity.toLowerCase() === cityName.toLowerCase()}
-                  onClick={() => void handleCitySelect(cityName)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${activeCity.toLowerCase() === cityName.toLowerCase()
+          <div
+            className="flex flex-wrap items-center gap-2"
+            role="group"
+            aria-label={t('dash.corridorSelector')}
+          >
+            {(cities.length > 0
+              ? cities.map((c) => c.city)
+              : ['Mumbai', 'Delhi', 'Bengaluru', 'Kolkata', 'Pune']
+            ).map((cityName) => (
+              <button
+                key={cityName}
+                type="button"
+                aria-pressed={activeCity.toLowerCase() === cityName.toLowerCase()}
+                onClick={() => void handleCitySelect(cityName)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                  activeCity.toLowerCase() === cityName.toLowerCase()
                     ? 'bg-[#0F766E] text-white border-[#0F766E]'
                     : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
-                    }`}
-                >
-                  {cityName}
-                </button>
-              )
-            )}
+                }`}
+              >
+                {cityName}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -281,9 +291,14 @@ export const DashboardPage: React.FC = () => {
                     disabled={routePreviewMutation.isPending}
                     onClick={() => routePreviewMutation.mutate(activeCity)}
                   >
-                    {routePreviewMutation.isPending ? 'Computing Routes...' : 'Compute Live Corridor Options'}
+                    {routePreviewMutation.isPending
+                      ? 'Computing Routes...'
+                      : 'Compute Live Corridor Options'}
                   </Button>
-                  <Link to="/app/routes" className={buttonStyles({ size: 'sm', variant: 'outline' })}>
+                  <Link
+                    to="/app/routes"
+                    className={buttonStyles({ size: 'sm', variant: 'outline' })}
+                  >
                     Open Route Planner
                   </Link>
                 </div>
@@ -293,22 +308,31 @@ export const DashboardPage: React.FC = () => {
                 {routePreviewMutation.data.routes.map((route) => (
                   <div
                     key={route.id}
-                    className={`p-3 rounded-xl border text-xs ${route.recommended
-                      ? 'bg-[#EBF7F0] border-[#A3E5BA]'
-                      : 'bg-[#F8FAF7] border-[#E2E8F0]'
-                      }`}
+                    className={`p-3 rounded-xl border text-xs ${
+                      route.recommended
+                        ? 'bg-[#EBF7F0] border-[#A3E5BA]'
+                        : 'bg-[#F8FAF7] border-[#E2E8F0]'
+                    }`}
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>{route.name}</span>
                       <span>{route.inhaled_dose_ug} µg dose</span>
                     </div>
                     <div className="text-[#475569] mt-0.5">
-                      {route.travel_time_min} min · {route.average_pm25} µg/m³ · {route.co2_emissions_kg} kg CO2
+                      {route.travel_time_min} min · {route.average_pm25} µg/m³ ·{' '}
+                      {route.co2_emissions_kg} kg CO2
                     </div>
                   </div>
                 ))}
                 <div className="pt-1">
-                  <Link to="/app/routes" className={buttonStyles({ variant: 'outline', size: 'sm', className: 'w-full' })}>
+                  <Link
+                    to="/app/routes"
+                    className={buttonStyles({
+                      variant: 'outline',
+                      size: 'sm',
+                      className: 'w-full',
+                    })}
+                  >
                     Customize Origin & Destination
                   </Link>
                 </div>

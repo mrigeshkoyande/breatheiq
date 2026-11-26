@@ -59,7 +59,8 @@ export const AdminPage: React.FC = () => {
         body: JSON.stringify({ action }),
       }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['admin', 'queue'] }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Moderation failed.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Moderation failed.'),
   });
 
   const toggleUserMutation = useMutation({
@@ -69,7 +70,8 @@ export const AdminPage: React.FC = () => {
         body: JSON.stringify({ is_active }),
       }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'User update failed.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'User update failed.'),
   });
 
   const tabs: Array<{ id: AdminTab; label: string }> = [
@@ -120,7 +122,10 @@ export const AdminPage: React.FC = () => {
             {queueQuery.isLoading ? (
               <LoadingSkeleton lines={3} />
             ) : queueQuery.error ? (
-              <ErrorBanner message="Unable to fetch moderation queue." onRetry={() => void queueQuery.refetch()} />
+              <ErrorBanner
+                message="Unable to fetch moderation queue."
+                onRetry={() => void queueQuery.refetch()}
+              />
             ) : (queueQuery.data ?? []).length === 0 ? (
               <p className="text-sm text-[#475569]">No pending unverified reports.</p>
             ) : (
@@ -186,7 +191,9 @@ export const AdminPage: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => toggleUserMutation.mutate({ id: u.id, is_active: !u.is_active })}
+                      onClick={() =>
+                        toggleUserMutation.mutate({ id: u.id, is_active: !u.is_active })
+                      }
                     >
                       {u.is_active ? 'Suspend' : 'Activate'}
                     </Button>
@@ -204,7 +211,10 @@ export const AdminPage: React.FC = () => {
               <LoadingSkeleton lines={3} />
             ) : (
               (tracesQuery.data ?? []).map((t) => (
-                <div key={t.id} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between">
+                <div
+                  key={t.id}
+                  className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between"
+                >
                   <div>
                     <strong>{t.intent}</strong> · Model: {t.model} · Status: {t.status}
                   </div>
@@ -222,7 +232,10 @@ export const AdminPage: React.FC = () => {
               <LoadingSkeleton lines={3} />
             ) : (
               (auditQuery.data ?? []).map((a) => (
-                <div key={a.id} className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between">
+                <div
+                  key={a.id}
+                  className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between"
+                >
                   <span>
                     <strong>{a.action}</strong> — {a.details || 'Verified event'}
                   </span>
@@ -240,7 +253,10 @@ export const AdminPage: React.FC = () => {
               <LoadingSkeleton lines={3} />
             ) : (
               (healthQuery.data ?? []).map((h) => (
-                <div key={h.service} className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex justify-between text-xs">
+                <div
+                  key={h.service}
+                  className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex justify-between text-xs"
+                >
                   <div>
                     <div className="font-bold text-sm">{h.service}</div>
                     <div className="text-[#475569]">{h.mode}</div>

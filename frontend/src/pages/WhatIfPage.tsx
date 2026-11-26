@@ -137,13 +137,16 @@ export const WhatIfPage: React.FC = () => {
                     {simResult.daily_averted_pm25_dose_ug} µg
                   </div>
                   <div className="text-xs text-[#475569] mt-1">
-                    {simResult.inhalation_detail.protection_efficiency_pct}% reduction vs unfiltered air
+                    {simResult.inhalation_detail.protection_efficiency_pct}% reduction vs unfiltered
+                    air
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <div className="text-xs font-bold text-[#475569]">Daily CO2 Saved</div>
-                    <div className="text-xl font-extrabold mt-1">{simResult.daily_co2_averted_kg} kg</div>
+                    <div className="text-xl font-extrabold mt-1">
+                      {simResult.daily_co2_averted_kg} kg
+                    </div>
                   </div>
                   <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
                     <div className="text-xs font-bold text-[#475569]">90-Day CO2 Saved</div>

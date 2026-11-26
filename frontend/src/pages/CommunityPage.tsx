@@ -15,7 +15,12 @@ export const CommunityPage: React.FC = () => {
   const qc = useQueryClient();
   const { data: household } = useHousehold();
   const [filterSeverity, setFilterSeverity] = useState('');
-  const { data: reports = [], isLoading, error, refetch } = useCommunityReports(undefined, filterSeverity);
+  const {
+    data: reports = [],
+    isLoading,
+    error,
+    refetch,
+  } = useCommunityReports(undefined, filterSeverity);
 
   const [reportType, setReportType] = useState('construction_dust');
   const [severity, setSeverity] = useState('severe');
@@ -47,9 +52,11 @@ export const CommunityPage: React.FC = () => {
   });
 
   const upvoteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest<CommunityReport>(`/community/reports/${id}/verify`, { method: 'POST' }),
+    mutationFn: (id: number) =>
+      apiRequest<CommunityReport>(`/community/reports/${id}/verify`, { method: 'POST' }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['community', 'reports'] }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Unable to upvote report.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Unable to upvote report.'),
   });
 
   return (
@@ -70,7 +77,9 @@ export const CommunityPage: React.FC = () => {
 
         {(error || actionError) && (
           <ErrorBanner
-            message={actionError || (error instanceof Error ? error.message : 'Unable to fetch reports.')}
+            message={
+              actionError || (error instanceof Error ? error.message : 'Unable to fetch reports.')
+            }
             onRetry={() => void refetch()}
           />
         )}
@@ -88,7 +97,10 @@ export const CommunityPage: React.FC = () => {
               className="space-y-3"
             >
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="comm-type" className="text-xs font-semibold uppercase text-[#334155]">
+                <label
+                  htmlFor="comm-type"
+                  className="text-xs font-semibold uppercase text-[#334155]"
+                >
                   Hazard Type
                 </label>
                 <select
@@ -104,7 +116,10 @@ export const CommunityPage: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="comm-sev" className="text-xs font-semibold uppercase text-[#334155]">
+                <label
+                  htmlFor="comm-sev"
+                  className="text-xs font-semibold uppercase text-[#334155]"
+                >
                   Severity
                 </label>
                 <select
@@ -183,7 +198,9 @@ export const CommunityPage: React.FC = () => {
                       <Badge badgeType="USER-REPORTED" />
                     </div>
                   </div>
-                  {report.description && <p className="text-sm text-[#334155]">{report.description}</p>}
+                  {report.description && (
+                    <p className="text-sm text-[#334155]">{report.description}</p>
+                  )}
                   <div className="flex justify-end">
                     <Button
                       type="button"

@@ -25,11 +25,7 @@ export class ErrorBoundary extends React.Component<
             <AlertTriangle className="w-10 h-10 text-[#DC5252] mx-auto" aria-hidden="true" />
             <h1 className="text-xl font-bold text-[#182A29]">Something went wrong</h1>
             <p className="text-sm text-[#475569]">{this.state.errorMessage}</p>
-            <Button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mx-auto"
-            >
+            <Button type="button" onClick={() => window.location.reload()} className="mx-auto">
               <RotateCcw className="w-4 h-4" aria-hidden="true" />
               Reload Application
             </Button>

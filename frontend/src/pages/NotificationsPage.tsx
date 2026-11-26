@@ -19,7 +19,8 @@ export const NotificationsPage: React.FC = () => {
   const markReadMutation = useMutation({
     mutationFn: (id: number) => apiRequest(`/user/alerts/${id}/read`, { method: 'PATCH' }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.alerts }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Unable to mark read.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Unable to mark read.'),
   });
 
   const addRuleMutation = useMutation({
@@ -35,13 +36,15 @@ export const NotificationsPage: React.FC = () => {
         }),
       }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.alerts }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Unable to save rule.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Unable to save rule.'),
   });
 
   const deleteRuleMutation = useMutation({
     mutationFn: (id: number) => apiRequest(`/user/alerts/rules/${id}`, { method: 'DELETE' }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.alerts }),
-    onError: (err: unknown) => setActionError(err instanceof Error ? err.message : 'Unable to remove rule.'),
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Unable to remove rule.'),
   });
 
   const rules = data?.rules ?? [];
@@ -62,7 +65,9 @@ export const NotificationsPage: React.FC = () => {
 
         {(error || actionError) && (
           <ErrorBanner
-            message={actionError || (error instanceof Error ? error.message : 'Unable to fetch alerts.')}
+            message={
+              actionError || (error instanceof Error ? error.message : 'Unable to fetch alerts.')
+            }
             onRetry={() => void refetch()}
           />
         )}
@@ -94,7 +99,12 @@ export const NotificationsPage: React.FC = () => {
                   value={targetMember}
                   onChange={(e) => setTargetMember(e.target.value)}
                 />
-                <Button type="submit" size="sm" disabled={addRuleMutation.isPending} className="w-full">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={addRuleMutation.isPending}
+                  className="w-full"
+                >
                   <Plus className="w-4 h-4" aria-hidden="true" />
                   Add Alert Rule
                 </Button>
@@ -135,7 +145,9 @@ export const NotificationsPage: React.FC = () => {
                     <div
                       key={n.id}
                       className={`p-4 rounded-xl border space-y-1.5 ${
-                        n.is_read ? 'bg-[#F8FAF7] border-[#E2E8F0]' : 'bg-[#FEF8E7] border-[#FCE28E]'
+                        n.is_read
+                          ? 'bg-[#F8FAF7] border-[#E2E8F0]'
+                          : 'bg-[#FEF8E7] border-[#FCE28E]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">

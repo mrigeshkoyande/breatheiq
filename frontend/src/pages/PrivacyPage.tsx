@@ -53,7 +53,10 @@ export const PrivacyPage: React.FC = () => {
       <SkipLink />
       <PublicHeader />
 
-      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 lg:px-8 py-10 space-y-6">
+      <main
+        id="main-content"
+        className="flex-1 max-w-4xl w-full mx-auto px-4 lg:px-8 py-10 space-y-6"
+      >
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E]">
             <ShieldCheck className="w-4 h-4" aria-hidden="true" />
@@ -75,9 +78,9 @@ export const PrivacyPage: React.FC = () => {
               <h2>Session & Credential Storage</h2>
             </div>
             <p className="text-sm text-[#475569] leading-relaxed">
-              Short-lived access JWTs (~15 minutes) remain strictly in React memory. Refresh sessions
-              use rotating HttpOnly cookies hashed with SHA-256 and family reuse detection. Passwords
-              are salted and hashed with Argon2id.
+              Short-lived access JWTs (~15 minutes) remain strictly in React memory. Refresh
+              sessions use rotating HttpOnly cookies hashed with SHA-256 and family reuse detection.
+              Passwords are salted and hashed with Argon2id.
             </p>
           </Card>
 
