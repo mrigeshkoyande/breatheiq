@@ -25,12 +25,14 @@ engine = create_async_engine(
 )
 
 if is_sqlite:
+
     @event.listens_for(engine.sync_engine, "connect")
     def set_sqlite_pragma(dbapi_connection: Any, _connection_record: Any) -> None:
         """Enable SQLite foreign key enforcement per connection."""
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
+
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

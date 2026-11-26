@@ -65,7 +65,9 @@ def create_refresh_token(user_id: int, family_id: str) -> tuple[str, str, dateti
     return raw_token, hash_token(jti), expires_at
 
 
-def create_one_time_token(user_id: int, purpose: str, expires_minutes: int = 30) -> tuple[str, str, datetime]:
+def create_one_time_token(
+    user_id: int, purpose: str, expires_minutes: int = 30
+) -> tuple[str, str, datetime]:
     """Generate a single-use token for email verification or password reset."""
     jti = str(uuid.uuid4())
     now = datetime.now(UTC)

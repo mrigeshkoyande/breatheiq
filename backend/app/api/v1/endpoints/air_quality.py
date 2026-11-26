@@ -22,8 +22,12 @@ def list_cities() -> list[CityConfig]:
 
 @router.get("/current", response_model=AirDataPayload)
 async def get_current_air_quality(
-    lat: Annotated[float | None, Query(ge=-90.0, le=90.0, description="Latitude coordinate")] = None,
-    lon: Annotated[float | None, Query(ge=-180.0, le=180.0, description="Longitude coordinate")] = None,
+    lat: Annotated[
+        float | None, Query(ge=-90.0, le=90.0, description="Latitude coordinate")
+    ] = None,
+    lon: Annotated[
+        float | None, Query(ge=-180.0, le=180.0, description="Longitude coordinate")
+    ] = None,
     city: Annotated[
         str | None, Query(min_length=1, max_length=64, description="Preconfigured city name")
     ] = None,

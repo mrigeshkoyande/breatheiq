@@ -29,4 +29,6 @@ class AITrace(Base):
     tokens_used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     validator_flags: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )

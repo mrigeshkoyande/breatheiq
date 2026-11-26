@@ -107,6 +107,7 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncGenerator[None, None]:
         yield
     finally:
         air_data_service.set_http_client(None)
+        fastapi_app.state.http_client = None
         await http_client.aclose()
 
 
