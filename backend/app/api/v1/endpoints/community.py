@@ -2,18 +2,28 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
+from app.core.constants import MAX_PAGE_LIMIT
+from app.core.exceptions import ResourceNotFoundError
 from app.core.rate_limit import limiter
+from app.db.seed_data import DEMO_COMMUNITY_REPORTS
 from app.models.app_data import CommunityReport
 from app.models.auth import User
 from app.schemas.app_schemas import CommunityReportResponse, ReportCreateSchema
 
 router = APIRouter(prefix="/community", tags=["Community Air Watch"])
+
+
+async def _seed_initial_reports(db: AsyncSession) -> None:
+    """Seed fallback community smog reports in demo/dev environments when empty."""
+    reports = [CommunityReport(user_id=1, **spec) for spec in DEMO_COMMUNITY_REPORTS]
+    db.add_all(reports)
+    await db.commit()
 
 
 @router.get("/reports", response_model=list[CommunityReportResponse])
@@ -33,49 +43,12 @@ async def list_community_reports(
     if severity:
         query = query.where(CommunityReport.severity == severity)
 
-    res = await db.execute(query.limit(50))
-    reports = list(res.scalars().all())
-
-    if not reports and (settings.DEMO_MODE or settings.ENVIRONMENT in ("development", "demo", "testing")):
-        seed = [
-            CommunityReport(
-                user_id=1,
-                report_type="construction_dust",
-                severity="severe",
-                location_name="SV Road Metro Construction Corridor, Andheri West",
-                latitude=19.1190,
-                longitude=72.8470,
-                description="Excavation site active without mandatory green dust barrier mesh.",
-                upvote_count=8,
-                status="UNVERIFIED",
-            ),
-            CommunityReport(
-                user_id=1,
-                report_type="garbage_burning",
-                severity="hazardous",
-                location_name="Deonar Peripheral Corridor, Chembur",
-                latitude=19.0620,
-                longitude=72.9210,
-                description="Biomass and plastic waste smoldering on vacant lot.",
-                upvote_count=14,
-                status="VERIFIED",
-            ),
-            CommunityReport(
-                user_id=1,
-                report_type="traffic_congestion",
-                severity="moderate",
-                location_name="Western Express Highway Kalanagar Junction",
-                latitude=19.0600,
-                longitude=72.8520,
-                description="Stalled commercial trucks causing evening diesel idling.",
-                upvote_count=5,
-                status="UNVERIFIED",
-            ),
-        ]
-        db.add_all(seed)
-        await db.commit()
-        res = await db.execute(query.limit(50))
-        reports = list(res.scalars().all())
+    reports = list((await db.execute(query.limit(MAX_PAGE_LIMIT))).scalars().all())
+    if not reports and (
+        settings.DEMO_MODE or settings.ENVIRONMENT in ("development", "demo", "testing")
+    ):
+        await _seed_initial_reports(db)
+        reports = list((await db.execute(query.limit(MAX_PAGE_LIMIT))).scalars().all())
 
     return [CommunityReportResponse.model_validate(item) for item in reports]
 
@@ -114,10 +87,13 @@ async def upvote_community_report(
     _user: Annotated[User, Depends(get_current_user)],
 ) -> CommunityReportResponse:
     """Confirm and upvote a community air hazard observation."""
-    res = await db.execute(select(CommunityReport).where(CommunityReport.id == report_id))
-    report = res.scalars().first()
+    report = (
+        (await db.execute(select(CommunityReport).where(CommunityReport.id == report_id)))
+        .scalars()
+        .first()
+    )
     if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise ResourceNotFoundError("Report not found")
     report.upvote_count += 1
     await db.commit()
     await db.refresh(report)
