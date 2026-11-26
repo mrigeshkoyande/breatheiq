@@ -4,14 +4,15 @@ PYTHON ?= python
 NPM ?= npm --prefix frontend
 
 lint:
-	$(PYTHON) -m ruff check backend/app backend/tests/conftest.py
-	$(PYTHON) -m ruff format --check backend/app
-	cd backend && $(PYTHON) -m mypy --strict -p app
+	$(PYTHON) -m ruff check backend/app backend/tests/conftest.py backend/tests/test_branch_coverage.py
+	$(PYTHON) -m ruff format --check backend/app backend/tests/conftest.py backend/tests/test_branch_coverage.py
+	cd backend && $(PYTHON) -m mypy --config-file ../pyproject.toml -p app
+	$(NPM) run format:check
 	$(NPM) run lint
 	$(NPM) run typecheck
 
 format:
-	$(PYTHON) -m ruff check --fix backend/app backend/tests/conftest.py
+	$(PYTHON) -m ruff check --fix backend/app backend/tests/conftest.py backend/tests/test_branch_coverage.py
 	$(PYTHON) -m ruff format backend/app backend/tests
 	$(NPM) run format
 
@@ -20,7 +21,7 @@ test:
 	$(NPM) test
 
 coverage:
-	cd backend && $(PYTHON) -m pytest tests --cov=app --cov-branch --cov-report=term-missing --cov-fail-under=90 -q
+	cd backend && $(PYTHON) -m pytest tests --cov=app --cov-config=.coveragerc --cov-branch --cov-report=term-missing --cov-fail-under=95 -q
 	$(NPM) run test:coverage
 
 run:
@@ -28,5 +29,5 @@ run:
 
 check: lint
 	$(PYTHON) scripts/check_all.py
-	cd backend && $(PYTHON) -m pip_audit -r requirements.txt
+	$(PYTHON) -m pip_audit -r backend/requirements.txt
 	$(NPM) audit --audit-level=high
