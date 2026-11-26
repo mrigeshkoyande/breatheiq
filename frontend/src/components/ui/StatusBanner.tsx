@@ -10,7 +10,7 @@ interface ErrorBannerProps {
 export const ErrorBanner: React.FC<ErrorBannerProps> = ({ message, onRetry }) => (
   <div
     role="alert"
-    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] px-4 py-3 rounded-xl text-sm"
+    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-danger-soft border border-danger-border text-[#991B1B] px-4 py-3 rounded-xl text-sm"
   >
     <div className="flex items-center gap-2.5">
       <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />

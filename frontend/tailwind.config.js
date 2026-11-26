@@ -63,10 +63,27 @@ export default {
         "on-error-container": "#93000a",
 
         // Original BreatheIQ Palette Tokens
+        brand: {
+          DEFAULT: "#0F766E",
+          deep: "#115E59",
+          mint: "#DDF5EC",
+          emerald: "#1E6F44",
+        },
         canvas: "#F8FAF7",
         ink: {
           DEFAULT: "#182A29",
+          secondary: "#475569",
+          strong: "#334155",
           muted: "#64748B",
+        },
+        edge: {
+          DEFAULT: "#E2E8F0",
+          strong: "#CBD5E1",
+        },
+        danger: {
+          DEFAULT: "#B91C1C",
+          soft: "#FEF2F2",
+          border: "#FECACA",
         },
         cpcb: {
           good: "#2F9E62",

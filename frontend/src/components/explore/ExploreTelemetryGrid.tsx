@@ -37,7 +37,7 @@ export const ExploreTelemetryGrid: React.FC<ExploreTelemetryGridProps> = ({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold">{currentAir.location_name}</h2>
-            <p className="text-xs text-[#475569] mt-0.5">
+            <p className="text-xs text-ink-secondary mt-0.5">
               Updated: {new Date(currentAir.timestamp_utc).toLocaleString()}
             </p>
           </div>
@@ -49,16 +49,16 @@ export const ExploreTelemetryGrid: React.FC<ExploreTelemetryGridProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {pollutants.map((item) => (
-            <div key={item.label} className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-              <div className="text-xs font-bold text-[#475569]">{item.label}</div>
+            <div key={item.label} className="p-3.5 rounded-xl bg-canvas border border-edge">
+              <div className="text-xs font-bold text-ink-secondary">{item.label}</div>
               <div className="text-lg font-extrabold mt-1">{item.value}</div>
             </div>
           ))}
         </div>
 
-        <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA] text-sm text-[#182A29]">
+        <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA] text-sm text-ink">
           <strong>Advisory:</strong> {currentAir.naqi.health_advisory}{' '}
-          <span className="text-[#475569]">
+          <span className="text-ink-secondary">
             (Public health guidance only — not medical advice.)
           </span>
         </div>
@@ -70,50 +70,50 @@ export const ExploreTelemetryGrid: React.FC<ExploreTelemetryGridProps> = ({
           <Badge badgeType="FORECAST" />
         </div>
         <div className="space-y-3 text-sm">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-            <span className="flex items-center gap-2 text-[#475569]">
-              <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+          <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-edge">
+            <span className="flex items-center gap-2 text-ink-secondary">
+              <Wind className="w-4 h-4 text-brand" aria-hidden="true" />
               Wind Speed
             </span>
             <span className="font-bold">{currentAir.wind_speed_ms} m/s</span>
           </div>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-            <span className="flex items-center gap-2 text-[#475569]">
-              <Thermometer className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+          <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-edge">
+            <span className="flex items-center gap-2 text-ink-secondary">
+              <Thermometer className="w-4 h-4 text-brand" aria-hidden="true" />
               Temperature
             </span>
             <span className="font-bold">{currentAir.temperature_c} °C</span>
           </div>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-            <span className="flex items-center gap-2 text-[#475569]">
-              <Droplets className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+          <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-edge">
+            <span className="flex items-center gap-2 text-ink-secondary">
+              <Droplets className="w-4 h-4 text-brand" aria-hidden="true" />
               Humidity
             </span>
             <span className="font-bold">{currentAir.relative_humidity_pct}%</span>
           </div>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-            <span className="flex items-center gap-2 text-[#475569]">
-              <Layers className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+          <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-edge">
+            <span className="flex items-center gap-2 text-ink-secondary">
+              <Layers className="w-4 h-4 text-brand" aria-hidden="true" />
               Mixing Height
             </span>
             <span className="font-bold">{currentAir.boundary_layer_height_m ?? 500} m</span>
           </div>
         </div>
         {forecast.length > 0 && (
-          <div className="pt-2 border-t border-[#E2E8F0]">
-            <div className="text-xs font-bold uppercase tracking-wider text-[#475569] mb-2">
+          <div className="pt-2 border-t border-edge">
+            <div className="text-xs font-bold uppercase tracking-wider text-ink-secondary mb-2">
               Next 6 Hours PM2.5 Trend
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               {forecast.slice(0, 6).map((slot) => (
                 <div
                   key={slot.time}
-                  className="p-2 rounded-lg bg-[#F8FAF7] border border-[#E2E8F0] text-center"
+                  className="p-2 rounded-lg bg-canvas border border-edge text-center"
                 >
-                  <div className="text-[#475569]">
+                  <div className="text-ink-secondary">
                     {slot.time.split('T')[1]?.slice(0, 5) || '--'}
                   </div>
-                  <div className="font-bold text-[#182A29]">{slot.pm25}</div>
+                  <div className="font-bold text-ink">{slot.pm25}</div>
                 </div>
               ))}
             </div>

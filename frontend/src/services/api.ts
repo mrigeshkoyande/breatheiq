@@ -1,4 +1,5 @@
 import { AuthResponse } from '../types/auth';
+import { removeStorage, writeStorage } from '../utils/storage';
 
 let inMemoryToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
@@ -36,11 +37,7 @@ const BASE_URL = resolveApiBaseUrl();
 
 function clearSessionState(): null {
   setAccessToken(null);
-  try {
-    localStorage.removeItem(SESSION_HINT_KEY);
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
-  }
+  removeStorage(SESSION_HINT_KEY);
   return null;
 }
 
@@ -55,10 +52,9 @@ async function executeTokenRefresh(): Promise<string | null> {
       if (!refreshRes.ok) return clearSessionState();
       const refreshData: AuthResponse = await refreshRes.json();
       setAccessToken(refreshData.access_token);
-      localStorage.setItem(SESSION_HINT_KEY, 'true');
+      writeStorage(SESSION_HINT_KEY, 'true');
       return refreshData.access_token;
-    } catch (err: unknown) {
-      if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+    } catch {
       return clearSessionState();
     } finally {
       refreshPromise = null;
@@ -90,8 +86,7 @@ async function parseErrorMessage(res: Response): Promise<string> {
     const errData: { detail?: string; message?: string } = await res.json();
     if (typeof errData.detail === 'string') return errData.detail;
     if (typeof errData.message === 'string') return errData.message;
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+  } catch {
     return res.statusText || fallback;
   }
   return fallback;

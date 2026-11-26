@@ -18,14 +18,14 @@ export const DevUiPage: React.FC = () => {
     'Severe',
   ] as const;
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29]">
+    <div className="min-h-screen bg-canvas text-ink">
       <SkipLink />
       <PublicHeader />
       <main id="main-content" className="max-w-5xl mx-auto px-4 py-10 space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-extrabold">BreatheIQ Design System Primitives</h1>
-            <p className="text-sm text-[#475569] mt-1">
+            <p className="text-sm text-ink-secondary mt-1">
               Accessible token reference with dual-channel AQI indicators and provenance badges.
             </p>
           </div>

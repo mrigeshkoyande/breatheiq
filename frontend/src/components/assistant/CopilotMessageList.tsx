@@ -32,14 +32,12 @@ export const CopilotMessageList: React.FC<CopilotMessageListProps> = ({ messages
       >
         <div
           className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm space-y-2 ${
-            msg.sender === 'user'
-              ? 'bg-[#0F766E] text-white'
-              : 'bg-[#F8FAF7] border border-[#E2E8F0] text-[#182A29]'
+            msg.sender === 'user' ? 'bg-brand text-white' : 'bg-canvas border border-edge text-ink'
           }`}
         >
           <div className="flex items-center justify-between gap-3 text-[11px]">
             <span className="font-bold">{msg.sender === 'user' ? 'You' : 'BreatheIQ Copilot'}</span>
-            <span className={msg.sender === 'user' ? 'text-[#DDF5EC]' : 'text-[#475569]'}>
+            <span className={msg.sender === 'user' ? 'text-[#DDF5EC]' : 'text-ink-secondary'}>
               {msg.timestamp}
             </span>
           </div>
@@ -50,7 +48,7 @@ export const CopilotMessageList: React.FC<CopilotMessageListProps> = ({ messages
               {msg.flags?.map((flag) => (
                 <span
                   key={flag}
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white border border-[#E2E8F0] text-[#475569]"
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white border border-edge text-ink-secondary"
                 >
                   {flag}
                 </span>

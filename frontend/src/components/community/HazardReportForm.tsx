@@ -40,14 +40,14 @@ export const HazardReportForm: React.FC<HazardReportFormProps> = ({
       className="space-y-3"
     >
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="comm-type" className="text-xs font-semibold uppercase text-[#334155]">
+        <label htmlFor="comm-type" className="text-xs font-semibold uppercase text-ink-strong">
           Hazard Type
         </label>
         <select
           id="comm-type"
           value={reportType}
           onChange={(e) => onTypeChange(e.target.value)}
-          className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
+          className="bg-white border border-edge-strong rounded-lg px-3 py-2 text-sm"
         >
           <option value="construction_dust">Construction Dust</option>
           <option value="garbage_burning">Garbage Burning</option>
@@ -56,14 +56,14 @@ export const HazardReportForm: React.FC<HazardReportFormProps> = ({
         </select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="comm-sev" className="text-xs font-semibold uppercase text-[#334155]">
+        <label htmlFor="comm-sev" className="text-xs font-semibold uppercase text-ink-strong">
           Severity
         </label>
         <select
           id="comm-sev"
           value={severity}
           onChange={(e) => onSeverityChange(e.target.value)}
-          className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
+          className="bg-white border border-edge-strong rounded-lg px-3 py-2 text-sm"
         >
           <option value="moderate">Moderate</option>
           <option value="severe">Severe</option>

@@ -89,10 +89,10 @@ export const AdminPage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <Shield className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+            <Shield className="w-6 h-6 text-brand" aria-hidden="true" />
             Administration & Moderation Console
           </h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             RBAC-enforced moderation queue, Copilot safety traces, audit logs, and provider health.
           </p>
         </div>
@@ -109,8 +109,8 @@ export const AdminPage: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                  : 'bg-white text-[#334155] border-[#CBD5E1]'
+                  ? 'bg-brand text-white border-brand'
+                  : 'bg-white text-ink-strong border-edge-strong'
               }`}
             >
               {tab.label}

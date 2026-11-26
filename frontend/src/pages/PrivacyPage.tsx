@@ -49,7 +49,7 @@ export const PrivacyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       <SkipLink />
       <PublicHeader />
 
@@ -58,12 +58,12 @@ export const PrivacyPage: React.FC = () => {
         className="flex-1 max-w-4xl w-full mx-auto px-4 lg:px-8 py-10 space-y-6"
       >
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand">
             <ShieldCheck className="w-4 h-4" aria-hidden="true" />
             Privacy & Data Sovereignty
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">Your Atmospheric & Family Data</h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             BreatheIQ stores only the location corridors, room dimensions, and sensitivity flags you
             explicitly enter to personalize smog guidance.
           </p>
@@ -74,10 +74,10 @@ export const PrivacyPage: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="space-y-3">
             <div className="flex items-center gap-2 font-bold">
-              <Lock className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+              <Lock className="w-4 h-4 text-brand" aria-hidden="true" />
               <h2>Session & Credential Storage</h2>
             </div>
-            <p className="text-sm text-[#475569] leading-relaxed">
+            <p className="text-sm text-ink-secondary leading-relaxed">
               Short-lived access JWTs (~15 minutes) remain strictly in React memory. Refresh
               sessions use rotating HttpOnly cookies hashed with SHA-256 and family reuse detection.
               Passwords are salted and hashed with Argon2id.
@@ -86,7 +86,7 @@ export const PrivacyPage: React.FC = () => {
 
           <Card className="space-y-3">
             <h2 className="font-bold">Transparency & No Ad Tracking</h2>
-            <p className="text-sm text-[#475569] leading-relaxed">
+            <p className="text-sm text-ink-secondary leading-relaxed">
               BreatheIQ does not load third-party advertising trackers or sell household health
               sensitivity attributes. Copilot trace logs hash prompts before storage.
             </p>
@@ -96,7 +96,7 @@ export const PrivacyPage: React.FC = () => {
         <Card elevated className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="font-bold text-lg">Export Personal Telemetry Archive</h2>
-            <p className="text-xs text-[#475569]">
+            <p className="text-xs text-ink-secondary">
               {user
                 ? `Download JSON archive of profile, household, rooms, routine, and impact for ${user.email}.`
                 : 'Sign in to export your household and exposure ledger records.'}

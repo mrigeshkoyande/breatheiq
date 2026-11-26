@@ -52,10 +52,10 @@ export const RoutesPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <Navigation className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Navigation className="w-6 h-6 text-brand" aria-hidden="true" />
               CleanRoute Multimodal Exposure Navigator
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Compare inhaled PM2.5 dosage and ARAI/DMRC CO2 savings across {city} transit
               corridors.
             </p>
@@ -127,32 +127,32 @@ export const RoutesPage: React.FC = () => {
                     onClick={() => setSelectedRouteId(route.id)}
                     className={`text-left p-5 rounded-2xl border transition-all space-y-2 ${
                       selected
-                        ? 'bg-[#EBF7F0] border-[#0F766E] ring-2 ring-[#0F766E]/25'
-                        : 'bg-white border-[#CBD5E1] hover:border-[#0F766E]'
+                        ? 'bg-[#EBF7F0] border-brand ring-2 ring-[#0F766E]/25'
+                        : 'bg-white border-edge-strong hover:border-brand'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-sm">{route.name}</span>
                       {route.recommended && <Badge badgeType="ESTIMATED" />}
                     </div>
-                    <div className="text-2xl font-extrabold text-[#0F766E]">
+                    <div className="text-2xl font-extrabold text-brand">
                       {route.inhaled_dose_ug} µg
                     </div>
-                    <div className="text-xs text-[#475569]">
+                    <div className="text-xs text-ink-secondary">
                       {route.travel_time_min} min · {route.average_pm25} µg/m³ ·{' '}
                       {route.co2_emissions_kg} kg CO2
                     </div>
-                    <p className="text-xs text-[#334155] pt-1">{route.advisory}</p>
+                    <p className="text-xs text-ink-strong pt-1">{route.advisory}</p>
                   </button>
                 );
               })}
             </div>
 
             {activeRoute && (
-              <Card className="bg-[#F8FAF7]">
-                <div className="text-xs font-bold uppercase text-[#0F766E]">Selected Option</div>
+              <Card className="bg-canvas">
+                <div className="text-xs font-bold uppercase text-brand">Selected Option</div>
                 <div className="font-bold text-base mt-0.5">{activeRoute.name}</div>
-                <p className="text-sm text-[#475569] mt-1">
+                <p className="text-sm text-ink-secondary mt-1">
                   Rating: <strong>{activeRoute.exposure_rating}</strong> — {activeRoute.advisory}
                 </p>
               </Card>

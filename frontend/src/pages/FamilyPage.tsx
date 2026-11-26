@@ -59,10 +59,10 @@ export const FamilyPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <Users className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Users className="w-6 h-6 text-brand" aria-hidden="true" />
               Family AirTwin Vulnerability Profiles
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Household exposure protection ({impact?.total_averted_pm25_mg ?? 0} mg cumulative
               PM2.5 averted).
             </p>
@@ -100,14 +100,14 @@ export const FamilyPage: React.FC = () => {
               />
             </div>
             <div className="sm:col-span-3 flex flex-col gap-1.5">
-              <label htmlFor="fam-age" className="text-xs font-semibold uppercase text-[#334155]">
+              <label htmlFor="fam-age" className="text-xs font-semibold uppercase text-ink-strong">
                 Age Tier
               </label>
               <select
                 id="fam-age"
                 value={ageCategory}
                 onChange={(e) => setAgeCategory(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
               >
                 <option value="infant">Infant (0-2)</option>
                 <option value="child">Child (3-17)</option>
@@ -116,14 +116,14 @@ export const FamilyPage: React.FC = () => {
               </select>
             </div>
             <div className="sm:col-span-2 flex flex-col gap-1.5">
-              <label htmlFor="fam-sens" className="text-xs font-semibold uppercase text-[#334155]">
+              <label htmlFor="fam-sens" className="text-xs font-semibold uppercase text-ink-strong">
                 Sensitivity
               </label>
               <select
                 id="fam-sens"
                 value={sensitivity}
                 onChange={(e) => setSensitivity(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
               >
                 <option value="none">None</option>
                 <option value="asthma">Asthma</option>
@@ -149,10 +149,10 @@ export const FamilyPage: React.FC = () => {
               <Card key={m.id} className="flex items-start justify-between gap-3">
                 <div className="space-y-1.5">
                   <div className="font-bold text-lg">{m.name}</div>
-                  <div className="text-xs text-[#475569] capitalize">
+                  <div className="text-xs text-ink-secondary capitalize">
                     {m.age_category} · Sensitivity: {m.sensitivity.replace('_', ' ')}
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#DDF5EC] text-[#0F766E] text-xs font-bold">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-mint text-brand text-xs font-bold">
                     Vulnerability Score: {m.vulnerability_score}/100
                   </div>
                 </div>
@@ -160,7 +160,7 @@ export const FamilyPage: React.FC = () => {
                   type="button"
                   aria-label={`Remove ${m.name} from family profile`}
                   onClick={() => setMemberToDelete(m)}
-                  className="p-2 rounded-lg text-[#475569] hover:text-[#B91C1C] hover:bg-[#FEF2F2]"
+                  className="p-2 rounded-lg text-ink-secondary hover:text-danger hover:bg-danger-soft"
                 >
                   <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -169,8 +169,8 @@ export const FamilyPage: React.FC = () => {
           </div>
         )}
 
-        <div className="text-xs text-[#475569] flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
+        <div className="text-xs text-ink-secondary flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-brand shrink-0" aria-hidden="true" />
           <span>
             Vulnerability weights guide daily scheduling only and are not clinical advice.
           </span>

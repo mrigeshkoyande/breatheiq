@@ -4,7 +4,7 @@ import { CheckCircle2, MailCheck, XCircle } from 'lucide-react';
 import { apiRequest } from '../services/api';
 import { buttonStyles } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { SkipLink } from '../components/layout/SkipLink';
+import { AuthFormShell } from '../components/layout/AuthFormShell';
 
 export const VerifyEmailPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -35,59 +35,52 @@ export const VerifyEmailPage: React.FC = () => {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
-      <SkipLink />
-      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 backdrop-blur-md">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
-          <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
-        </Link>
-        <Link to="/login" className="text-sm font-semibold text-[#0F766E]">
+    <AuthFormShell
+      headerAction={
+        <Link to="/login" className="text-sm font-semibold text-brand">
           Sign In
         </Link>
-      </header>
-
-      <main id="main-content" className="flex-1 flex items-center justify-center p-4">
-        <Card elevated className="max-w-md w-full p-8 text-center space-y-5">
-          {status === 'loading' && (
-            <div className="space-y-3" role="status" aria-live="polite">
-              <MailCheck
-                className="w-12 h-12 text-[#0F766E] mx-auto animate-pulse motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-              <h1 className="text-xl font-bold">Verifying Email</h1>
-              <p className="text-sm text-[#475569]">{message}</p>
+      }
+    >
+      <Card elevated className="max-w-md w-full p-8 text-center space-y-5">
+        {status === 'loading' && (
+          <div className="space-y-3" role="status" aria-live="polite">
+            <MailCheck
+              className="w-12 h-12 text-brand mx-auto animate-pulse motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            <h1 className="text-xl font-bold">Verifying Email</h1>
+            <p className="text-sm text-ink-secondary">{message}</p>
+          </div>
+        )}
+        {status === 'success' && (
+          <div className="space-y-4">
+            <CheckCircle2 className="w-12 h-12 text-brand-emerald mx-auto" aria-hidden="true" />
+            <h1 className="text-2xl font-bold">Email Verified</h1>
+            <p className="text-sm text-ink-secondary">{message}</p>
+            <div className="pt-2">
+              <Link to="/app/dashboard" className={buttonStyles({ className: 'w-full' })}>
+                Open Dashboard
+              </Link>
             </div>
-          )}
-          {status === 'success' && (
-            <div className="space-y-4">
-              <CheckCircle2 className="w-12 h-12 text-[#2F9E62] mx-auto" aria-hidden="true" />
-              <h1 className="text-2xl font-bold">Email Verified</h1>
-              <p className="text-sm text-[#475569]">{message}</p>
-              <div className="pt-2">
-                <Link to="/app/dashboard" className={buttonStyles({ className: 'w-full' })}>
-                  Open Dashboard
-                </Link>
-              </div>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="space-y-4">
+            <XCircle className="w-12 h-12 text-[#DC5252] mx-auto" aria-hidden="true" />
+            <h1 className="text-2xl font-bold">Verification Failed</h1>
+            <p className="text-sm text-danger">{message}</p>
+            <div className="pt-2">
+              <Link
+                to="/login"
+                className={buttonStyles({ variant: 'outline', className: 'w-full' })}
+              >
+                Return to Sign In
+              </Link>
             </div>
-          )}
-          {status === 'error' && (
-            <div className="space-y-4">
-              <XCircle className="w-12 h-12 text-[#DC5252] mx-auto" aria-hidden="true" />
-              <h1 className="text-2xl font-bold">Verification Failed</h1>
-              <p className="text-sm text-[#B91C1C]">{message}</p>
-              <div className="pt-2">
-                <Link
-                  to="/login"
-                  className={buttonStyles({ variant: 'outline', className: 'w-full' })}
-                >
-                  Return to Sign In
-                </Link>
-              </div>
-            </div>
-          )}
-        </Card>
-      </main>
-    </div>
+          </div>
+        )}
+      </Card>
+    </AuthFormShell>
   );
 };

@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest, SESSION_HINT_KEY, setAccessToken } from '../services/api';
 import { AuthResponse, User } from '../types/auth';
+import { readStorage, removeStorage, writeStorage } from '../utils/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -16,23 +17,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function readSessionHint(): boolean {
-  try {
-    return localStorage.getItem(SESSION_HINT_KEY) === 'true';
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
-    return false;
-  }
+  return readStorage(SESSION_HINT_KEY) === 'true';
 }
 
 function writeSessionHint(enabled: boolean): void {
-  try {
-    if (enabled) {
-      localStorage.setItem(SESSION_HINT_KEY, 'true');
-    } else {
-      localStorage.removeItem(SESSION_HINT_KEY);
-    }
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+  if (enabled) {
+    writeStorage(SESSION_HINT_KEY, 'true');
+  } else {
+    removeStorage(SESSION_HINT_KEY);
   }
 }
 
@@ -59,8 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await apiRequest<AuthResponse>('/auth/refresh', { method: 'POST' });
       commitSession(res, setUser);
-    } catch (err: unknown) {
-      if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+    } catch {
       clearSession(setUser);
     } finally {
       setLoading(false);
@@ -74,8 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .then((res) => {
         if (active) commitSession(res, setUser);
       })
-      .catch((err: unknown) => {
-        if (err instanceof Error && import.meta.env.DEV) console.debug(err.message);
+      .catch(() => {
         if (active) clearSession(setUser);
       })
       .finally(() => {

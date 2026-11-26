@@ -65,10 +65,10 @@ export const CommunityPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <MessageSquareHeart className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <MessageSquareHeart className="w-6 h-6 text-brand" aria-hidden="true" />
               Community Smog Watch Feed
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Citizen hazard reports marked UNVERIFIED until reviewed by community moderators.
             </p>
           </div>
@@ -108,7 +108,7 @@ export const CommunityPage: React.FC = () => {
                 aria-label="Filter reports by severity"
                 value={filterSeverity}
                 onChange={(e) => setFilterSeverity(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-1.5 text-xs font-semibold"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-1.5 text-xs font-semibold"
               >
                 <option value="">All Severities</option>
                 <option value="moderate">Moderate</option>
@@ -121,7 +121,9 @@ export const CommunityPage: React.FC = () => {
               <LoadingSkeleton lines={4} label="Loading community reports..." />
             ) : reports.length === 0 ? (
               <Card>
-                <p className="text-sm text-[#475569]">No community reports match this filter.</p>
+                <p className="text-sm text-ink-secondary">
+                  No community reports match this filter.
+                </p>
               </Card>
             ) : (
               reports.map((report) => (
@@ -129,7 +131,7 @@ export const CommunityPage: React.FC = () => {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <div className="font-bold text-base">{report.location_name}</div>
-                      <div className="text-xs text-[#475569] capitalize">
+                      <div className="text-xs text-ink-secondary capitalize">
                         {report.report_type.replace('_', ' ')} · Severity: {report.severity}
                       </div>
                     </div>
@@ -137,7 +139,7 @@ export const CommunityPage: React.FC = () => {
                       <span
                         className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
                           report.status === 'VERIFIED'
-                            ? 'bg-[#DDF5EC] text-[#0F766E]'
+                            ? 'bg-brand-mint text-brand'
                             : 'bg-[#FEF3C7] text-[#92400E]'
                         }`}
                       >
@@ -147,7 +149,7 @@ export const CommunityPage: React.FC = () => {
                     </div>
                   </div>
                   {report.description && (
-                    <p className="text-sm text-[#334155]">{report.description}</p>
+                    <p className="text-sm text-ink-strong">{report.description}</p>
                   )}
                   <div className="flex justify-end">
                     <Button

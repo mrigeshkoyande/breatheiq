@@ -94,10 +94,10 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <Home className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Home className="w-6 h-6 text-brand" aria-hidden="true" />
               Indoor Air & CADR Purifier Sizing
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Grounded against current {city} ambient PM2.5 ({outdoorPm25} µg/m³).
             </p>
           </div>
@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
           <Card elevated className="lg:col-span-7 space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-lg flex items-center gap-2">
-                <Fan className="w-5 h-5 text-[#0F766E]" aria-hidden="true" />
+                <Fan className="w-5 h-5 text-brand" aria-hidden="true" />
                 Single-Zone HEPA CADR Calculator
               </h2>
               <Badge badgeType="ESTIMATED" />

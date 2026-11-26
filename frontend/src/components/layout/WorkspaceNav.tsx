@@ -21,8 +21,8 @@ const NavLinksList: React.FC<{
           aria-current={active ? 'page' : undefined}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
             active
-              ? 'bg-[#DDF5EC] text-[#0F766E] font-bold'
-              : 'text-[#334155] hover:bg-[#F8FAF7] hover:text-[#0F766E]'
+              ? 'bg-brand-mint text-brand font-bold'
+              : 'text-ink-strong hover:bg-canvas hover:text-brand'
           }`}
         >
           <Icon className="w-4 h-4 shrink-0" aria-hidden={true} />
@@ -49,7 +49,7 @@ export const WorkspaceSidebar: React.FC<SidebarProps> = ({
   signOutLabel,
   onLogout,
 }) => (
-  <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-white border-r border-[#E2E8F0] p-4 justify-between sticky top-0 h-screen">
+  <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-white border-r border-edge p-4 justify-between sticky top-0 h-screen">
     <div className="space-y-5 overflow-y-auto">
       <Link
         to="/app/dashboard"
@@ -57,21 +57,21 @@ export const WorkspaceSidebar: React.FC<SidebarProps> = ({
       >
         <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
         <div>
-          <div className="font-bold text-base tracking-tight text-[#182A29]">BreatheIQ</div>
-          <div className="text-[11px] font-medium text-[#475569]">Atmospheric Suite</div>
+          <div className="font-bold text-base tracking-tight text-ink">BreatheIQ</div>
+          <div className="text-[11px] font-medium text-ink-secondary">Atmospheric Suite</div>
         </div>
       </Link>
       <NavLinksList items={items} currentPath={currentPath} />
     </div>
 
-    <div className="pt-4 border-t border-[#E2E8F0] space-y-2">
-      <div className="px-2 text-xs text-[#475569] truncate font-medium">{userLabel}</div>
+    <div className="pt-4 border-t border-edge space-y-2">
+      <div className="px-2 text-xs text-ink-secondary truncate font-medium">{userLabel}</div>
       <Button
         type="button"
         variant="ghost"
         size="sm"
         onClick={onLogout}
-        className="w-full justify-start text-[#B91C1C] hover:bg-[#FEF2F2]"
+        className="w-full justify-start text-danger hover:bg-danger-soft"
       >
         <LogOut className="w-4 h-4" aria-hidden="true" />
         {signOutLabel}
@@ -111,13 +111,13 @@ export const MobileNavDrawer: React.FC<DrawerProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src="/logo-mark.webp" alt="BreatheIQ" className="w-7 h-7 object-contain" />
-              <span className="font-bold text-base text-[#182A29]">BreatheIQ</span>
+              <span className="font-bold text-base text-ink">BreatheIQ</span>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close workspace menu"
-              className="p-2 rounded-lg text-[#475569] hover:bg-[#F1F5F9]"
+              className="p-2 rounded-lg text-ink-secondary hover:bg-[#F1F5F9]"
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -129,7 +129,7 @@ export const MobileNavDrawer: React.FC<DrawerProps> = ({
           variant="outline"
           size="sm"
           onClick={onLogout}
-          className="mt-4 w-full text-[#B91C1C]"
+          className="mt-4 w-full text-danger"
         >
           <LogOut className="w-4 h-4" aria-hidden="true" />
           {signOutLabel}

@@ -6,7 +6,7 @@ export const RouteLoadingFallback: React.FC = () => (
   <div
     role="status"
     aria-live="polite"
-    className="min-h-screen flex items-center justify-center bg-[#F8FAF7]"
+    className="min-h-screen flex items-center justify-center bg-canvas"
   >
     <div className="flex flex-col items-center gap-3">
       <img
@@ -14,7 +14,7 @@ export const RouteLoadingFallback: React.FC = () => (
         alt="Loading"
         className="w-10 h-10 animate-bounce motion-reduce:animate-none"
       />
-      <span className="text-xs font-semibold text-[#0F766E] uppercase tracking-wider">
+      <span className="text-xs font-semibold text-brand uppercase tracking-wider">
         Synchronizing Air Telemetry...
       </span>
     </div>

@@ -21,7 +21,7 @@ export const CorridorSelectorHeader: React.FC<CorridorSelectorHeaderProps> = ({
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
       <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{title}</h1>
-      <p className="text-sm text-[#475569] mt-0.5">{disclaimer}</p>
+      <p className="text-sm text-ink-secondary mt-0.5">{disclaimer}</p>
     </div>
     <div className="flex flex-wrap items-center gap-2" role="group" aria-label={corridorLabel}>
       {cities.map((cityName) => (
@@ -32,8 +32,8 @@ export const CorridorSelectorHeader: React.FC<CorridorSelectorHeaderProps> = ({
           onClick={() => onSelectCity(cityName)}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
             activeCity.toLowerCase() === cityName.toLowerCase()
-              ? 'bg-[#0F766E] text-white border-[#0F766E]'
-              : 'bg-white text-[#334155] border-[#CBD5E1] hover:border-[#0F766E]'
+              ? 'bg-brand text-white border-brand'
+              : 'bg-white text-ink-strong border-edge-strong hover:border-brand'
           }`}
         >
           {cityName}

@@ -146,17 +146,46 @@ export function calculateTransitSavings(
   };
 }
 
+export const CPCB_CATEGORIES: readonly CpcbCategory[] = [
+  'Good',
+  'Satisfactory',
+  'Moderate',
+  'Poor',
+  'Very Poor',
+  'Severe',
+];
+
+export type ValidatedSourceBadge =
+  'LIVE' | 'MODELED' | 'FORECAST' | 'ESTIMATED' | 'USER-REPORTED' | 'DEMO';
+
+const PROVENANCE_SOURCES: readonly ValidatedSourceBadge[] = [
+  'LIVE',
+  'MODELED',
+  'FORECAST',
+  'ESTIMATED',
+  'USER-REPORTED',
+  'DEMO',
+];
+
+/** Type guard verifying whether a string is a valid CPCB NAQI category. */
+export function isCpcbCategory(value: string): value is CpcbCategory {
+  return (CPCB_CATEGORIES as readonly string[]).includes(value);
+}
+
+/** Narrow arbitrary category strings into a canonical CpcbCategory with safe fallback. */
+export function toCpcbCategory(value: string | null | undefined): CpcbCategory {
+  if (value && isCpcbCategory(value)) return value;
+  return 'Moderate';
+}
+
+/** Narrow arbitrary telemetry source badges into canonical ProvenanceSource with fallback. */
+export function toProvenanceSource(value: string | null | undefined): ValidatedSourceBadge {
+  const match = PROVENANCE_SOURCES.find((item) => item === value);
+  return match ?? 'MODELED';
+}
+
 /** Validates allowed data-card provenance labels. */
 export function isValidProvenanceBadge(badge: string): boolean {
-  const allowed = [
-    'LIVE',
-    'MODELED',
-    'FORECAST',
-    'ESTIMATED',
-    'DEMO',
-    'USER-REPORTED',
-    'VERIFIED',
-    'UNVERIFIED',
-  ];
+  const allowed = [...PROVENANCE_SOURCES, 'VERIFIED', 'UNVERIFIED'];
   return allowed.includes(badge.toUpperCase());
 }

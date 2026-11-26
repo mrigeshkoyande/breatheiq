@@ -38,7 +38,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
   onNext,
 }) => (
   <div className="space-y-5">
-    <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+    <div className="flex items-center gap-2.5 text-brand font-bold">
       <Users className="w-5 h-5" aria-hidden="true" />
       <h2>Step 2 · Household AirTwin Profiles</h2>
     </div>
@@ -47,11 +47,11 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
       {members.map((m, idx) => (
         <div
           key={`${m.name}-${idx}`}
-          className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAF7]"
+          className="flex items-center justify-between px-4 py-3 rounded-xl border border-edge bg-canvas"
         >
           <div>
             <div className="font-semibold text-sm">{m.name}</div>
-            <div className="text-xs text-[#475569] capitalize">
+            <div className="text-xs text-ink-secondary capitalize">
               {m.age_category} · {m.sensitivity.replace('_', ' ')}
             </div>
           </div>
@@ -64,7 +64,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
       ))}
     </div>
 
-    <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-[#E2E8F0] bg-white">
+    <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-edge bg-white">
       <Input
         label="Member Name"
         value={newMemberName}
@@ -74,7 +74,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="onb-age"
-          className="text-xs font-semibold uppercase tracking-wider text-[#334155]"
+          className="text-xs font-semibold uppercase tracking-wider text-ink-strong"
         >
           Age Tier
         </label>
@@ -82,7 +82,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
           id="onb-age"
           value={newMemberAge}
           onChange={(e) => onAgeChange(e.target.value)}
-          className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+          className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
         >
           <option value="infant">Infant (0-2)</option>
           <option value="child">Child (3-17)</option>
@@ -93,7 +93,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="onb-sens"
-          className="text-xs font-semibold uppercase tracking-wider text-[#334155]"
+          className="text-xs font-semibold uppercase tracking-wider text-ink-strong"
         >
           Sensitivity
         </label>
@@ -101,7 +101,7 @@ export const AirTwinMembersStep: React.FC<AirTwinMembersStepProps> = ({
           id="onb-sens"
           value={newMemberSens}
           onChange={(e) => onSensitivityChange(e.target.value)}
-          className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+          className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
         >
           <option value="none">None</option>
           <option value="asthma">Asthma</option>

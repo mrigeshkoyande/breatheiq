@@ -2,21 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Bot, Send, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
-import { CopilotChatResponse, ProvenanceSource } from '../types/api';
+import { CopilotChatResponse } from '../types/api';
 import { AppShell } from '../components/layout/AppShell';
 import { ChatMessage, CopilotMessageList } from '../components/assistant/CopilotMessageList';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ErrorBanner } from '../components/ui/StatusBanner';
-
-const VALID_BADGES: ProvenanceSource[] = [
-  'LIVE',
-  'MODELED',
-  'FORECAST',
-  'ESTIMATED',
-  'USER-REPORTED',
-  'DEMO',
-];
+import { toProvenanceSource } from '../utils/calculations';
 
 const DEFAULT_PROMPTS = [
   'When is the safest window to ventilate today?',
@@ -81,9 +73,7 @@ export const AssistantPage: React.FC = () => {
           lon: household?.longitude ?? 72.8777,
         }),
       });
-      const badge: ProvenanceSource = VALID_BADGES.includes(res.source_badge as ProvenanceSource)
-        ? (res.source_badge as ProvenanceSource)
-        : 'MODELED';
+      const badge = toProvenanceSource(res.source_badge);
 
       setMessages((prev) => [
         ...prev,
@@ -111,15 +101,15 @@ export const AssistantPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
-              <Bot className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Bot className="w-6 h-6 text-brand" aria-hidden="true" />
               Grounded Atmospheric Copilot
             </h1>
-            <p className="text-xs text-[#475569]">
+            <p className="text-xs text-ink-secondary">
               Safety-validated responses citing retrieved {city} telemetry · Public health guidance
               only.
             </p>
           </div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] bg-[#DDF5EC] px-3 py-1 rounded-full">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand bg-brand-mint px-3 py-1 rounded-full">
             <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
             Evidence Validator Active
           </div>
@@ -130,14 +120,14 @@ export const AssistantPage: React.FC = () => {
         <Card className="p-4 sm:p-6 space-y-4">
           <CopilotMessageList messages={messages} endRef={endRef} />
 
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-[#E2E8F0]">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-edge">
             {suggestions.slice(0, 3).map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 disabled={sending}
                 onClick={() => void sendMessage(prompt)}
-                className="text-xs px-3 py-1.5 rounded-full bg-[#F8FAF7] border border-[#CBD5E1] hover:border-[#0F766E] text-[#334155] font-medium transition-colors"
+                className="text-xs px-3 py-1.5 rounded-full bg-canvas border border-edge-strong hover:border-brand text-ink-strong font-medium transition-colors"
               >
                 {prompt}
               </button>
@@ -160,7 +150,7 @@ export const AssistantPage: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={`Ask about ${city} smog, windows, purifiers, or commutes...`}
-              className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
+              className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-edge-strong bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
             />
             <Button
               type="submit"
@@ -172,8 +162,8 @@ export const AssistantPage: React.FC = () => {
             </Button>
           </form>
 
-          <div className="flex items-center gap-2 text-[11px] text-[#475569]">
-            <ShieldAlert className="w-3.5 h-3.5 text-[#0F766E] shrink-0" aria-hidden="true" />
+          <div className="flex items-center gap-2 text-[11px] text-ink-secondary">
+            <ShieldAlert className="w-3.5 h-3.5 text-brand shrink-0" aria-hidden="true" />
             <span>Advisory guidance only — not medical advice.</span>
           </div>
         </Card>

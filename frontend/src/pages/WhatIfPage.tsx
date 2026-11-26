@@ -50,10 +50,10 @@ export const WhatIfPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <Sliders className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Sliders className="w-6 h-6 text-brand" aria-hidden="true" />
               Seasonal Lifestyle Impact Simulator
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Evaluating against current {household?.city || 'Mumbai'} PM2.5 ({outdoorPm25} µg/m³).
             </p>
           </div>
@@ -111,14 +111,14 @@ export const WhatIfPage: React.FC = () => {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="wi-mode" className="text-xs font-bold uppercase text-[#334155]">
+              <label htmlFor="wi-mode" className="text-xs font-bold uppercase text-ink-strong">
                 Commute Mode Replacing Solo Car
               </label>
               <select
                 id="wi-mode"
                 value={transitMode}
                 onChange={(e) => setTransitMode(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
               >
                 <option value="electric_metro">Electric Metro</option>
                 <option value="cng_bus">CNG Public Bus</option>
@@ -132,33 +132,35 @@ export const WhatIfPage: React.FC = () => {
             {simResult ? (
               <div className="space-y-3">
                 <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA]">
-                  <div className="text-xs font-bold text-[#0F766E]">Daily Averted PM2.5 Intake</div>
+                  <div className="text-xs font-bold text-brand">Daily Averted PM2.5 Intake</div>
                   <div className="text-3xl font-extrabold mt-1">
                     {simResult.daily_averted_pm25_dose_ug} µg
                   </div>
-                  <div className="text-xs text-[#475569] mt-1">
+                  <div className="text-xs text-ink-secondary mt-1">
                     {simResult.inhalation_detail.protection_efficiency_pct}% reduction vs unfiltered
                     air
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <div className="text-xs font-bold text-[#475569]">Daily CO2 Saved</div>
+                  <div className="p-3.5 rounded-xl bg-canvas border border-edge">
+                    <div className="text-xs font-bold text-ink-secondary">Daily CO2 Saved</div>
                     <div className="text-xl font-extrabold mt-1">
                       {simResult.daily_co2_averted_kg} kg
                     </div>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <div className="text-xs font-bold text-[#475569]">90-Day CO2 Saved</div>
+                  <div className="p-3.5 rounded-xl bg-canvas border border-edge">
+                    <div className="text-xs font-bold text-ink-secondary">90-Day CO2 Saved</div>
                     <div className="text-xl font-extrabold mt-1">
                       {(simResult.daily_co2_averted_kg * 90).toFixed(1)} kg
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-[#475569] leading-relaxed">{simResult.methodology}</p>
+                <p className="text-xs text-ink-secondary leading-relaxed">
+                  {simResult.methodology}
+                </p>
               </div>
             ) : (
-              <p className="text-sm text-[#475569]">Adjust sliders to evaluate scenario...</p>
+              <p className="text-sm text-ink-secondary">Adjust sliders to evaluate scenario...</p>
             )}
           </Card>
         </div>

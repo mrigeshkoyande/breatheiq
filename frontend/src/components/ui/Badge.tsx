@@ -10,12 +10,12 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 export const Badge: React.FC<BadgeProps> = ({ badgeType, className, ...props }) => {
   const styles: Record<SourceBadgeType, string> = {
-    LIVE: 'bg-[#DDF5EC] text-[#0F766E] border-transparent',
-    MODELED: 'bg-[#F1F5F9] text-[#334155] border-[#CBD5E1]',
+    LIVE: 'bg-brand-mint text-brand border-transparent',
+    MODELED: 'bg-[#F1F5F9] text-ink-strong border-edge-strong',
     FORECAST: 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]',
     ESTIMATED: 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A]',
     'USER-REPORTED': 'bg-[#F3E8FF] text-[#6B21A8] border-[#E9D5FF]',
-    DEMO: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1] border-dashed',
+    DEMO: 'bg-[#F1F5F9] text-ink-secondary border-edge-strong border-dashed',
   };
 
   return (

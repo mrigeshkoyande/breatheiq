@@ -82,15 +82,15 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       <SkipLink />
-      <header className="bg-white border-b border-[#E2E8F0] px-4 lg:px-8 py-3.5">
+      <header className="bg-white border-b border-edge px-4 lg:px-8 py-3.5">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
             <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
           </Link>
-          <span className="text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Setup Step {step} of 3
           </span>
         </div>
@@ -100,7 +100,7 @@ export const OnboardingPage: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Personalize Your Family Air Defense
           </h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             Configure your city corridor, household respiratory vulnerabilities, and smog alerts.
           </p>
           <div
@@ -114,7 +114,7 @@ export const OnboardingPage: React.FC = () => {
             {[1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className={`h-2 rounded-full ${step >= idx ? 'bg-[#0F766E]' : 'bg-[#E2E8F0]'}`}
+                className={`h-2 rounded-full ${step >= idx ? 'bg-brand' : 'bg-[#E2E8F0]'}`}
               />
             ))}
           </div>

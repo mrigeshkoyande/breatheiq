@@ -22,10 +22,10 @@ export const AnalyticsPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <TrendingUp className="w-6 h-6 text-brand" aria-hidden="true" />
               24-Hour Inversion & Particulate Curves
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Boundary layer depth and hourly PM2.5 dispersion forecast for{' '}
               {household?.city || 'Mumbai'}.
             </p>
@@ -45,7 +45,7 @@ export const AnalyticsPage: React.FC = () => {
           <>
             <div className="grid sm:grid-cols-3 gap-4">
               <Card>
-                <div className="text-xs font-bold uppercase text-[#475569]">
+                <div className="text-xs font-bold uppercase text-ink-secondary">
                   Peak Forecast PM2.5
                 </div>
                 <div className="text-2xl font-extrabold mt-1">
@@ -53,17 +53,19 @@ export const AnalyticsPage: React.FC = () => {
                 </div>
               </Card>
               <Card>
-                <div className="text-xs font-bold uppercase text-[#475569]">
+                <div className="text-xs font-bold uppercase text-ink-secondary">
                   Optimal Aeration Window
                 </div>
-                <div className="text-2xl font-extrabold mt-1 text-[#0F766E]">
+                <div className="text-2xl font-extrabold mt-1 text-brand">
                   {oracle?.best_window_start
                     ? `${oracle.best_window_start} - ${oracle.best_window_end}`
                     : 'Calculating...'}
                 </div>
               </Card>
               <Card>
-                <div className="text-xs font-bold uppercase text-[#475569]">Peak Mixing Height</div>
+                <div className="text-xs font-bold uppercase text-ink-secondary">
+                  Peak Mixing Height
+                </div>
                 <div className="text-2xl font-extrabold mt-1">
                   {Math.max(...forecast.map((f) => f.boundary_layer_height_m))} m
                 </div>
@@ -73,7 +75,7 @@ export const AnalyticsPage: React.FC = () => {
             <Card className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-lg">Hourly PM2.5 Trajectory (µg/m³)</h2>
-                <span className="text-xs text-[#475569]">
+                <span className="text-xs text-ink-secondary">
                   First 12 hours shown with mixing height
                 </span>
               </div>
@@ -87,16 +89,16 @@ export const AnalyticsPage: React.FC = () => {
                       role="listitem"
                       className="grid grid-cols-12 items-center gap-3 text-xs"
                     >
-                      <span className="col-span-2 sm:col-span-1 font-bold text-[#334155]">
+                      <span className="col-span-2 sm:col-span-1 font-bold text-ink-strong">
                         {hourLabel}
                       </span>
                       <div className="col-span-6 sm:col-span-8 bg-[#F1F5F9] h-4 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#0F766E] rounded-full"
+                          className="h-full bg-brand rounded-full"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="col-span-4 sm:col-span-3 text-right font-semibold text-[#182A29]">
+                      <span className="col-span-4 sm:col-span-3 text-right font-semibold text-ink">
                         {slot.pm25} µg/m³ · BL {slot.boundary_layer_height_m}m
                       </span>
                     </div>

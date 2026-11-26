@@ -24,7 +24,7 @@ export const RoutineTaskList: React.FC<RoutineTaskListProps> = ({
     <Card className="space-y-4">
       <div className="flex items-center justify-between text-sm font-bold">
         <span>Today&apos;s Scheduled Tasks</span>
-        <span className="text-[#0F766E]">
+        <span className="text-brand">
           {completedCount} of {tasks.length} completed
         </span>
       </div>
@@ -32,13 +32,15 @@ export const RoutineTaskList: React.FC<RoutineTaskListProps> = ({
       {isLoading ? (
         <LoadingSkeleton lines={4} label="Loading daily tasks..." />
       ) : tasks.length === 0 ? (
-        <p className="text-sm text-[#475569] py-4">No tasks scheduled yet. Add an action above.</p>
+        <p className="text-sm text-ink-secondary py-4">
+          No tasks scheduled yet. Add an action above.
+        </p>
       ) : (
         <div className="space-y-2.5">
           {tasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
+              className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-canvas border border-edge"
             >
               <button
                 type="button"
@@ -53,21 +55,24 @@ export const RoutineTaskList: React.FC<RoutineTaskListProps> = ({
               >
                 {task.is_completed ? (
                   <CheckCircle2
-                    className="w-5 h-5 text-[#2F9E62] shrink-0 mt-0.5"
+                    className="w-5 h-5 text-brand-emerald shrink-0 mt-0.5"
                     aria-hidden="true"
                   />
                 ) : (
-                  <Circle className="w-5 h-5 text-[#475569] shrink-0 mt-0.5" aria-hidden="true" />
+                  <Circle
+                    className="w-5 h-5 text-ink-secondary shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
                 )}
                 <div className="min-w-0">
                   <div
                     className={`text-sm font-semibold ${
-                      task.is_completed ? 'line-through text-[#475569]' : 'text-[#182A29]'
+                      task.is_completed ? 'line-through text-ink-secondary' : 'text-ink'
                     }`}
                   >
                     {task.title}
                   </div>
-                  <div className="text-xs text-[#475569] capitalize">
+                  <div className="text-xs text-ink-secondary capitalize">
                     {task.time_slot} · {task.category}
                   </div>
                 </div>
@@ -77,7 +82,7 @@ export const RoutineTaskList: React.FC<RoutineTaskListProps> = ({
                 type="button"
                 aria-label={`Delete task "${task.title}"`}
                 onClick={() => onDelete(task.id)}
-                className="p-2 rounded-lg text-[#475569] hover:text-[#B91C1C] hover:bg-[#FEF2F2]"
+                className="p-2 rounded-lg text-ink-secondary hover:text-danger hover:bg-danger-soft"
               >
                 <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>

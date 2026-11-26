@@ -27,10 +27,10 @@ export const AirQualityPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <Activity className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <Activity className="w-6 h-6 text-brand" aria-hidden="true" />
               Multi-Pollutant Atmospheric Readings
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Station and modeled particulate readings with statutory CPCB NAQI sub-indices.
             </p>
           </div>
@@ -46,8 +46,8 @@ export const AirQualityPage: React.FC = () => {
                 onClick={() => setCityOverride(c)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${
                   selectedCity.toLowerCase() === c.toLowerCase()
-                    ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                    : 'bg-white text-[#334155] border-[#CBD5E1]'
+                    ? 'bg-brand text-white border-brand'
+                    : 'bg-white text-ink-strong border-edge-strong'
                 }`}
               >
                 {c}
@@ -72,7 +72,7 @@ export const AirQualityPage: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-bold">{airData.location_name}</h2>
-                  <p className="text-xs text-[#475569]">
+                  <p className="text-xs text-ink-secondary">
                     Timestamp: {new Date(airData.timestamp_utc).toLocaleString()}
                   </p>
                 </div>
@@ -91,11 +91,8 @@ export const AirQualityPage: React.FC = () => {
                   { label: 'CO', value: `${airData.co} mg/m³` },
                   { label: 'O3', value: `${airData.o3} µg/m³` },
                 ].map((p) => (
-                  <div
-                    key={p.label}
-                    className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
-                  >
-                    <div className="text-xs font-bold text-[#475569]">{p.label}</div>
+                  <div key={p.label} className="p-3 rounded-xl bg-canvas border border-edge">
+                    <div className="text-xs font-bold text-ink-secondary">{p.label}</div>
                     <div className="text-base font-extrabold mt-1">{p.value}</div>
                   </div>
                 ))}
@@ -106,30 +103,30 @@ export const AirQualityPage: React.FC = () => {
               <Card className="space-y-3">
                 <h2 className="font-bold text-lg">Meteorological Dispersion Vectors</h2>
                 <div className="space-y-2.5 text-sm">
-                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="flex items-center gap-2 text-[#475569]">
-                      <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                  <div className="flex justify-between p-3 rounded-xl bg-canvas border border-edge">
+                    <span className="flex items-center gap-2 text-ink-secondary">
+                      <Wind className="w-4 h-4 text-brand" aria-hidden="true" />
                       Wind Speed
                     </span>
                     <strong>{airData.wind_speed_ms} m/s</strong>
                   </div>
-                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="flex items-center gap-2 text-[#475569]">
-                      <Thermometer className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                  <div className="flex justify-between p-3 rounded-xl bg-canvas border border-edge">
+                    <span className="flex items-center gap-2 text-ink-secondary">
+                      <Thermometer className="w-4 h-4 text-brand" aria-hidden="true" />
                       Temperature
                     </span>
                     <strong>{airData.temperature_c} °C</strong>
                   </div>
-                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="flex items-center gap-2 text-[#475569]">
-                      <Droplets className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                  <div className="flex justify-between p-3 rounded-xl bg-canvas border border-edge">
+                    <span className="flex items-center gap-2 text-ink-secondary">
+                      <Droplets className="w-4 h-4 text-brand" aria-hidden="true" />
                       Relative Humidity
                     </span>
                     <strong>{airData.relative_humidity_pct}%</strong>
                   </div>
-                  <div className="flex justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <span className="flex items-center gap-2 text-[#475569]">
-                      <Layers className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+                  <div className="flex justify-between p-3 rounded-xl bg-canvas border border-edge">
+                    <span className="flex items-center gap-2 text-ink-secondary">
+                      <Layers className="w-4 h-4 text-brand" aria-hidden="true" />
                       Mixing Height
                     </span>
                     <strong>{airData.boundary_layer_height_m ?? 450} m</strong>
@@ -143,15 +140,15 @@ export const AirQualityPage: React.FC = () => {
                   {Object.values(airData.naqi.sub_indices).map((sub) => (
                     <div
                       key={sub.pollutant}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-sm"
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-canvas border border-edge text-sm"
                     >
                       <div>
                         <span className="font-bold">{sub.pollutant}</span>{' '}
-                        <span className="text-xs text-[#475569]">
+                        <span className="text-xs text-ink-secondary">
                           ({sub.concentration} {sub.unit})
                         </span>
                       </div>
-                      <span className="font-bold text-[#0F766E]">
+                      <span className="font-bold text-brand">
                         {sub.sub_index} · {sub.category}
                       </span>
                     </div>

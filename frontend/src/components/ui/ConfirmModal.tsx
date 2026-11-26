@@ -80,12 +80,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="max-w-md w-full bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xl space-y-4"
+        className="max-w-md w-full bg-white rounded-2xl border border-edge p-6 shadow-2xl space-y-4"
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 text-[#B91C1C]">
+          <div className="flex items-center gap-3 text-danger">
             <AlertTriangle className="w-6 h-6 shrink-0" aria-hidden="true" />
-            <h3 id={titleId} className="font-bold text-lg text-[#182A29]">
+            <h3 id={titleId} className="font-bold text-lg text-ink">
               {title}
             </h3>
           </div>
@@ -94,13 +94,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             onClick={onCancel}
             disabled={loading}
             aria-label="Close dialog"
-            className="p-1.5 rounded-lg text-[#475569] hover:text-[#182A29] hover:bg-[#F1F5F9]"
+            className="p-1.5 rounded-lg text-ink-secondary hover:text-ink hover:bg-[#F1F5F9]"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
-        <p id={descId} className="text-sm text-[#475569] leading-relaxed">
+        <p id={descId} className="text-sm text-ink-secondary leading-relaxed">
           {description}
         </p>
 

@@ -32,19 +32,19 @@ export const RoomsPanelCard: React.FC<RoomsPanelCardProps> = ({
   <Card className="lg:col-span-5 space-y-4">
     <div className="flex items-center justify-between">
       <h2 className="font-bold text-lg flex items-center gap-2">
-        <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
+        <Wind className="w-4 h-4 text-brand" aria-hidden="true" />
         Window Oracle Status
       </h2>
       <Badge badgeType={oracle?.is_forecast_driven ? 'FORECAST' : 'ESTIMATED'} />
     </div>
-    <p className="text-sm text-[#334155]">
+    <p className="text-sm text-ink-strong">
       Best window:{' '}
       <strong>
         {oracle?.best_window_start || '12:00'} - {oracle?.best_window_end || '15:00'}
       </strong>{' '}
       ({oracle?.current_action || 'PURIFY'})
     </p>
-    <h3 className="font-bold text-sm pt-2 border-t border-[#E2E8F0]">Registered Rooms</h3>
+    <h3 className="font-bold text-sm pt-2 border-t border-edge">Registered Rooms</h3>
     {isLoading ? (
       <LoadingSkeleton lines={3} label="Loading rooms..." />
     ) : (
@@ -52,11 +52,11 @@ export const RoomsPanelCard: React.FC<RoomsPanelCardProps> = ({
         {rooms.map((r) => (
           <div
             key={r.id}
-            className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex items-center justify-between text-xs"
+            className="p-3 rounded-xl bg-canvas border border-edge flex items-center justify-between text-xs"
           >
             <div>
-              <div className="font-bold text-sm text-[#182A29]">{r.name}</div>
-              <div className="text-[#475569]">
+              <div className="font-bold text-sm text-ink">{r.name}</div>
+              <div className="text-ink-secondary">
                 {r.length_m}m x {r.width_m}m x {r.height_m}m
               </div>
             </div>

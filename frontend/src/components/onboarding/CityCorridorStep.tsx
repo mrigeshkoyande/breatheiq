@@ -22,7 +22,7 @@ export const CityCorridorStep: React.FC<CityCorridorStepProps> = ({
   onNext,
 }) => (
   <div className="space-y-5">
-    <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+    <div className="flex items-center gap-2.5 text-brand font-bold">
       <MapPin className="w-5 h-5" aria-hidden="true" />
       <h2>Step 1 · Select Urban Monitoring Corridor</h2>
     </div>
@@ -36,8 +36,8 @@ export const CityCorridorStep: React.FC<CityCorridorStepProps> = ({
           onClick={() => onSelectCity(c)}
           className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
             selectedCity === c
-              ? 'bg-[#DDF5EC] border-[#0F766E] text-[#0F766E]'
-              : 'bg-white border-[#CBD5E1] text-[#334155] hover:border-[#0F766E]'
+              ? 'bg-brand-mint border-brand text-brand'
+              : 'bg-white border-edge-strong text-ink-strong hover:border-brand'
           }`}
         >
           {c}

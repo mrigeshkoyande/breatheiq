@@ -30,7 +30,7 @@ export const ExplorePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       <SkipLink />
       <PublicHeader />
 
@@ -40,14 +40,14 @@ export const ExplorePage: React.FC = () => {
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E] mb-1">
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand mb-1">
               <Compass className="w-4 h-4" aria-hidden="true" />
               Metropolitan Air Explorer
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">
               Indian Urban Air Quality Corridors
             </h1>
-            <p className="text-sm text-[#475569] mt-1">
+            <p className="text-sm text-ink-secondary mt-1">
               Inspect CPCB NAQI sub-indices, raw pollutant concentrations, and 24-hour forecasts.
             </p>
           </div>
@@ -56,14 +56,17 @@ export const ExplorePage: React.FC = () => {
             <label htmlFor="city-search" className="sr-only">
               Search monitoring cities
             </label>
-            <Search className="w-4 h-4 text-[#475569] absolute left-3 top-3" aria-hidden="true" />
+            <Search
+              className="w-4 h-4 text-ink-secondary absolute left-3 top-3"
+              aria-hidden="true"
+            />
             <input
               id="city-search"
               type="text"
               placeholder="Filter city or state..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-[#CBD5E1] rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
+              className="w-full bg-white border border-edge-strong rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E]"
             />
           </div>
         </div>
@@ -77,8 +80,8 @@ export const ExplorePage: React.FC = () => {
               onClick={() => setSelectedCity(c.city)}
               className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
                 selectedCity.toLowerCase() === c.city.toLowerCase()
-                  ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                  : 'bg-white text-[#182A29] border-[#CBD5E1] hover:border-[#0F766E]'
+                  ? 'bg-brand text-white border-brand'
+                  : 'bg-white text-ink border-edge-strong hover:border-brand'
               }`}
             >
               {c.city}

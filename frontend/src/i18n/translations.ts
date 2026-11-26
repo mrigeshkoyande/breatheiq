@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { readStorage, writeStorage } from '../utils/storage';
 
 export type SupportedLang = 'en' | 'hi' | 'mr';
 
@@ -90,27 +91,12 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 const LANG_STORAGE_KEY = 'breatheiq_lang';
 
 function readStoredLanguage(): SupportedLang {
-  try {
-    const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    if (saved === 'en' || saved === 'hi' || saved === 'mr') {
-      return saved;
-    }
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) {
-      console.debug('[i18n] Unable to read saved language:', err.message);
-    }
-  }
-  return 'en';
+  const saved = readStorage(LANG_STORAGE_KEY);
+  return saved === 'en' || saved === 'hi' || saved === 'mr' ? saved : 'en';
 }
 
 function writeStoredLanguage(lang: SupportedLang): void {
-  try {
-    localStorage.setItem(LANG_STORAGE_KEY, lang);
-  } catch (err: unknown) {
-    if (err instanceof Error && import.meta.env.DEV) {
-      console.debug('[i18n] Unable to save language preference:', err.message);
-    }
-  }
+  writeStorage(LANG_STORAGE_KEY, lang);
 }
 
 /** Provides localized UI copy (EN/HI/MR) and syncs `<html lang>`. */

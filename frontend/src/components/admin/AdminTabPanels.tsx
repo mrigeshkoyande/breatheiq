@@ -33,16 +33,16 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
     ) : isError ? (
       <ErrorBanner message="Unable to fetch moderation queue." onRetry={onRetry} />
     ) : reports.length === 0 ? (
-      <p className="text-sm text-[#475569]">No pending unverified reports.</p>
+      <p className="text-sm text-ink-secondary">No pending unverified reports.</p>
     ) : (
       reports.map((r) => (
         <div
           key={r.id}
-          className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3"
+          className="p-4 rounded-xl bg-canvas border border-edge flex flex-wrap items-center justify-between gap-3"
         >
           <div>
             <div className="font-bold text-sm">{r.location_name}</div>
-            <div className="text-xs text-[#475569]">
+            <div className="text-xs text-ink-secondary">
               {r.report_type} · {r.severity} · {r.upvote_count} confirmations
             </div>
           </div>
@@ -84,7 +84,7 @@ export const AdminUsersPanel: React.FC<UsersPanelProps> = ({
         placeholder="Search users..."
         value={userSearch}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-1.5 text-sm"
+        className="bg-white border border-edge-strong rounded-lg px-3 py-1.5 text-sm"
       />
     </div>
     {isLoading ? (
@@ -94,11 +94,11 @@ export const AdminUsersPanel: React.FC<UsersPanelProps> = ({
         {users.map((u) => (
           <div
             key={u.id}
-            className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs"
+            className="p-3 rounded-xl bg-canvas border border-edge flex flex-wrap items-center justify-between gap-3 text-xs"
           >
             <div>
               <div className="font-bold text-sm">{u.email}</div>
-              <div className="text-[#475569]">
+              <div className="text-ink-secondary">
                 Role: {u.role} · {u.is_active ? 'Active' : 'Suspended'}
               </div>
             </div>
@@ -125,12 +125,12 @@ export const AiTracesPanel: React.FC<{ traces: AITrace[]; isLoading: boolean }> 
       traces.map((t) => (
         <div
           key={t.id}
-          className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between"
+          className="p-3 rounded-xl bg-canvas border border-edge text-xs flex justify-between"
         >
           <div>
             <strong>{t.intent}</strong> · Model: {t.model} · Status: {t.status}
           </div>
-          <span className="text-[#475569]">{t.latency_ms} ms</span>
+          <span className="text-ink-secondary">{t.latency_ms} ms</span>
         </div>
       ))
     )}
@@ -154,25 +154,25 @@ export const AuditAndHealthPanels: React.FC<{
       logs.map((a) => (
         <div
           key={a.id}
-          className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs flex justify-between"
+          className="p-3 rounded-xl bg-canvas border border-edge text-xs flex justify-between"
         >
           <span>
             <strong>{a.action}</strong> — {a.details || 'Verified event'}
           </span>
-          <span className="text-[#475569]">{new Date(a.timestamp).toLocaleString()}</span>
+          <span className="text-ink-secondary">{new Date(a.timestamp).toLocaleString()}</span>
         </div>
       ))
     ) : (
       health.map((h) => (
         <div
           key={h.service}
-          className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex justify-between text-xs"
+          className="p-3.5 rounded-xl bg-canvas border border-edge flex justify-between text-xs"
         >
           <div>
             <div className="font-bold text-sm">{h.service}</div>
-            <div className="text-[#475569]">{h.mode}</div>
+            <div className="text-ink-secondary">{h.mode}</div>
           </div>
-          <span className="font-bold text-[#0F766E]">
+          <span className="font-bold text-brand">
             {h.status} ({h.latency_ms} ms)
           </span>
         </div>

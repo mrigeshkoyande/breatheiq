@@ -55,10 +55,10 @@ export const NotificationsPage: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <Bell className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+            <Bell className="w-6 h-6 text-brand" aria-hidden="true" />
             Smog Alert Feed & Threshold Rules
           </h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             Configure personal NAQI escalation triggers and manage delivered advisories.
           </p>
         </div>
@@ -110,15 +110,15 @@ export const NotificationsPage: React.FC = () => {
                 </Button>
               </form>
 
-              <div className="space-y-2 pt-2 border-t border-[#E2E8F0]">
+              <div className="space-y-2 pt-2 border-t border-edge">
                 {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex items-center justify-between text-xs"
+                    className="p-3 rounded-xl bg-canvas border border-edge flex items-center justify-between text-xs"
                   >
                     <div>
                       <div className="font-bold">AQI &gt;= {rule.aqi_threshold}</div>
-                      <div className="text-[#475569]">
+                      <div className="text-ink-secondary">
                         {rule.target_member} · Quiet {rule.quiet_hours_start}-{rule.quiet_hours_end}
                       </div>
                     </div>
@@ -126,7 +126,7 @@ export const NotificationsPage: React.FC = () => {
                       type="button"
                       aria-label={`Delete alert rule for ${rule.target_member}`}
                       onClick={() => deleteRuleMutation.mutate(rule.id)}
-                      className="p-1.5 rounded text-[#475569] hover:text-[#B91C1C]"
+                      className="p-1.5 rounded text-ink-secondary hover:text-danger"
                     >
                       <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
@@ -138,16 +138,14 @@ export const NotificationsPage: React.FC = () => {
             <Card className="lg:col-span-7 space-y-3">
               <h2 className="font-bold text-lg">Alert Notifications ({notifications.length})</h2>
               {notifications.length === 0 ? (
-                <p className="text-sm text-[#475569]">No alert notifications recorded.</p>
+                <p className="text-sm text-ink-secondary">No alert notifications recorded.</p>
               ) : (
                 <div className="space-y-3">
                   {notifications.map((n) => (
                     <div
                       key={n.id}
                       className={`p-4 rounded-xl border space-y-1.5 ${
-                        n.is_read
-                          ? 'bg-[#F8FAF7] border-[#E2E8F0]'
-                          : 'bg-[#FEF8E7] border-[#FCE28E]'
+                        n.is_read ? 'bg-canvas border-edge' : 'bg-[#FEF8E7] border-[#FCE28E]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -164,8 +162,8 @@ export const NotificationsPage: React.FC = () => {
                           </Button>
                         )}
                       </div>
-                      <p className="text-xs text-[#334155]">{n.message}</p>
-                      <div className="text-[11px] text-[#475569]">
+                      <p className="text-xs text-ink-strong">{n.message}</p>
+                      <div className="text-[11px] text-ink-secondary">
                         Driver: {n.pollutant_driver} · Trigger AQI: {n.aqi_at_trigger}
                       </div>
                     </div>

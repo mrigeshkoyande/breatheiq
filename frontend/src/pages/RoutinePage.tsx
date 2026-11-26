@@ -56,16 +56,16 @@ export const RoutinePage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <CalendarCheck className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+              <CalendarCheck className="w-6 h-6 text-brand" aria-hidden="true" />
               Adaptive Daily Smog Routine
             </h1>
-            <p className="text-sm text-[#475569]">
+            <p className="text-sm text-ink-secondary">
               Schedule outdoor errands around boundary layer expansion windows.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Badge badgeType="ESTIMATED" />
-            <span className="px-3 py-1 rounded-full bg-[#DDF5EC] text-[#0F766E] text-xs font-bold">
+            <span className="px-3 py-1 rounded-full bg-brand-mint text-brand text-xs font-bold">
               Ledger Streak: {impact?.clean_air_streak_days ?? tasks.length} Days
             </span>
           </div>
@@ -102,7 +102,7 @@ export const RoutinePage: React.FC = () => {
             <div className="sm:col-span-2 flex flex-col gap-1.5">
               <label
                 htmlFor="routine-slot"
-                className="text-xs font-semibold uppercase text-[#334155]"
+                className="text-xs font-semibold uppercase text-ink-strong"
               >
                 Time Slot
               </label>
@@ -110,7 +110,7 @@ export const RoutinePage: React.FC = () => {
                 id="routine-slot"
                 value={slot}
                 onChange={(e) => setSlot(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
               >
                 <option value="morning">Morning</option>
                 <option value="afternoon">Afternoon</option>
@@ -120,7 +120,7 @@ export const RoutinePage: React.FC = () => {
             <div className="sm:col-span-2 flex flex-col gap-1.5">
               <label
                 htmlFor="routine-cat"
-                className="text-xs font-semibold uppercase text-[#334155]"
+                className="text-xs font-semibold uppercase text-ink-strong"
               >
                 Category
               </label>
@@ -128,7 +128,7 @@ export const RoutinePage: React.FC = () => {
                 id="routine-cat"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2.5 text-sm"
+                className="bg-white border border-edge-strong rounded-lg px-3 py-2.5 text-sm"
               >
                 <option value="ventilation">Ventilation</option>
                 <option value="purifier">Purifier</option>

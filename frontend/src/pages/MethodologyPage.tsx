@@ -12,7 +12,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { ErrorBanner } from '../components/ui/StatusBanner';
-import { CpcbCategory } from '../utils/calculations';
+import { toCpcbCategory } from '../utils/calculations';
 
 /** Public methodology reference and interactive CPCB NAQI sub-index calculator. */
 export const MethodologyPage: React.FC = () => {
@@ -56,7 +56,7 @@ export const MethodologyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       <SkipLink />
       <PublicHeader />
 
@@ -65,14 +65,14 @@ export const MethodologyPage: React.FC = () => {
         className="flex-1 max-w-6xl w-full mx-auto px-4 lg:px-8 py-10 space-y-8"
       >
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand">
             <BookOpen className="w-4 h-4" aria-hidden="true" />
             Statutory Atmospheric Methods
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">
             CPCB NAQI & Exposure Methodology
           </h1>
-          <p className="text-sm text-[#475569] max-w-3xl">
+          <p className="text-sm text-ink-secondary max-w-3xl">
             BreatheIQ computes composite NAQI-style air quality indices directly from raw pollutant
             concentrations using Central Pollution Control Board (CPCB) piecewise linear equations.
           </p>
@@ -84,7 +84,7 @@ export const MethodologyPage: React.FC = () => {
           <Card elevated className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-lg">
-                <Calculator className="w-5 h-5 text-[#0F766E]" aria-hidden="true" />
+                <Calculator className="w-5 h-5 text-brand" aria-hidden="true" />
                 <h2>Interactive NAQI Sandbox</h2>
               </div>
               <Badge badgeType="ESTIMATED" />
@@ -150,7 +150,7 @@ export const MethodologyPage: React.FC = () => {
 
             {calcResult && (
               <div
-                className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] space-y-3"
+                className="p-4 rounded-xl bg-canvas border border-edge space-y-3"
                 aria-live="polite"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -160,19 +160,19 @@ export const MethodologyPage: React.FC = () => {
                   {calcResult.category && calcResult.category !== 'Incomplete Data' && (
                     <AqiBadge
                       aqi={calcResult.aqi ?? 0}
-                      category={calcResult.category as CpcbCategory}
+                      category={toCpcbCategory(calcResult.category)}
                     />
                   )}
                 </div>
-                <p className="text-xs text-[#475569]">{calcResult.health_advisory}</p>
-                <div className="text-xs text-[#334155]">
+                <p className="text-xs text-ink-secondary">{calcResult.health_advisory}</p>
+                <div className="text-xs text-ink-strong">
                   Dominant Driver: <strong>{calcResult.dominant_pollutant ?? 'N/A'}</strong>
                 </div>
               </div>
             )}
 
-            <div className="text-xs text-[#475569] flex items-center gap-2 pt-1">
-              <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
+            <div className="text-xs text-ink-secondary flex items-center gap-2 pt-1">
+              <ShieldAlert className="w-4 h-4 text-brand shrink-0" aria-hidden="true" />
               <span>
                 Advisory only — follows public CPCB/WHO guidance and is not medical advice.
               </span>

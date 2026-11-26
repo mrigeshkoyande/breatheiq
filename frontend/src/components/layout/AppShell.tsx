@@ -36,7 +36,7 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col lg:flex-row">
       <SkipLink />
 
       <WorkspaceSidebar
@@ -48,27 +48,27 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
       />
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#E2E8F0] px-4 lg:px-8 py-3">
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-edge px-4 lg:px-8 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Open workspace menu"
-                className="lg:hidden p-2 rounded-lg text-[#182A29] hover:bg-[#F1F5F9]"
+                className="lg:hidden p-2 rounded-lg text-ink hover:bg-[#F1F5F9]"
               >
                 <Menu className="w-5 h-5" aria-hidden="true" />
               </button>
               <Link to="/app/dashboard" className="lg:hidden shrink-0">
                 <img src="/logo-mark.webp" alt="BreatheIQ" className="w-7 h-7 object-contain" />
               </Link>
-              <span className="text-sm font-bold text-[#182A29] truncate">{title}</span>
+              <span className="text-sm font-bold text-ink truncate">{title}</span>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {headerRight}
               <div
-                className="inline-flex items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAF7] p-0.5"
+                className="inline-flex items-center rounded-lg border border-edge bg-canvas p-0.5"
                 role="group"
                 aria-label="Language switcher"
               >
@@ -79,9 +79,7 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
                     onClick={() => setLang(code)}
                     aria-pressed={lang === code}
                     className={`px-2 py-1 text-[11px] font-bold uppercase rounded-md transition-colors ${
-                      lang === code
-                        ? 'bg-[#0F766E] text-white'
-                        : 'text-[#475569] hover:text-[#182A29]'
+                      lang === code ? 'bg-brand text-white' : 'text-ink-secondary hover:text-ink'
                     }`}
                   >
                     {code}
@@ -91,7 +89,7 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
               <Link
                 to="/app/notifications"
                 aria-label={`Notifications (${unreadCount} unread)`}
-                className="relative p-2 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAF7] hover:text-[#0F766E]"
+                className="relative p-2 rounded-lg border border-edge text-ink-strong hover:bg-canvas hover:text-brand"
               >
                 <Bell className="w-4 h-4" aria-hidden="true" />
                 {unreadCount > 0 && (
@@ -114,7 +112,7 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
 
         <nav
           aria-label="Mobile Quick Navigation"
-          className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-[#E2E8F0] px-2 py-1.5 flex items-center justify-around"
+          className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-edge px-2 py-1.5 flex items-center justify-around"
         >
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -125,7 +123,7 @@ export const AppShell: React.FC<AppShellProps> = ({ title, children, headerRight
                 to={item.path}
                 aria-current={active ? 'page' : undefined}
                 className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
-                  active ? 'text-[#0F766E]' : 'text-[#475569]'
+                  active ? 'text-brand' : 'text-ink-secondary'
                 }`}
               >
                 <Icon className="w-4 h-4" aria-hidden="true" />

@@ -68,7 +68,7 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen text-[#182A29] flex flex-col bg-gradient-to-br from-[#EDFAF5] via-[#F8FAF7] to-[#E6F7F5]">
+    <div className="min-h-screen text-ink flex flex-col bg-gradient-to-br from-[#EDFAF5] via-[#F8FAF7] to-[#E6F7F5]">
       <SkipLink />
       <PublicHeader />
 
@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
                 <h2 className="text-2xl font-extrabold tracking-tight">
                   Why Standard AQI Apps Are Not Enough During Winter Smog
                 </h2>
-                <p className="text-sm text-[#475569] mt-1">
+                <p className="text-sm text-ink-secondary mt-1">
                   Translating ambient particulate spikes into specific indoor and commute actions.
                 </p>
               </div>
@@ -111,16 +111,16 @@ export const LandingPage: React.FC = () => {
               {comparisonRows.map((row) => (
                 <div
                   key={row.gap}
-                  className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] space-y-2"
+                  className="p-4 rounded-xl bg-canvas border border-edge space-y-2"
                 >
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
+                  <div className="text-xs font-bold uppercase tracking-wider text-danger">
                     Challenge
                   </div>
-                  <p className="text-sm text-[#334155] font-medium">{row.gap}</p>
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#0F766E] pt-1">
+                  <p className="text-sm text-ink-strong font-medium">{row.gap}</p>
+                  <div className="text-xs font-bold uppercase tracking-wider text-brand pt-1">
                     BreatheIQ Response
                   </div>
-                  <p className="text-sm text-[#182A29] font-semibold">{row.solution}</p>
+                  <p className="text-sm text-ink font-semibold">{row.solution}</p>
                 </div>
               ))}
             </div>
@@ -134,8 +134,8 @@ export const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-4">
             {faqItems.map((item) => (
               <Card key={item.q} className="space-y-2">
-                <h3 className="font-bold text-base text-[#182A29]">{item.q}</h3>
-                <p className="text-sm text-[#475569] leading-relaxed">{item.a}</p>
+                <h3 className="font-bold text-base text-ink">{item.q}</h3>
+                <p className="text-sm text-ink-secondary leading-relaxed">{item.a}</p>
               </Card>
             ))}
           </div>
@@ -145,7 +145,7 @@ export const LandingPage: React.FC = () => {
         <section className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
           <Card
             elevated
-            className="p-6 sm:p-8 bg-[#0F766E] text-white border-0 flex flex-col md:flex-row md:items-center justify-between gap-6"
+            className="p-6 sm:p-8 bg-brand text-white border-0 flex flex-col md:flex-row md:items-center justify-between gap-6"
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#DDF5EC]">

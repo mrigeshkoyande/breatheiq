@@ -18,11 +18,11 @@ const BASE_BUTTON_STYLES =
   'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-[#0F766E] hover:bg-[#115E59] text-white focus:ring-[#0F766E]',
-  secondary: 'bg-[#DDF5EC] hover:bg-[#CCFBF1] text-[#0F766E] focus:ring-[#0F766E]',
+  primary: 'bg-brand hover:bg-[#115E59] text-white focus:ring-[#0F766E]',
+  secondary: 'bg-brand-mint hover:bg-[#CCFBF1] text-brand focus:ring-[#0F766E]',
   outline:
-    'bg-white border border-[#E2E8F0] hover:bg-[#F8FAF7] hover:border-[#CCFBF1] text-[#182A29] focus:ring-[#0F766E]',
-  ghost: 'bg-transparent hover:bg-[#F8FAF7] text-[#182A29] focus:ring-[#0F766E]',
+    'bg-white border border-edge hover:bg-canvas hover:border-[#CCFBF1] text-ink focus:ring-[#0F766E]',
+  ghost: 'bg-transparent hover:bg-canvas text-ink focus:ring-[#0F766E]',
   danger: 'bg-[#B91C1C] hover:bg-[#991B1B] text-white focus:ring-[#B91C1C]',
 };
 

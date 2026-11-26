@@ -9,7 +9,7 @@ export const Card: React.FC<CardProps> = ({ children, className, elevated = fals
   return (
     <div
       className={cn(
-        'bg-white border border-[#E2E8F0] rounded-2xl p-6 transition-shadow',
+        'bg-white border border-edge rounded-2xl p-6 transition-shadow',
         elevated ? 'shadow-elevated border-[#CCFBF1]' : 'shadow-atmospheric',
         className
       )}

@@ -23,7 +23,7 @@ export const AlertThresholdStep: React.FC<AlertThresholdStepProps> = ({
   onComplete,
 }) => (
   <div className="space-y-5">
-    <div className="flex items-center gap-2.5 text-[#0F766E] font-bold">
+    <div className="flex items-center gap-2.5 text-brand font-bold">
       <Bell className="w-5 h-5" aria-hidden="true" />
       <h2>Step 3 · SmogShield Alert Threshold</h2>
     </div>
@@ -31,7 +31,7 @@ export const AlertThresholdStep: React.FC<AlertThresholdStepProps> = ({
     <div className="space-y-2">
       <label htmlFor="onb-threshold" className="flex justify-between text-sm font-semibold">
         <span>Trigger High-Priority Smog Alert At</span>
-        <span className="text-[#0F766E]">{aqiThreshold} NAQI</span>
+        <span className="text-brand">{aqiThreshold} NAQI</span>
       </label>
       <input
         id="onb-threshold"
@@ -43,14 +43,14 @@ export const AlertThresholdStep: React.FC<AlertThresholdStepProps> = ({
         onChange={(e) => onThresholdChange(Number(e.target.value))}
         className="w-full accent-[#0F766E]"
       />
-      <div className="flex justify-between text-xs text-[#475569]">
+      <div className="flex justify-between text-xs text-ink-secondary">
         <span>100 (Moderate)</span>
         <span>200 (Poor)</span>
         <span>300+ (Very Poor / Severe)</span>
       </div>
     </div>
 
-    <label className="flex items-center gap-3 p-3.5 rounded-xl border border-[#E2E8F0] cursor-pointer">
+    <label className="flex items-center gap-3 p-3.5 rounded-xl border border-edge cursor-pointer">
       <input
         type="checkbox"
         checked={enablePush}
@@ -62,8 +62,8 @@ export const AlertThresholdStep: React.FC<AlertThresholdStepProps> = ({
       </span>
     </label>
 
-    <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] text-xs text-[#475569] flex items-center gap-2">
-      <ShieldAlert className="w-4 h-4 text-[#0F766E] shrink-0" aria-hidden="true" />
+    <div className="p-3 rounded-xl bg-canvas border border-edge text-xs text-ink-secondary flex items-center gap-2">
+      <ShieldAlert className="w-4 h-4 text-brand shrink-0" aria-hidden="true" />
       <span>Public health guidance only — not medical advice.</span>
     </div>
 

@@ -30,7 +30,7 @@ export const DashboardMetricsRow: React.FC<DashboardMetricsRowProps> = ({
   <div className="grid sm:grid-cols-3 gap-4">
     <Card className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#475569]">
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-secondary">
           Routine Progress
         </span>
         <Badge badgeType="ESTIMATED" />
@@ -38,13 +38,13 @@ export const DashboardMetricsRow: React.FC<DashboardMetricsRowProps> = ({
       <div className="text-2xl font-extrabold">
         {completedCount} / {totalTasks} Tasks
       </div>
-      <p className="text-xs text-[#475569]">Persisted daily smog protection steps</p>
+      <p className="text-xs text-ink-secondary">Persisted daily smog protection steps</p>
     </Card>
 
     <Card className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#475569] flex items-center gap-1.5">
-          <Leaf className="w-3.5 h-3.5 text-[#0F766E]" aria-hidden="true" />
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-secondary flex items-center gap-1.5">
+          <Leaf className="w-3.5 h-3.5 text-brand" aria-hidden="true" />
           {impactTitle}
         </span>
         <Badge badgeType="ESTIMATED" />
@@ -52,7 +52,7 @@ export const DashboardMetricsRow: React.FC<DashboardMetricsRowProps> = ({
       <div className="text-2xl font-extrabold">
         {impact ? `${impact.total_averted_pm25_mg} mg PM2.5` : '--'}
       </div>
-      <p className="text-xs text-[#475569]">
+      <p className="text-xs text-ink-secondary">
         {impact
           ? `${impact.total_averted_co2_kg} kg CO2 avoided · ${impact.clean_air_streak_days}-day ledger`
           : 'Loading impact ledger...'}
@@ -61,8 +61,8 @@ export const DashboardMetricsRow: React.FC<DashboardMetricsRowProps> = ({
 
     <Card className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#475569] flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-[#0F766E]" aria-hidden="true" />
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-secondary flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-brand" aria-hidden="true" />
           Family AirTwin Peak Risk
         </span>
         <Badge badgeType="ESTIMATED" />
@@ -70,7 +70,7 @@ export const DashboardMetricsRow: React.FC<DashboardMetricsRowProps> = ({
       <div className="text-2xl font-extrabold">
         {highestVulnerability > 0 ? `${highestVulnerability} / 100` : '--'}
       </div>
-      <p className="text-xs text-[#475569]">
+      <p className="text-xs text-ink-secondary">
         {memberCount} registered family member{memberCount === 1 ? '' : 's'}
       </p>
     </Card>

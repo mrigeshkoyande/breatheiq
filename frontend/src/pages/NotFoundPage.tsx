@@ -26,25 +26,25 @@ export const NotFoundPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       <SkipLink />
-      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#E2E8F0] bg-white">
+      <header className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-edge bg-white">
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/logo-mark.webp" alt="BreatheIQ" className="w-8 h-8 object-contain" />
           <span className="font-bold text-lg tracking-tight">BreatheIQ</span>
         </Link>
-        <Link to="/" className="text-sm font-semibold text-[#0F766E] hover:underline">
+        <Link to="/" className="text-sm font-semibold text-brand hover:underline">
           Back to Home
         </Link>
       </header>
 
       <main id="main-content" className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-lg w-full bg-white border border-[#E2E8F0] rounded-2xl p-8 text-center space-y-6 shadow-sm">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FEF2F2] text-[#B91C1C] text-xs font-bold uppercase tracking-wider">
+        <div className="max-w-lg w-full bg-white border border-edge rounded-2xl p-8 text-center space-y-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-danger-soft text-danger text-xs font-bold uppercase tracking-wider">
             404 · Page Not Found
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">Atmospheric Route Unavailable</h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             The page you requested could not be found. Search core topics below or return to your
             workspace.
           </p>

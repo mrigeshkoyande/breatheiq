@@ -34,7 +34,7 @@ export const ProfileSettingsCard: React.FC<ProfileCardProps> = ({
         required
       />
       {saved && (
-        <div className="flex items-center gap-2 text-xs font-bold text-[#1E6F44]" role="status">
+        <div className="flex items-center gap-2 text-xs font-bold text-brand-emerald" role="status">
           <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
           Profile saved to database.
         </div>
@@ -82,6 +82,7 @@ export const PasswordLanguageCard: React.FC<PasswordLanguageCardProps> = ({
       <Input
         label="Current Password"
         type="password"
+        autoComplete="current-password"
         value={currentPassword}
         onChange={(e) => onCurrentPasswordChange(e.target.value)}
         required
@@ -89,13 +90,14 @@ export const PasswordLanguageCard: React.FC<PasswordLanguageCardProps> = ({
       <Input
         label="New Password"
         type="password"
+        autoComplete="new-password"
         value={newPassword}
         onChange={(e) => onNewPasswordChange(e.target.value)}
         placeholder="Minimum 8 characters"
         required
       />
       {pwdSuccess && (
-        <div className="text-xs font-bold text-[#1E6F44]" role="status">
+        <div className="text-xs font-bold text-brand-emerald" role="status">
           {pwdSuccess}
         </div>
       )}
@@ -105,8 +107,8 @@ export const PasswordLanguageCard: React.FC<PasswordLanguageCardProps> = ({
       </Button>
     </form>
 
-    <div className="pt-3 border-t border-[#E2E8F0] space-y-2">
-      <span className="text-xs font-bold uppercase text-[#334155]">Interface Language</span>
+    <div className="pt-3 border-t border-edge space-y-2">
+      <span className="text-xs font-bold uppercase text-ink-strong">Interface Language</span>
       <div className="grid grid-cols-3 gap-2">
         {LANG_OPTIONS.map((item) => (
           <button
@@ -116,8 +118,8 @@ export const PasswordLanguageCard: React.FC<PasswordLanguageCardProps> = ({
             onClick={() => onLangChange(item.code)}
             className={`py-2 px-3 rounded-lg text-xs font-bold border ${
               lang === item.code
-                ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                : 'bg-white text-[#334155] border-[#CBD5E1]'
+                ? 'bg-brand text-white border-brand'
+                : 'bg-white text-ink-strong border-edge-strong'
             }`}
           >
             {item.label}

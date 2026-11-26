@@ -94,10 +94,10 @@ export const SettingsPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 lg:px-8 py-6 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <SettingsIcon className="w-6 h-6 text-[#0F766E]" aria-hidden="true" />
+            <SettingsIcon className="w-6 h-6 text-brand" aria-hidden="true" />
             Account, Language & Data Controls
           </h1>
-          <p className="text-sm text-[#475569]">
+          <p className="text-sm text-ink-secondary">
             Manage your persisted profile, password, and display language.
           </p>
         </div>
@@ -126,10 +126,10 @@ export const SettingsPage: React.FC = () => {
           />
         </div>
 
-        <Card className="border-[#FECACA] bg-[#FEF2F2]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Card className="border-danger-border bg-danger-soft/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="font-bold text-base text-[#991B1B]">Permanent Account Deletion</h2>
-            <p className="text-xs text-[#475569]">
+            <p className="text-xs text-ink-secondary">
               Deletes your user record, refresh sessions, rooms, family profiles, and impact
               history.
             </p>
