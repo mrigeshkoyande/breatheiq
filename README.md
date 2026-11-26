@@ -32,11 +32,11 @@ BreatheIQ is an urban air quality assistant built for families navigating severe
 
 ## 🏗️ Repository Architecture
 
-Every module in `backend/app` (53 module files; max 199 lines) and `frontend/src` (78 source files; max 199 lines) follows strict single-responsibility layering:
+Every module in `backend/app` (54 module files; max 199 lines) and `frontend/src` (79 `.ts`/`.tsx` files + `index.css`; max 199 lines) follows strict single-responsibility layering:
 
 ```text
 breatheiq/
-├── .github/workflows/ci.yml      # Ruff check+format, mypy strict, >=95% pytest cov, Prettier, ESLint, Vite build, npm/pip audits
+├── .github/workflows/ci.yml      # Ruff check+format (backend + scripts), mypy strict, >=95% pytest cov, Prettier, ESLint, >=85% Vitest cov, Vite build, npm/pip audits
 ├── .editorconfig                 # Consistent UTF-8, LF/indent rules
 ├── LICENSE                       # MIT License
 ├── Makefile                      # Unified targets: make lint | format | test | coverage | run | check
@@ -54,23 +54,24 @@ breatheiq/
 │   │   ├── engines/              # Pure deterministic domain logic (naqi, purifier, ventilation, routing, impact)
 │   │   ├── models/               # SQLAlchemy 2 ORM models (auth, app_data, alerts_impact, community, copilot)
 │   │   ├── schemas/              # Strict Pydantic v2 input/output schemas
-│   │   └── services/             # External I/O & orchestration (OpenAQ/Open-Meteo adapters, Gemini gateway, guardrails, auth helpers)
-│   └── tests/                    # Mirrored unit and ASGI integration suites (112 tests)
+│   │   └── services/             # External I/O & orchestration (OpenAQ/Open-Meteo adapters, Gemini gateway, guardrails, admin probes, auth helpers)
+│   └── tests/                    # Mirrored unit and ASGI integration suites (113 tests)
 ├── frontend/
 │   ├── .prettierrc.json          # Frontend code formatting configuration
 │   ├── eslint.config.js          # ESLint + jsx-a11y + no-explicit-any strict rules
+│   ├── tailwind.config.js        # Brand, ink, edge, danger, and CPCB semantic palette tokens
 │   ├── src/
 │   │   ├── api/hooks.ts          # TanStack Query data-fetching and cache invalidation hooks
 │   │   ├── components/           # Feature-scoped accessible UI panels (admin, assistant, community, dashboard, explore, home, landing, layout, methodology, onboarding, routine, settings, ui)
 │   │   ├── config/               # Navigation & capability metadata
 │   │   ├── context/              # In-memory JWT AuthProvider + HttpOnly refresh lifecycle
 │   │   ├── i18n/                 # Localization (English / Hindi / Marathi)
-│   │   ├── pages/                # 24 lazy-loaded route pages
+│   │   ├── pages/                # 24 lazy-loaded route pages + verification/UI specs
 │   │   ├── routes/               # ProtectedRoute guards & lazy route registry
 │   │   ├── services/api.ts       # Typed Fetch wrapper with timeout, 401 refresh lock, and ApiError handling
 │   │   ├── types/                # Domain-split TypeScript contracts (auth, admin, household, telemetry)
-│   │   └── utils/calculations.ts # CPCB category theming and helper calculations
-│   └── tests/                    # Vitest unit tests (5 files) & Playwright 3-viewport E2E + Axe specs
+│   │   └── utils/                # Type guards, CPCB calculations (`calculations.ts`), and safe storage (`storage.ts`)
+│   └── tests/                    # Vitest unit tests (8 files; 56 tests) & Playwright 3-viewport E2E + Axe specs (29 tests)
 ├── docs/                         # Route manifest, BUILD_STATUS ledger, deployment guides, screen specs
 └── scripts/                      # Quality gates (check_all.py, check_claims.py, audit_stubs.py, check_repo_size.py, measure_bundle.py, build_status.py, smoke_live.py)
 ```
@@ -196,17 +197,17 @@ npm --prefix frontend run dev
 | Verification Gate | Command | Latest Measured Result | Notes |
 |---|---|---|---|
 | **Master Quality Gate** | `python scripts/check_all.py` | **8/8 GATES PASSED** | Runs claims, stubs, repo size, Vite build, bundle size, Vitest, Pytest, ledger. |
-| **Backend Lint & Strict Types** | `python -m ruff check ... && python -m mypy -p app` | **0 lint / 0 type issues** (64 files) | Enforced via `pyproject.toml` (`ruff` format/check + `mypy --strict`). |
-| **Backend Pytest + Branch Cov** | `python -m pytest tests --cov=app --cov-config=.coveragerc --cov-branch` | **112 passed** (`98%` branch+stmt cov) | Pure calculation engines `>= 96%`; remaining 29 missed lines are CLI/startup env guards. |
+| **Backend & Scripts Lint / Types** | `python -m ruff check backend scripts && python -m mypy --strict backend/app` | **0 lint / 0 type issues** (54 app + 12 script modules) | Enforced via `pyproject.toml` (`ruff` format/check + `C901`/`RET`/`ARG` + `mypy --strict`). |
+| **Backend Pytest + Branch Cov** | `python -m pytest tests --cov=app --cov-config=.coveragerc --cov-branch` | **113 passed** (`97.69%` branch+stmt cov) | Engines, models, schemas `>= 96%`; includes admin self-demotion & prod CORS/CSP tests. |
 | **Frontend Lint & Format** | `npm --prefix frontend run format:check && npm --prefix frontend run lint && npm --prefix frontend run typecheck` | **0 errors, 0 warnings** | Prettier + ESLint + `jsx-a11y` + strict `tsc --noEmit`. |
-| **Frontend Vitest + V8 Cov** | `npm --prefix frontend run test:coverage` | **42 passed** (5 files; `46.39%` stmts) | Unit tests for calculations, API client, Auth/i18n contexts, and page integrations; interactive flows verified via Playwright. |
+| **Frontend Vitest + V8 Cov** | `npm --prefix frontend run test:coverage` | **56 passed** (8 files; `86.45%` stmts, `88.37%` lines) | Covers routes, hooks, auth flows, modal keyboard focus traps, and storage/type guards (`85%` floor enforced). |
 | **Playwright E2E + Axe A11y** | `npx playwright test` (in `frontend/`) | **29 passed** (`390px`/`768px`/`1440px`) | 24 release routes at 3 viewports + routine persistence + `@axe-core/playwright` WCAG 2.2 AA scan. |
 | **Live Smoke Verification** | `python scripts/smoke_live.py` | **32/32 passed** (0 failures) | Tests `/healthz`, `/readyz`, SPA fallback, JSON 404, CSP/HSTS headers, cookies, and 24 routes. |
 | **Dependency Security Audits** | `python -m pip_audit -r backend/requirements.txt` & `npm --prefix frontend audit --audit-level=high` | **0 vulnerabilities found** | Verified across Python runtime and npm dependencies. |
 | **Claims & Stubs Audits** | `python scripts/check_claims.py && python scripts/audit_stubs.py` | **0 violations / 0 stubs** | Enforces no banned buzzwords, no unverified claims, and no placeholder code. |
 | **Route Ledger Audit** | `python scripts/build_status.py` | **24/24 verified** (70 deferred) | Verifies mounted routes, line bounds, and 3-viewport screenshots. |
-| **Frontend Bundle Budget** | `python scripts/measure_bundle.py` | **55.24 KB** JS / **5.93 KB** CSS (gzip) | Within performance budget (`<= 200 KB` JS, `<= 50 KB` CSS). |
-| **Tracked Repository Size** | `python scripts/check_repo_size.py` | **1.310 MB** tracked (< 1.5 MB budget) | Git store `< 2.0 MB`; single active branch `main`. |
+| **Frontend Bundle Budget** | `python scripts/measure_bundle.py` | **55.29 KB** JS / **5.98 KB** CSS (gzip) | Within performance budget (`<= 200 KB` JS, `<= 50 KB` CSS). |
+| **Tracked Repository Size** | `python scripts/check_repo_size.py` | **1.374 MB** tracked (< 1.5 MB budget) | Git store `< 2.0 MB`; single active branch `main`. |
 
 ---
 
