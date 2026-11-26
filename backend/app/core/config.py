@@ -11,6 +11,53 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEFAULT_JWT_PLACEHOLDER = "breatheiq-super-secret-key-change-in-production-min-32-chars-long"
 
 
+def _parse_origin_entries(v: Any) -> list[str]:
+    """Parse ALLOWED_ORIGINS raw value from list, JSON array string, or CSV text."""
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return [str(item) for item in v]
+    if not isinstance(v, str):
+        raise ValueError(
+            f"Invalid type for ALLOWED_ORIGINS: {type(v)}. Expected JSON array string or comma-separated URLs."
+        )
+    stripped = v.strip()
+    if not stripped:
+        return []
+    if stripped.startswith("[") and stripped.endswith("]"):
+        try:
+            parsed = json.loads(stripped)
+            return [str(item) for item in parsed] if isinstance(parsed, list) else [str(parsed)]
+        except json.JSONDecodeError:
+            cleaned = stripped.strip("[]").replace("'", "").replace('"', "")
+            return [item.strip() for item in cleaned.split(",") if item.strip()]
+    return (
+        [item.strip() for item in stripped.split(",") if item.strip()]
+        if "," in stripped
+        else [stripped]
+    )
+
+
+def _validate_origin_entries(origins: list[str]) -> list[str]:
+    """Validate explicit CORS origin URLs and reject insecure wildcards."""
+    cleaned_origins: list[str] = []
+    for origin in origins:
+        origin_str = origin.strip().rstrip("/")
+        if not origin_str:
+            continue
+        if origin_str == "*":
+            raise ValueError(
+                "Wildcard '*' origin cannot be combined with credentials (allow_credentials=True). "
+                "Specify explicit origins (e.g. 'https://breatheiq.vercel.app') or leave empty for same-origin."
+            )
+        if not origin_str.startswith(("http://", "https://")):
+            raise ValueError(
+                f"Invalid CORS origin '{origin_str}': each origin must begin with 'http://' or 'https://'"
+            )
+        cleaned_origins.append(origin_str)
+    return cleaned_origins
+
+
 class Settings(BaseSettings):
     """Typed runtime settings validated at startup."""
 
@@ -60,48 +107,7 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> list[str]:
         """Normalize ALLOWED_ORIGINS from list, JSON string, CSV string, or single URL."""
-        if v is None:
-            return []
-        origins: list[str]
-        if isinstance(v, list):
-            origins = [str(item) for item in v]
-        elif isinstance(v, str):
-            stripped = v.strip()
-            if not stripped:
-                return []
-            if stripped.startswith("[") and stripped.endswith("]"):
-                try:
-                    parsed = json.loads(stripped)
-                    origins = [str(item) for item in parsed] if isinstance(parsed, list) else [str(parsed)]
-                except json.JSONDecodeError:
-                    cleaned = stripped.strip("[]").replace("'", "").replace('"', "")
-                    origins = [item.strip() for item in cleaned.split(",") if item.strip()]
-            elif "," in stripped:
-                origins = [item.strip() for item in stripped.split(",") if item.strip()]
-            else:
-                origins = [stripped]
-        else:
-            raise ValueError(
-                f"Invalid type for ALLOWED_ORIGINS: {type(v)}. Expected JSON array string or comma-separated URLs."
-            )
-
-        cleaned_origins: list[str] = []
-        for origin in origins:
-            origin_str = origin.strip().rstrip("/")
-            if not origin_str:
-                continue
-            if origin_str == "*":
-                raise ValueError(
-                    "Wildcard '*' origin cannot be combined with credentials (allow_credentials=True). "
-                    "Specify explicit origins (e.g. 'https://breatheiq.vercel.app') or leave empty for same-origin."
-                )
-            if not origin_str.startswith(("http://", "https://")):
-                raise ValueError(
-                    f"Invalid CORS origin '{origin_str}': each origin must begin with 'http://' or 'https://'"
-                )
-            cleaned_origins.append(origin_str)
-
-        return cleaned_origins
+        return _validate_origin_entries(_parse_origin_entries(v))
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -156,9 +162,16 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_and_cookies(self) -> "Settings":
         """Enforce secure cookies in hosted demo/production environments."""
-        if self.ENVIRONMENT in ("demo", "production") and "COOKIE_SECURE" not in self.model_fields_set:
+        if (
+            self.ENVIRONMENT in ("demo", "production")
+            and "COOKIE_SECURE" not in self.model_fields_set
+        ):
             self.COOKIE_SECURE = True
-        if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE and self.ENVIRONMENT != "development":
+        if (
+            self.COOKIE_SAMESITE == "none"
+            and not self.COOKIE_SECURE
+            and self.ENVIRONMENT != "development"
+        ):
             self.COOKIE_SECURE = True
         return self
 

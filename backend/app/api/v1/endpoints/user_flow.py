@@ -8,10 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
-from app.engines.impact import (
-    calculate_inhalation_dosage,
-    calculate_transit_emission_savings,
-)
+from app.engines.routing import evaluate_clean_routes
 from app.models.app_data import (
     Household,
     HouseholdMember,
@@ -76,7 +73,9 @@ async def get_household(
     res = await db.execute(select(Household).where(Household.user_id == user.id))
     household = res.scalars().first()
     if not household:
-        household = Household(user_id=user.id, name="Home", city="Mumbai", neighborhood="Andheri West")
+        household = Household(
+            user_id=user.id, name="Home", city="Mumbai", neighborhood="Andheri West"
+        )
         db.add(household)
         await db.commit()
         await db.refresh(household)
@@ -166,7 +165,9 @@ async def delete_member(
 ) -> dict[str, str]:
     """Delete a household member owned by the caller."""
     res = await db.execute(
-        select(HouseholdMember).where(HouseholdMember.id == member_id, HouseholdMember.user_id == user.id)
+        select(HouseholdMember).where(
+            HouseholdMember.id == member_id, HouseholdMember.user_id == user.id
+        )
     )
     member = res.scalars().first()
     if not member:
@@ -269,7 +270,12 @@ async def get_room_readings(
     readings = list(readings_res.scalars().all())
     if not readings:
         initial = RoomReading(
-            room_id=room_id, pm25=28.0, co2=620.0, temperature_c=25.5, humidity_pct=58.0, source="Manual"
+            room_id=room_id,
+            pm25=28.0,
+            co2=620.0,
+            temperature_c=25.5,
+            humidity_pct=58.0,
+            source="Manual",
         )
         db.add(initial)
         await db.commit()
@@ -358,7 +364,9 @@ async def get_routine_tasks(
         db.add_all(seed_tasks)
         await db.commit()
         res = await db.execute(
-            select(RoutineTask).where(RoutineTask.user_id == user.id, RoutineTask.date_str == today_str)
+            select(RoutineTask).where(
+                RoutineTask.user_id == user.id, RoutineTask.date_str == today_str
+            )
         )
         tasks = list(res.scalars().all())
     return [RoutineTaskResponse.model_validate(t) for t in tasks]
@@ -434,86 +442,15 @@ async def cleanroute_navigator(req: CleanRouteRequest) -> dict[str, Any]:
     telemetry = await air_data_service.get_current_air_quality(
         city_meta["latitude"], city_meta["longitude"], city_meta["city"]
     )
-
-    dist = req.distance_km
-    rush_factor = 1.2 if (7 <= req.departure_hour <= 10 or 17 <= req.departure_hour <= 21) else 1.0
-    ambient_pm25 = max(25.0, telemetry.pm25)
-
-    time_a_min = max(5, round(dist * 2.4 * rush_factor))
-    pm25_a = round(ambient_pm25 * 1.4, 1)
-    dose_a = calculate_inhalation_dosage(
-        pm25_a, pm25_a, duration_hours=time_a_min / 60.0, activity_level="adult_moderate_activity"
-    ).unprotected_inhaled_dose_ug
-    co2_a = round(dist * 0.180, 2)
-
-    time_b_min = time_a_min + 5
-    pm25_b = round(ambient_pm25 * 0.82, 1)
-    dose_b = calculate_inhalation_dosage(
-        pm25_b, pm25_b, duration_hours=time_b_min / 60.0, activity_level="adult_moderate_activity"
-    ).unprotected_inhaled_dose_ug
-    co2_b = round(dist * 0.170, 2)
-    green_dose_drop_pct = round(max(0.0, (1 - dose_b / max(1.0, dose_a)) * 100))
-
-    time_c_min = max(4, time_a_min - 2)
-    pm25_c = round(max(18.0, ambient_pm25 * 0.28), 1)
-    dose_c = calculate_inhalation_dosage(
-        pm25_c, pm25_c, duration_hours=time_c_min / 60.0, activity_level="adult_resting"
-    ).unprotected_inhaled_dose_ug
-    metro_savings = calculate_transit_emission_savings(
-        dist, chosen_mode="electric_metro", baseline_mode="petrol_car_solo"
+    return evaluate_clean_routes(
+        origin=req.origin,
+        destination=req.destination,
+        city=telemetry.city,
+        source=telemetry.source,
+        distance_km=req.distance_km,
+        departure_hour=req.departure_hour,
+        ambient_pm25=telemetry.pm25,
     )
-    co2_c = round(max(0.01, co2_a - metro_savings.co2_averted_kg), 2)
-    metro_dose_drop_pct = round(max(0.0, (1 - dose_c / max(1.0, dose_a)) * 100))
-    metro_co2_drop_pct = round(max(0.0, (metro_savings.co2_averted_kg / max(0.01, co2_a)) * 100))
-
-    return {
-        "origin": req.origin,
-        "destination": req.destination,
-        "city": telemetry.city,
-        "source": telemetry.source,
-        "distance_km": dist,
-        "routes": [
-            {
-                "id": "route_clean",
-                "name": "CleanRoute (Green Corridor & Canopy)",
-                "travel_time_min": time_b_min,
-                "average_pm25": pm25_b,
-                "inhaled_dose_ug": round(dose_b, 1),
-                "co2_emissions_kg": co2_b,
-                "exposure_rating": "Lowest Surface Road Exposure",
-                "recommended": True,
-                "advisory": (
-                    f"Secondary arterial corridor avoids tailpipe canyons (~{green_dose_drop_pct}% lower "
-                    f"estimated particulate intake vs highway under current {telemetry.city} telemetry)."
-                ),
-            },
-            {
-                "id": "route_metro",
-                "name": "Electric Metro Corridor Transit",
-                "travel_time_min": time_c_min,
-                "average_pm25": pm25_c,
-                "inhaled_dose_ug": round(dose_c, 1),
-                "co2_emissions_kg": co2_c,
-                "exposure_rating": "Minimal Inhaled Dosage",
-                "recommended": True,
-                "advisory": (
-                    f"Filtered rapid transit avoids ~{metro_co2_drop_pct}% CO2 and "
-                    f"~{metro_dose_drop_pct}% estimated inhaled PM2.5 vs highway driving."
-                ),
-            },
-            {
-                "id": "route_arterial",
-                "name": "Primary Express Arterial Highway",
-                "travel_time_min": time_a_min,
-                "average_pm25": pm25_a,
-                "inhaled_dose_ug": round(dose_a, 1),
-                "co2_emissions_kg": co2_a,
-                "exposure_rating": "Severe Exhaust Exposure",
-                "recommended": False,
-                "advisory": "High diesel exhaust plume. Keep windows closed and consider an N95 mask.",
-            },
-        ],
-    }
 
 
 # ----------------- Impact Ledger -----------------
@@ -544,7 +481,9 @@ async def get_impact_ledger(
         db.add_all(seed_logs)
         await db.commit()
         res = await db.execute(
-            select(ImpactLog).where(ImpactLog.user_id == user.id).order_by(ImpactLog.date_str.desc())
+            select(ImpactLog)
+            .where(ImpactLog.user_id == user.id)
+            .order_by(ImpactLog.date_str.desc())
         )
         logs = list(res.scalars().all())
 

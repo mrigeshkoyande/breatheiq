@@ -40,7 +40,7 @@ class ConflictError(BreatheIQError):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
-class DomainValidationError(BreatheIQError):
+class DomainValidationError(BreatheIQError, ValueError):
     """Raised when domain inputs violate scientific or physical constraints."""
 
     status_code = status.HTTP_400_BAD_REQUEST
