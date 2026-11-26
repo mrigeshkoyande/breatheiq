@@ -25,10 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 
-      - name: Lint and Format Check Backend (Ruff)
+      - name: Lint and Format Check Backend & Scripts (Ruff)
         run: |
-          ruff format --check backend/app backend/tests/conftest.py backend/tests/test_branch_coverage.py
-          ruff check backend/app backend/tests/conftest.py backend/tests/test_branch_coverage.py
+          ruff format --check backend scripts
+          ruff check backend scripts
 
       - name: Typecheck Backend (Mypy Strict)
         run: |
