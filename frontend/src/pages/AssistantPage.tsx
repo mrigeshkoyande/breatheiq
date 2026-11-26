@@ -48,8 +48,9 @@ export const AssistantPage: React.FC = () => {
   useEffect(() => {
     const prefersReduced =
       typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    endRef.current?.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
+    endRef.current?.scrollIntoView?.({ behavior: prefersReduced ? 'auto' : 'smooth' });
   }, [messages]);
 
   const nextId = (prefix: string) => {
