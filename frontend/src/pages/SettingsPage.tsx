@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, KeyRound, Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../services/api';
-import { SupportedLang, useLanguage } from '../i18n/translations';
+import { useLanguage } from '../i18n/translations';
 import { User } from '../types/auth';
 import { AppShell } from '../components/layout/AppShell';
+import { PasswordLanguageCard, ProfileSettingsCard } from '../components/settings/SettingsPanels';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Input } from '../components/ui/Input';
 import { ErrorBanner } from '../components/ui/StatusBanner';
 
+/** User account profile, password management, locale switcher, and deletion controls. */
 export const SettingsPage: React.FC = () => {
   const { user, logout, setUserProfile } = useAuth();
   const { lang, setLang } = useLanguage();
@@ -20,12 +21,10 @@ export const SettingsPage: React.FC = () => {
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
-
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [pwdSaving, setPwdSaving] = useState(false);
   const [pwdSuccess, setPwdSuccess] = useState('');
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -106,87 +105,25 @@ export const SettingsPage: React.FC = () => {
         {errorMsg && <ErrorBanner message={errorMsg} />}
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="space-y-4">
-            <h2 className="font-bold text-lg">Profile Information</h2>
-            <form onSubmit={(e) => void handleUpdateProfile(e)} className="space-y-4">
-              <Input label="Account Email" value={user?.email || ''} disabled />
-              <Input
-                label="Full Name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-              {profileSaved && (
-                <div
-                  className="flex items-center gap-2 text-xs font-bold text-[#1E6F44]"
-                  role="status"
-                >
-                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  Profile saved to database.
-                </div>
-              )}
-              <Button type="submit" disabled={profileSaving} className="w-full">
-                {profileSaving ? 'Saving Profile...' : 'Save Profile Changes'}
-              </Button>
-            </form>
-          </Card>
-
-          <Card className="space-y-4">
-            <h2 className="font-bold text-lg">Password & Language</h2>
-            <form onSubmit={(e) => void handleChangePassword(e)} className="space-y-3">
-              <Input
-                label="Current Password"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-              <Input
-                label="New Password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                required
-              />
-              {pwdSuccess && (
-                <div className="text-xs font-bold text-[#1E6F44]" role="status">
-                  {pwdSuccess}
-                </div>
-              )}
-              <Button type="submit" variant="secondary" disabled={pwdSaving} className="w-full">
-                <KeyRound className="w-4 h-4" aria-hidden="true" />
-                {pwdSaving ? 'Updating Password...' : 'Update Password'}
-              </Button>
-            </form>
-
-            <div className="pt-3 border-t border-[#E2E8F0] space-y-2">
-              <span className="text-xs font-bold uppercase text-[#334155]">Interface Language</span>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { code: 'en', label: 'English' },
-                    { code: 'hi', label: 'हिन्दी' },
-                    { code: 'mr', label: 'मराठी' },
-                  ] as Array<{ code: SupportedLang; label: string }>
-                ).map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    aria-pressed={lang === item.code}
-                    onClick={() => setLang(item.code)}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border ${
-                      lang === item.code
-                        ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                        : 'bg-white text-[#334155] border-[#CBD5E1]'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </Card>
+          <ProfileSettingsCard
+            email={user?.email || ''}
+            fullName={fullName}
+            saving={profileSaving}
+            saved={profileSaved}
+            onFullNameChange={setFullName}
+            onSubmit={(e) => void handleUpdateProfile(e)}
+          />
+          <PasswordLanguageCard
+            currentPassword={currentPassword}
+            newPassword={newPassword}
+            pwdSaving={pwdSaving}
+            pwdSuccess={pwdSuccess}
+            lang={lang}
+            onCurrentPasswordChange={setCurrentPassword}
+            onNewPasswordChange={setNewPassword}
+            onChangePassword={(e) => void handleChangePassword(e)}
+            onLangChange={setLang}
+          />
         </div>
 
         <Card className="border-[#FECACA] bg-[#FEF2F2]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -5,14 +5,16 @@ import { apiRequest } from '../services/api';
 import { NAQIResult } from '../types/api';
 import { PublicHeader } from '../components/layout/PublicHeader';
 import { SkipLink } from '../components/layout/SkipLink';
+import { NaqiFormulaCard } from '../components/methodology/NaqiFormulaCard';
 import { AqiBadge } from '../components/ui/AqiBadge';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { ErrorBanner } from '../components/ui/StatusBanner';
-import { CpcbCategory, getNaqiTheme } from '../utils/calculations';
+import { CpcbCategory } from '../utils/calculations';
 
+/** Public methodology reference and interactive CPCB NAQI sub-index calculator. */
 export const MethodologyPage: React.FC = () => {
   const { data: breakpointsTable } = useNaqiBreakpoints();
   const [pm25, setPm25] = useState('85');
@@ -77,51 +79,7 @@ export const MethodologyPage: React.FC = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <Card className="space-y-4">
-            <h2 className="text-xl font-bold">Linear Sub-Index Equation</h2>
-            <p className="text-sm text-[#475569]">
-              For pollutant concentration <strong>Cₚ</strong> falling in statutory interval{' '}
-              <strong>[Bₗₒ, Bₕᵢ]</strong> with index range <strong>[Iₗₒ, Iₕᵢ]</strong>:
-            </p>
-            <div className="p-4 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] font-mono text-sm">
-              Iₚ = ((Iₕᵢ - Iₗₒ) / (Bₕᵢ - Bₗₒ)) × (Cₚ - Bₗₒ) + Iₗₒ
-            </div>
-            <ul className="text-xs text-[#475569] space-y-1.5 list-disc pl-5">
-              <li>Composite NAQI equals the highest sub-index across monitored pollutants.</li>
-              <li>Validity requires at least 3 monitored pollutants including PM2.5 or PM10.</li>
-              <li>All numbers displayed are guidance estimates — not clinical medical advice.</li>
-            </ul>
-
-            {breakpointsTable && (
-              <div className="pt-2 space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#475569]">
-                  Statutory CPCB Index Tiers
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                  {breakpointsTable.categories.map((cat) => {
-                    const theme = getNaqiTheme(cat.category as CpcbCategory);
-                    return (
-                      <div
-                        key={cat.category}
-                        className="p-2.5 rounded-lg border border-[#E2E8F0] bg-white flex items-center justify-between"
-                      >
-                        <span className={`font-bold flex items-center gap-2 ${theme.text}`}>
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme.bg}`}
-                            aria-hidden="true"
-                          />
-                          {cat.category}
-                        </span>
-                        <span className="text-[#475569]">
-                          {cat.min} - {cat.max > 500 ? '500+' : cat.max}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </Card>
+          <NaqiFormulaCard categories={breakpointsTable?.categories} />
 
           <Card elevated className="space-y-5">
             <div className="flex items-center justify-between">

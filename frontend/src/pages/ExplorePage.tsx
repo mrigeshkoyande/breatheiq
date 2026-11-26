@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Compass, Droplets, Layers, Search, Thermometer, Wind } from 'lucide-react';
+import { Compass, Search } from 'lucide-react';
 import { useAirQualityForecast, useCities, useCurrentAirQuality } from '../api/hooks';
 import { PublicHeader } from '../components/layout/PublicHeader';
 import { SkipLink } from '../components/layout/SkipLink';
-import { AqiBadge } from '../components/ui/AqiBadge';
-import { Badge } from '../components/ui/Badge';
-import { Card } from '../components/ui/Card';
+import { ExploreTelemetryGrid } from '../components/explore/ExploreTelemetryGrid';
 import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
-import { CpcbCategory } from '../utils/calculations';
 
+/** Public urban air quality corridor explorer with 24-hour pollutant and meteorology outlook. */
 export const ExplorePage: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState('Mumbai');
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,11 +28,6 @@ export const ExplorePage: React.FC = () => {
       c.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.state.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const validCategory: CpcbCategory =
-    currentAir?.naqi.category && currentAir.naqi.category !== 'Incomplete Data'
-      ? currentAir.naqi.category
-      : 'Moderate';
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#182A29] flex flex-col">
@@ -104,107 +97,7 @@ export const ExplorePage: React.FC = () => {
         )}
 
         {currentAir && !airLoading && (
-          <div className="grid lg:grid-cols-3 gap-6">
-            <Card elevated className="lg:col-span-2 space-y-6">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-2xl font-bold">{currentAir.location_name}</h2>
-                  <p className="text-xs text-[#475569] mt-0.5">
-                    Updated: {new Date(currentAir.timestamp_utc).toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge badgeType={currentAir.source} />
-                  <AqiBadge aqi={currentAir.naqi.aqi ?? 0} category={validCategory} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {[
-                  { label: 'PM2.5', value: `${currentAir.pm25} µg/m³` },
-                  { label: 'PM10', value: `${currentAir.pm10} µg/m³` },
-                  { label: 'NO2', value: `${currentAir.no2} µg/m³` },
-                  { label: 'SO2', value: `${currentAir.so2} µg/m³` },
-                  { label: 'CO', value: `${currentAir.co} mg/m³` },
-                  { label: 'O3', value: `${currentAir.o3} µg/m³` },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="p-3.5 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]"
-                  >
-                    <div className="text-xs font-bold text-[#475569]">{item.label}</div>
-                    <div className="text-lg font-extrabold mt-1">{item.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-4 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA] text-sm text-[#182A29]">
-                <strong>Advisory:</strong> {currentAir.naqi.health_advisory}{' '}
-                <span className="text-[#475569]">
-                  (Public health guidance only — not medical advice.)
-                </span>
-              </div>
-            </Card>
-
-            <Card className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold text-lg">Atmospheric Drivers</h2>
-                <Badge badgeType="FORECAST" />
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                  <span className="flex items-center gap-2 text-[#475569]">
-                    <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
-                    Wind Speed
-                  </span>
-                  <span className="font-bold">{currentAir.wind_speed_ms} m/s</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                  <span className="flex items-center gap-2 text-[#475569]">
-                    <Thermometer className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
-                    Temperature
-                  </span>
-                  <span className="font-bold">{currentAir.temperature_c} °C</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                  <span className="flex items-center gap-2 text-[#475569]">
-                    <Droplets className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
-                    Humidity
-                  </span>
-                  <span className="font-bold">{currentAir.relative_humidity_pct}%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                  <span className="flex items-center gap-2 text-[#475569]">
-                    <Layers className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
-                    Mixing Height
-                  </span>
-                  <span className="font-bold">{currentAir.boundary_layer_height_m ?? 500} m</span>
-                </div>
-              </div>
-
-              {forecast.length > 0 && (
-                <div className="pt-2 border-t border-[#E2E8F0]">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#475569] mb-2">
-                    Next 6 Hours PM2.5 Trend
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    {forecast.slice(0, 6).map((slot) => (
-                      <div
-                        key={slot.time}
-                        className="p-2 rounded-lg bg-[#F8FAF7] border border-[#E2E8F0] text-center"
-                      >
-                        <div className="text-[#475569]">
-                          {slot.time.split('T')[1]?.slice(0, 5) || '--'}
-                        </div>
-                        <div className="font-bold text-[#182A29]">{slot.pm25}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
+          <ExploreTelemetryGrid currentAir={currentAir} forecast={forecast} />
         )}
       </main>
     </div>

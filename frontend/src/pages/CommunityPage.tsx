@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquareHeart, Plus, ThumbsUp } from 'lucide-react';
+import { MessageSquareHeart, ThumbsUp } from 'lucide-react';
 import { useCommunityReports, useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
 import { CommunityReport } from '../types/api';
 import { AppShell } from '../components/layout/AppShell';
+import { HazardReportForm } from '../components/community/HazardReportForm';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
 
+/** Community air hazard reporting feed with severity filtering and confirmations. */
 export const CommunityPage: React.FC = () => {
   const qc = useQueryClient();
   const { data: household } = useHousehold();
@@ -46,9 +47,8 @@ export const CommunityPage: React.FC = () => {
       setDescription('');
       void qc.invalidateQueries({ queryKey: ['community', 'reports'] });
     },
-    onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : 'Unable to submit report.');
-    },
+    onError: (err: unknown) =>
+      setActionError(err instanceof Error ? err.message : 'Unable to submit report.'),
   });
 
   const upvoteMutation = useMutation({
@@ -85,73 +85,21 @@ export const CommunityPage: React.FC = () => {
         )}
 
         <div className="grid lg:grid-cols-12 gap-6">
-          <Card className="lg:col-span-4 space-y-4 h-fit">
-            <h2 className="font-bold text-lg">Report Local Hazard</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!locationName.trim()) return;
-                setActionError('');
-                submitMutation.mutate();
-              }}
-              className="space-y-3"
-            >
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="comm-type"
-                  className="text-xs font-semibold uppercase text-[#334155]"
-                >
-                  Hazard Type
-                </label>
-                <select
-                  id="comm-type"
-                  value={reportType}
-                  onChange={(e) => setReportType(e.target.value)}
-                  className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="construction_dust">Construction Dust</option>
-                  <option value="garbage_burning">Garbage Burning</option>
-                  <option value="traffic_congestion">Diesel Traffic Plume</option>
-                  <option value="industrial_plume">Industrial Emission</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="comm-sev"
-                  className="text-xs font-semibold uppercase text-[#334155]"
-                >
-                  Severity
-                </label>
-                <select
-                  id="comm-sev"
-                  value={severity}
-                  onChange={(e) => setSeverity(e.target.value)}
-                  className="bg-white border border-[#CBD5E1] rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="moderate">Moderate</option>
-                  <option value="severe">Severe</option>
-                  <option value="hazardous">Hazardous</option>
-                </select>
-              </div>
-              <Input
-                label="Corridor / Junction"
-                placeholder="e.g. Link Road & SV Road"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                required
-              />
-              <Input
-                label="Observation Note"
-                placeholder="Visible smoke or dust plume"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              <Button type="submit" disabled={submitMutation.isPending} className="w-full">
-                <Plus className="w-4 h-4" aria-hidden="true" />
-                {submitMutation.isPending ? 'Submitting...' : 'Submit Citizen Report'}
-              </Button>
-            </form>
-          </Card>
+          <HazardReportForm
+            reportType={reportType}
+            severity={severity}
+            locationName={locationName}
+            description={description}
+            isSubmitting={submitMutation.isPending}
+            onTypeChange={setReportType}
+            onSeverityChange={setSeverity}
+            onLocationChange={setLocationName}
+            onDescriptionChange={setDescription}
+            onSubmit={() => {
+              setActionError('');
+              submitMutation.mutate();
+            }}
+          />
 
           <div className="lg:col-span-8 space-y-4">
             <div className="flex items-center justify-between gap-2">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Fan, Home, Plus, ShieldAlert, Wind } from 'lucide-react';
+import { Fan, Home } from 'lucide-react';
 import {
   queryKeys,
   useCurrentAirQuality,
@@ -11,12 +11,15 @@ import {
 import { apiRequest } from '../services/api';
 import { PurifierSizingResult, Room } from '../types/api';
 import { AppShell } from '../components/layout/AppShell';
+import { RoomsPanelCard } from '../components/home/RoomsPanelCard';
+import { CadrResultPanel } from '../components/home/CadrResultPanel';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
-import { ErrorBanner, LoadingSkeleton } from '../components/ui/StatusBanner';
+import { ErrorBanner } from '../components/ui/StatusBanner';
 
+/** Indoor air defense & HEPA CADR purifier sizing workspace. */
 export const HomePage: React.FC = () => {
   const qc = useQueryClient();
   const { data: household } = useHousehold();
@@ -79,6 +82,12 @@ export const HomePage: React.FC = () => {
     },
   });
 
+  const selectRoomForSizing = (room: Room) => {
+    setLengthM(String(room.length_m));
+    setWidthM(String(room.width_m));
+    setHeightM(String(room.height_m));
+  };
+
   return (
     <AppShell title="Indoor Air & Purifier Oracle">
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 space-y-6">
@@ -105,75 +114,19 @@ export const HomePage: React.FC = () => {
         )}
 
         <div className="grid lg:grid-cols-12 gap-6">
-          <Card className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg flex items-center gap-2">
-                <Wind className="w-4 h-4 text-[#0F766E]" aria-hidden="true" />
-                Window Oracle Status
-              </h2>
-              <Badge badgeType={oracle?.is_forecast_driven ? 'FORECAST' : 'ESTIMATED'} />
-            </div>
-            <p className="text-sm text-[#334155]">
-              Best window:{' '}
-              <strong>
-                {oracle?.best_window_start || '12:00'} - {oracle?.best_window_end || '15:00'}
-              </strong>{' '}
-              ({oracle?.current_action || 'PURIFY'})
-            </p>
-            <h3 className="font-bold text-sm pt-2 border-t border-[#E2E8F0]">Registered Rooms</h3>
-            {isLoading ? (
-              <LoadingSkeleton lines={3} label="Loading rooms..." />
-            ) : (
-              <div className="space-y-2">
-                {rooms.map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0] flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-bold text-sm text-[#182A29]">{r.name}</div>
-                      <div className="text-[#475569]">
-                        {r.length_m}m x {r.width_m}m x {r.height_m}m
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setLengthM(String(r.length_m));
-                        setWidthM(String(r.width_m));
-                        setHeightM(String(r.height_m));
-                      }}
-                    >
-                      Size CADR
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!roomName.trim()) return;
-                setActionError('');
-                addRoomMutation.mutate();
-              }}
-              className="flex gap-2 pt-2"
-            >
-              <Input
-                aria-label="New room name"
-                placeholder="Add room (e.g. Kids Study)"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-              />
-              <Button type="submit" size="md" disabled={addRoomMutation.isPending}>
-                <Plus className="w-4 h-4" aria-hidden="true" />
-                Save
-              </Button>
-            </form>
-          </Card>
+          <RoomsPanelCard
+            oracle={oracle}
+            rooms={rooms}
+            isLoading={isLoading}
+            roomName={roomName}
+            isSavingRoom={addRoomMutation.isPending}
+            onRoomNameChange={setRoomName}
+            onSelectRoom={selectRoomForSizing}
+            onAddRoom={() => {
+              setActionError('');
+              addRoomMutation.mutate();
+            }}
+          />
 
           <Card elevated className="lg:col-span-7 space-y-5">
             <div className="flex items-center justify-between">
@@ -234,43 +187,7 @@ export const HomePage: React.FC = () => {
               </div>
             </form>
 
-            {sizingResult && (
-              <div className="space-y-4 pt-2 border-t border-[#E2E8F0]">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-3 rounded-xl bg-[#EBF7F0] border border-[#A3E5BA]">
-                    <div className="text-xs font-bold text-[#0F766E]">Required CADR</div>
-                    <div className="text-xl font-extrabold">
-                      {sizingResult.required_cadr_m3h} m³/h
-                    </div>
-                    <div className="text-[11px] text-[#475569]">
-                      {sizingResult.required_cadr_cfm} CFM
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <div className="text-xs font-bold text-[#475569]">50% Reduction</div>
-                    <div className="text-xl font-extrabold">
-                      {sizingResult.time_to_50pct_min} min
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E2E8F0]">
-                    <div className="text-xs font-bold text-[#475569]">80% Reduction</div>
-                    <div className="text-xl font-extrabold">
-                      {sizingResult.time_to_80pct_min} min
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-[#334155]">
-                  <strong>Device Class:</strong> {sizingResult.recommended_device_class}
-                </p>
-                <div className="flex items-start gap-2 text-xs text-[#475569]">
-                  <ShieldAlert
-                    className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5"
-                    aria-hidden="true"
-                  />
-                  <span>{sizingResult.limitations}</span>
-                </div>
-              </div>
-            )}
+            {sizingResult && <CadrResultPanel result={sizingResult} />}
           </Card>
         </div>
       </div>

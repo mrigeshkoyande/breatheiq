@@ -4,21 +4,27 @@ import { useHousehold } from '../api/hooks';
 import { apiRequest } from '../services/api';
 import { CopilotChatResponse, ProvenanceSource } from '../types/api';
 import { AppShell } from '../components/layout/AppShell';
-import { Badge } from '../components/ui/Badge';
+import { ChatMessage, CopilotMessageList } from '../components/assistant/CopilotMessageList';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ErrorBanner } from '../components/ui/StatusBanner';
 
-interface ChatMessage {
-  id: string;
-  sender: 'user' | 'assistant';
-  text: string;
-  sourceBadge?: ProvenanceSource;
-  flags?: string[];
-  why?: string;
-  timestamp: string;
-}
+const VALID_BADGES: ProvenanceSource[] = [
+  'LIVE',
+  'MODELED',
+  'FORECAST',
+  'ESTIMATED',
+  'USER-REPORTED',
+  'DEMO',
+];
 
+const DEFAULT_PROMPTS = [
+  'When is the safest window to ventilate today?',
+  'What CADR purifier fits a 20 sq m bedroom?',
+  'Should I reschedule my morning outdoor run?',
+];
+
+/** Grounded AI Atmospheric Copilot conversation interface with evidence validation. */
 export const AssistantPage: React.FC = () => {
   const { data: household } = useHousehold();
   const city = household?.city || 'Mumbai';
@@ -35,11 +41,7 @@ export const AssistantPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([
-    'When is the safest window to ventilate today?',
-    'What CADR purifier fits a 20 sq m bedroom?',
-    'Should I reschedule my morning outdoor run?',
-  ]);
+  const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_PROMPTS);
   const msgCounterRef = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -62,13 +64,10 @@ export const AssistantPage: React.FC = () => {
     setErrorMsg('');
     if (!textToSend) setInput('');
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMsg: ChatMessage = {
-      id: nextId('u'),
-      sender: 'user',
-      text: query,
-      timestamp: nowTime,
-    };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId('u'), sender: 'user', text: query, timestamp: nowTime },
+    ]);
     setSending(true);
 
     try {
@@ -81,15 +80,7 @@ export const AssistantPage: React.FC = () => {
           lon: household?.longitude ?? 72.8777,
         }),
       });
-      const validBadges: ProvenanceSource[] = [
-        'LIVE',
-        'MODELED',
-        'FORECAST',
-        'ESTIMATED',
-        'USER-REPORTED',
-        'DEMO',
-      ];
-      const badge: ProvenanceSource = validBadges.includes(res.source_badge as ProvenanceSource)
+      const badge: ProvenanceSource = VALID_BADGES.includes(res.source_badge as ProvenanceSource)
         ? (res.source_badge as ProvenanceSource)
         : 'MODELED';
 
@@ -105,9 +96,7 @@ export const AssistantPage: React.FC = () => {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
-      if (res.suggested_prompts.length > 0) {
-        setSuggestions(res.suggested_prompts);
-      }
+      if (res.suggested_prompts.length > 0) setSuggestions(res.suggested_prompts);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Unable to reach Copilot service.');
     } finally {
@@ -138,51 +127,7 @@ export const AssistantPage: React.FC = () => {
         {errorMsg && <ErrorBanner message={errorMsg} />}
 
         <Card className="p-4 sm:p-6 space-y-4">
-          <div
-            role="log"
-            aria-live="polite"
-            aria-label="Copilot conversation"
-            className="space-y-4 max-h-[55vh] overflow-y-auto pr-1"
-          >
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm space-y-2 ${
-                    msg.sender === 'user'
-                      ? 'bg-[#0F766E] text-white'
-                      : 'bg-[#F8FAF7] border border-[#E2E8F0] text-[#182A29]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-3 text-[11px]">
-                    <span className="font-bold">
-                      {msg.sender === 'user' ? 'You' : 'BreatheIQ Copilot'}
-                    </span>
-                    <span className={msg.sender === 'user' ? 'text-[#DDF5EC]' : 'text-[#475569]'}>
-                      {msg.timestamp}
-                    </span>
-                  </div>
-                  <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
-                  {msg.sender === 'assistant' && msg.sourceBadge && (
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <Badge badgeType={msg.sourceBadge} />
-                      {msg.flags?.map((flag) => (
-                        <span
-                          key={flag}
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white border border-[#E2E8F0] text-[#475569]"
-                        >
-                          {flag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={endRef} />
-          </div>
+          <CopilotMessageList messages={messages} endRef={endRef} />
 
           <div className="flex flex-wrap gap-2 pt-2 border-t border-[#E2E8F0]">
             {suggestions.slice(0, 3).map((prompt) => (
