@@ -10,10 +10,15 @@ ignore = ["E501"]
 [tool.ruff.lint.per-file-ignores]
 "backend/tests/**/*.py" = ["BLE001"]
 
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [tool.mypy]
 python_version = "3.11"
 mypy_path = "backend"
 explicit_package_bases = true
+strict = true
 ignore_missing_imports = true
 warn_return_any = true
 warn_unused_ignores = true

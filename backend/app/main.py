@@ -24,21 +24,32 @@ from app.api.v1.endpoints import (
     user_flow,
 )
 from app.core.config import settings
+from app.core.exceptions import BreatheIQError
 from app.core.rate_limit import limiter
 from app.db.seed import seed_database
 from app.services.air_data import air_data_service
 
 
 async def _rate_limit_handler(request: Request, exc: Exception) -> Response:
+    """Return HTTP 429 JSON error when a client exceeds rate limits."""
     _ = request
     detail = getattr(exc, "detail", "Rate limit exceeded. Please try again later.")
     return JSONResponse(status_code=429, content={"detail": f"Rate limit exceeded: {detail}"})
+
+
+async def _domain_error_handler(request: Request, exc: Exception) -> Response:
+    """Translate typed application domain errors into safe HTTP JSON responses."""
+    _ = request
+    if isinstance(exc, BreatheIQError):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Attach strict HTTP security headers and CSP to every response."""
 
     async def dispatch(self, request: Request, call_next: Any) -> Response:
+        """Apply CSP, frame, content-type, referrer, and HSTS headers."""
         response: Response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
@@ -62,8 +73,13 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject oversized request bodies before parsing payloads."""
 
     async def dispatch(self, request: Request, call_next: Any) -> Response:
+        """Reject requests whose content length or body exceeds MAX_REQUEST_BODY_BYTES."""
         content_length = request.headers.get("content-length")
-        if content_length and content_length.isdigit() and int(content_length) > settings.MAX_REQUEST_BODY_BYTES:
+        if (
+            content_length
+            and content_length.isdigit()
+            and int(content_length) > settings.MAX_REQUEST_BODY_BYTES
+        ):
             return JSONResponse(
                 status_code=413,
                 content={"detail": "Request payload exceeds 1 MB maximum limit."},
@@ -106,6 +122,7 @@ app = FastAPI(
 app.state.limiter = limiter
 app.state.http_client = None
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+app.add_exception_handler(BreatheIQError, _domain_error_handler)
 
 app.add_middleware(RequestSizeLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
@@ -144,10 +161,7 @@ if os.path.exists(FRONTEND_DIST):
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str) -> Response:
         """Serve built SPA entry point and static assets while keeping /api 404s JSON."""
-        if (
-            full_path.startswith(("api/", "docs", "redoc"))
-            or full_path in ("healthz", "readyz")
-        ):
+        if full_path.startswith(("api/", "docs", "redoc")) or full_path in ("healthz", "readyz"):
             return JSONResponse(status_code=404, content={"detail": "Not Found"})
         candidate = os.path.join(FRONTEND_DIST, full_path)
         if os.path.isfile(candidate):
