@@ -91,7 +91,9 @@ async def test_auth_logout_invalid_tokens_and_error_paths(client):
         )
     ).status_code == 400
     assert (
-        await client.post("/api/v1/auth/verify-email", json={"token": "invalid.jwt.token.payload.12345"})
+        await client.post(
+            "/api/v1/auth/verify-email", json={"token": "invalid.jwt.token.payload.12345"}
+        )
     ).status_code == 400
 
     wrong_purpose, _, _ = create_one_time_token(signup.json()["user"]["id"], "verify_email")
@@ -122,7 +124,13 @@ async def test_user_flow_household_members_rooms_impact_and_not_found(client):
     assert hh.status_code == 200
     saved = await client.post(
         "/api/v1/user/household",
-        json={"name": "Seaface Home", "city": "Mumbai", "neighborhood": "Worli", "latitude": 19.0, "longitude": 72.8},
+        json={
+            "name": "Seaface Home",
+            "city": "Mumbai",
+            "neighborhood": "Worli",
+            "latitude": 19.0,
+            "longitude": 72.8,
+        },
         headers=headers,
     )
     assert saved.status_code == 200 and saved.json()["city"] == "Mumbai"
@@ -142,7 +150,13 @@ async def test_user_flow_household_members_rooms_impact_and_not_found(client):
     # Rooms + readings CRUD + 404s
     room = await client.post(
         "/api/v1/user/rooms",
-        json={"name": "Nursery", "length_m": 4.0, "width_m": 3.5, "height_m": 2.9, "has_purifier": True},
+        json={
+            "name": "Nursery",
+            "length_m": 4.0,
+            "width_m": 3.5,
+            "height_m": 2.9,
+            "has_purifier": True,
+        },
         headers=headers,
     )
     assert room.status_code == 200
@@ -155,7 +169,9 @@ async def test_user_flow_household_members_rooms_impact_and_not_found(client):
     assert reading.status_code == 200
     readings = await client.get(f"/api/v1/user/rooms/{rid}/readings", headers=headers)
     assert readings.status_code == 200 and len(readings.json()) >= 1
-    assert (await client.get("/api/v1/user/rooms/999999/readings", headers=headers)).status_code == 404
+    assert (
+        await client.get("/api/v1/user/rooms/999999/readings", headers=headers)
+    ).status_code == 404
     assert (await client.delete(f"/api/v1/user/rooms/{rid}", headers=headers)).status_code == 200
 
     # Impact ledger auto-seed + totals
@@ -165,10 +181,16 @@ async def test_user_flow_household_members_rooms_impact_and_not_found(client):
     assert imp.json()["total_averted_pm25_mg"] > 0
 
     # Missing routine, rule, notification 404 checks
-    assert (await client.patch("/api/v1/user/routine/999999/toggle", headers=headers)).status_code == 404
+    assert (
+        await client.patch("/api/v1/user/routine/999999/toggle", headers=headers)
+    ).status_code == 404
     assert (await client.delete("/api/v1/user/routine/999999", headers=headers)).status_code == 404
-    assert (await client.delete("/api/v1/user/alerts/rules/999999", headers=headers)).status_code == 404
-    assert (await client.patch("/api/v1/user/alerts/999999/read", headers=headers)).status_code == 404
+    assert (
+        await client.delete("/api/v1/user/alerts/rules/999999", headers=headers)
+    ).status_code == 404
+    assert (
+        await client.patch("/api/v1/user/alerts/999999/read", headers=headers)
+    ).status_code == 404
 
 
 @pytest.mark.asyncio
@@ -182,13 +204,19 @@ async def test_community_filters_and_verify_errors(client):
     all_reports = await client.get("/api/v1/community/reports")
     assert all_reports.status_code == 200 and len(all_reports.json()) >= 1
 
-    filtered = await client.get("/api/v1/community/reports?report_type=garbage_burning&severity=hazardous")
+    filtered = await client.get(
+        "/api/v1/community/reports?report_type=garbage_burning&severity=hazardous"
+    )
     assert filtered.status_code == 200
     assert all(r["report_type"] == "garbage_burning" for r in filtered.json())
 
     created = await client.post(
         "/api/v1/community/reports",
-        json={"report_type": "industrial_smoke", "severity": "moderate", "location_name": "Chembur"},
+        json={
+            "report_type": "industrial_smoke",
+            "severity": "moderate",
+            "location_name": "Chembur",
+        },
         headers=headers,
     )
     assert created.status_code == 200

@@ -124,7 +124,13 @@ async def test_openmeteo_modeled_and_openaq_live_mocked(monkeypatch):
             )
         return httpx.Response(
             200,
-            json={"current": {"temperature_2m": 27.5, "relative_humidity_2m": 62.0, "wind_speed_10m": 3.5}},
+            json={
+                "current": {
+                    "temperature_2m": 27.5,
+                    "relative_humidity_2m": 62.0,
+                    "wind_speed_10m": 3.5,
+                }
+            },
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as mock_client:

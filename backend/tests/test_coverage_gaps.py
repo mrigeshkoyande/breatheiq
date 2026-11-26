@@ -17,7 +17,9 @@ async def test_deps_auth_error_branches(client):
     from app.core.security import create_refresh_token
 
     raw_refresh, _, _ = create_refresh_token(1, "fam-1")
-    wrong_type = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {raw_refresh}"})
+    wrong_type = await client.get(
+        "/api/v1/auth/me", headers={"Authorization": f"Bearer {raw_refresh}"}
+    )
     assert wrong_type.status_code == 401
 
     # Non-existent user ID in valid access JWT
@@ -111,7 +113,13 @@ async def test_user_flow_missing_resource_404s_and_reads(client):
     assert hh1.status_code == 200
     hh2 = await client.post(
         "/api/v1/user/household",
-        json={"name": "New Home", "city": "Pune", "neighborhood": "Kothrud", "latitude": 18.5, "longitude": 73.8},
+        json={
+            "name": "New Home",
+            "city": "Pune",
+            "neighborhood": "Kothrud",
+            "latitude": 18.5,
+            "longitude": 73.8,
+        },
         headers=headers,
     )
     assert hh2.status_code == 200 and hh2.json()["city"] == "Pune"
@@ -134,8 +142,12 @@ async def test_user_flow_missing_resource_404s_and_reads(client):
         r = await client.delete(path, headers=headers)
         assert r.status_code == 404
 
-    assert (await client.patch("/api/v1/user/alerts/99999/read", headers=headers)).status_code == 404
-    assert (await client.get("/api/v1/user/rooms/99999/readings", headers=headers)).status_code == 404
+    assert (
+        await client.patch("/api/v1/user/alerts/99999/read", headers=headers)
+    ).status_code == 404
+    assert (
+        await client.get("/api/v1/user/rooms/99999/readings", headers=headers)
+    ).status_code == 404
     assert (
         await client.patch("/api/v1/user/routine/99999/toggle", headers=headers)
     ).status_code == 404

@@ -1,7 +1,9 @@
+import contextlib
+
 import pytest
 
 from app.core.config import settings
-from app.core.security import create_one_time_token, hash_token
+from app.core.security import create_one_time_token
 from app.models.auth import OneTimeToken
 
 
@@ -34,7 +36,11 @@ async def test_auth_config_gates_demo_mode_in_production(client, monkeypatch):
 async def test_signup_and_login_flow(client):
     signup_res = await client.post(
         "/api/v1/auth/signup",
-        json={"email": "testuser@example.com", "password": "Password123!", "full_name": "Test User"},
+        json={
+            "email": "testuser@example.com",
+            "password": "Password123!",
+            "full_name": "Test User",
+        },
     )
     assert signup_res.status_code == 201, signup_res.text
     data = signup_res.json()
@@ -126,7 +132,11 @@ async def test_account_lockout_and_rate_limiting(client):
 async def test_profile_update_password_change_sessions_and_delete(client):
     signup = await client.post(
         "/api/v1/auth/signup",
-        json={"email": "profile@example.com", "password": "Password123!", "full_name": "Initial Name"},
+        json={
+            "email": "profile@example.com",
+            "password": "Password123!",
+            "full_name": "Initial Name",
+        },
     )
     token = signup.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -190,7 +200,9 @@ async def test_forgot_password_reset_and_verify_email_flows(client):
     uid = signup.json()["user"]["id"]
 
     # forgot-password returns safe generic message without token leak
-    forgot = await client.post("/api/v1/auth/forgot-password", json={"email": "recovery@example.com"})
+    forgot = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "recovery@example.com"}
+    )
     assert forgot.status_code == 200
     assert "eyJ" not in forgot.text
 
@@ -203,13 +215,15 @@ async def test_forgot_password_reset_and_verify_email_flows(client):
 
     db_gen = app.dependency_overrides[get_db]()
     session = await anext(db_gen)
-    session.add(OneTimeToken(user_id=uid, jti_hash=v_hash, purpose="verify_email", expires_at=v_exp))
-    session.add(OneTimeToken(user_id=uid, jti_hash=r_hash, purpose="reset_password", expires_at=r_exp))
+    session.add(
+        OneTimeToken(user_id=uid, jti_hash=v_hash, purpose="verify_email", expires_at=v_exp)
+    )
+    session.add(
+        OneTimeToken(user_id=uid, jti_hash=r_hash, purpose="reset_password", expires_at=r_exp)
+    )
     await session.commit()
-    try:
+    with contextlib.suppress(StopAsyncIteration):
         await anext(db_gen)
-    except StopAsyncIteration:
-        pass
 
     ver = await client.post("/api/v1/auth/verify-email", json={"token": raw_verify})
     assert ver.status_code == 200

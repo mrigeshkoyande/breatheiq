@@ -7,9 +7,8 @@ Computes uncompressed and gzip compressed byte sizes and verifies against budget
 - Consolidated CSS bundle: <= 50 KB (gzipped, baseline target <= 30 KB)
 """
 
-import os
-import sys
 import gzip
+import sys
 from pathlib import Path
 
 DIST_ASSETS = Path(__file__).resolve().parent.parent / "frontend" / "dist" / "assets"
@@ -17,9 +16,11 @@ DIST_ASSETS = Path(__file__).resolve().parent.parent / "frontend" / "dist" / "as
 BUDGET_JS_GZIP_KB = 200.0
 BUDGET_CSS_GZIP_KB = 50.0
 
+
 def get_gzip_size_bytes(file_path: Path) -> int:
     with open(file_path, "rb") as f_in:
         return len(gzip.compress(f_in.read()))
+
 
 def main():
     if not DIST_ASSETS.exists():
@@ -45,7 +46,13 @@ def main():
         raw_kb = raw_bytes / 1024.0
         gzip_kb = gzip_bytes / 1024.0
 
-        budget_kb = BUDGET_JS_GZIP_KB if f.suffix == ".js" else BUDGET_CSS_GZIP_KB if f.suffix == ".css" else 100.0
+        budget_kb = (
+            BUDGET_JS_GZIP_KB
+            if f.suffix == ".js"
+            else BUDGET_CSS_GZIP_KB
+            if f.suffix == ".css"
+            else 100.0
+        )
         status = "PASS" if gzip_kb <= budget_kb else "FAIL (OVER BUDGET)"
         if gzip_kb > budget_kb:
             failures += 1
@@ -59,6 +66,7 @@ def main():
 
     print("[PASS] All frontend build assets are within gzip performance budget.")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

@@ -16,101 +16,179 @@ DECISIONS_PATH = os.path.join("docs", "DECISIONS.md")
 RELEASE_ROUTES = [
     # Public (4)
     {"path": "/", "name": "Landing Page", "category": "Public", "access": "public"},
-    {"path": "/explore", "name": "Interactive AQI Explorer", "category": "Public", "access": "public"},
-    {"path": "/methodology", "name": "Scientific Methodology & Standards", "category": "Public", "access": "public"},
-    {"path": "/privacy", "name": "Privacy Policy & Data Sovereignty", "category": "Public", "access": "public"},
+    {
+        "path": "/explore",
+        "name": "Interactive AQI Explorer",
+        "category": "Public",
+        "access": "public",
+    },
+    {
+        "path": "/methodology",
+        "name": "Scientific Methodology & Standards",
+        "category": "Public",
+        "access": "public",
+    },
+    {
+        "path": "/privacy",
+        "name": "Privacy Policy & Data Sovereignty",
+        "category": "Public",
+        "access": "public",
+    },
     # Auth (5)
     {"path": "/login", "name": "Sign In", "category": "Auth", "access": "public"},
     {"path": "/signup", "name": "Create Account", "category": "Auth", "access": "public"},
     {"path": "/forgot-password", "name": "Forgot Password", "category": "Auth", "access": "public"},
     {"path": "/reset-password", "name": "Reset Password", "category": "Auth", "access": "public"},
-    {"path": "/onboarding", "name": "Personalized Setup Wizard", "category": "Auth", "access": "user"},
+    {
+        "path": "/onboarding",
+        "name": "Personalized Setup Wizard",
+        "category": "Auth",
+        "access": "user",
+    },
     # App (13)
     {"path": "/app/dashboard", "name": "Main Dashboard", "category": "App", "access": "user"},
-    {"path": "/app/air-quality", "name": "Air Quality Deep Dive", "category": "App", "access": "user"},
-    {"path": "/app/analytics", "name": "Atmospheric & Inversion Analytics", "category": "App", "access": "user"},
-    {"path": "/app/assistant", "name": "GenAI Atmospheric Assistant", "category": "App", "access": "user"},
-    {"path": "/app/routine", "name": "Adaptive Routine & Dosage Optimizer", "category": "App", "access": "user"},
-    {"path": "/app/home", "name": "Indoor Air Quality & Window Oracle", "category": "App", "access": "user"},
-    {"path": "/app/family", "name": "Family Profiles & Sensitivities", "category": "App", "access": "user"},
-    {"path": "/app/routes", "name": "CleanRoute Commute Navigator", "category": "App", "access": "user"},
-    {"path": "/app/impact", "name": "Personal & Household Impact Ledger", "category": "App", "access": "user"},
-    {"path": "/app/impact/what-if", "name": "What-If Lifestyle & Policy Simulator", "category": "App", "access": "user"},
-    {"path": "/app/notifications", "name": "Smog Alerts & Notification Center", "category": "App", "access": "user"},
-    {"path": "/app/settings", "name": "Account & Privacy Settings", "category": "App", "access": "user"},
-    {"path": "/app/community", "name": "Air Watch Community Reports", "category": "App", "access": "user"},
+    {
+        "path": "/app/air-quality",
+        "name": "Air Quality Deep Dive",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/analytics",
+        "name": "Atmospheric & Inversion Analytics",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/assistant",
+        "name": "GenAI Atmospheric Assistant",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/routine",
+        "name": "Adaptive Routine & Dosage Optimizer",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/home",
+        "name": "Indoor Air Quality & Window Oracle",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/family",
+        "name": "Family Profiles & Sensitivities",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/routes",
+        "name": "CleanRoute Commute Navigator",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/impact",
+        "name": "Personal & Household Impact Ledger",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/impact/what-if",
+        "name": "What-If Lifestyle & Policy Simulator",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/notifications",
+        "name": "Smog Alerts & Notification Center",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/settings",
+        "name": "Account & Privacy Settings",
+        "category": "App",
+        "access": "user",
+    },
+    {
+        "path": "/app/community",
+        "name": "Air Watch Community Reports",
+        "category": "App",
+        "access": "user",
+    },
     # Admin (1)
     {"path": "/admin", "name": "Unified Command Center", "category": "Admin", "access": "admin"},
     # System (1)
-    {"path": "/404", "name": "Not Found Error Handler", "category": "System", "access": "public"}
+    {"path": "/404", "name": "Not Found Error Handler", "category": "System", "access": "public"},
 ]
 
 RELEASE_PATHS = {r["path"] for r in RELEASE_ROUTES}
 
-def update_manifest():
-    with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
+
+def _onboarding_entry() -> dict:
+    """Return fallback manifest entry for ``/onboarding`` when absent."""
+    return {
+        "id": 94,
+        "path": "/onboarding",
+        "name": "Personalized Setup Wizard",
+        "tier": "T1",
+        "access": "user",
+        "category": "Auth",
+        "status": "MISSING",
+        "inReleaseScope": True,
+        "designFile": "NO-DESIGN",
+        "apiEndpoints": ["/api/v1/auth/me", "/api/v1/user/profile", "/api/v1/user/preferences"],
+        "interactiveChecks": [
+            "step_location_select",
+            "step_family_members",
+            "step_sensitivities",
+            "step_alerts_save",
+            "step_complete_redirect",
+        ],
+        "minInteractiveElements": 6,
+    }
+
+
+def update_manifest() -> tuple[list[dict], list[dict]]:
+    """Mark release-scope vs deferred routes in ``docs/routes.manifest.json``."""
+    with open(MANIFEST_PATH, encoding="utf-8") as f:
         existing = json.load(f)
 
-    # Map existing routes by path
-    existing_by_path = {r["path"]: r for r in existing}
-
-    updated = []
-    deferred_list = []
-    active_list = []
-
-    # Process all routes
+    updated, deferred_list, active_list = [], [], []
     for item in existing:
-        path = item["path"]
-        if path in RELEASE_PATHS:
+        if item["path"] in RELEASE_PATHS:
             item["status"] = item.get("status", "FUNCTIONAL")
             item["inReleaseScope"] = True
             item.pop("deferReason", None)
             active_list.append(item)
-            updated.append(item)
         else:
             item["status"] = "DEFERRED"
             item["inReleaseScope"] = False
-            item["deferReason"] = "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
+            item["deferReason"] = (
+                "Scoped out for v1 hackathon release; prioritizes depth on core family flow"
+            )
             deferred_list.append(item)
-            updated.append(item)
+        updated.append(item)
 
-    # Check if /onboarding is in updated
-    onboarding_present = any(r["path"] == "/onboarding" for r in updated)
-    if not onboarding_present:
-        onboarding_entry = {
-            "id": 94,
-            "path": "/onboarding",
-            "name": "Personalized Setup Wizard",
-            "tier": "T1",
-            "access": "user",
-            "category": "Auth",
-            "status": "MISSING",
-            "inReleaseScope": True,
-            "designFile": "NO-DESIGN",
-            "apiEndpoints": [
-                "/api/v1/auth/me",
-                "/api/v1/user/profile",
-                "/api/v1/user/preferences"
-            ],
-            "interactiveChecks": [
-                "step_location_select",
-                "step_family_members",
-                "step_sensitivities",
-                "step_alerts_save",
-                "step_complete_redirect"
-            ],
-            "minInteractiveElements": 6
-        }
-        updated.append(onboarding_entry)
-        active_list.append(onboarding_entry)
+    if not any(r["path"] == "/onboarding" for r in updated):
+        entry = _onboarding_entry()
+        updated.append(entry)
+        active_list.append(entry)
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(updated, f, indent=2)
 
-    print(f"Manifest updated: {len(active_list)} active release routes, {len(deferred_list)} deferred routes.")
+    print(
+        f"Manifest updated: {len(active_list)} active release routes, {len(deferred_list)} deferred routes."
+    )
     return active_list, deferred_list
 
-def write_decisions(active_list, deferred_list):
+
+def write_decisions(deferred_list: list[dict]) -> None:
+    """Write ``docs/DECISIONS.md`` summarizing release scope consolidation."""
     content = f"""# Architectural Decision Records (ADR) — BreatheIQ
 
 ## ADR 001: 24-Route Release Scope Consolidation
@@ -158,6 +236,7 @@ All remaining {len(deferred_list)} routes are formally marked `DEFERRED` in `doc
 
     print(f"Decisions document written to {DECISIONS_PATH}.")
 
+
 if __name__ == "__main__":
-    active, deferred = update_manifest()
-    write_decisions(active, deferred)
+    _, deferred = update_manifest()
+    write_decisions(deferred)

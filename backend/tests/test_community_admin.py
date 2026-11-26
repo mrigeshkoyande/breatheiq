@@ -1,5 +1,7 @@
 import pytest
+
 from app.core.security import create_access_token
+
 
 @pytest.mark.asyncio
 async def test_community_reports_feed(client):
@@ -8,6 +10,7 @@ async def test_community_reports_feed(client):
     data = response.json()
     assert len(data) >= 3
     assert data[0]["status"] in ["UNVERIFIED", "VERIFIED"]
+
 
 @pytest.mark.asyncio
 async def test_community_report_creation_and_upvote(client):
@@ -23,9 +26,9 @@ async def test_community_report_creation_and_upvote(client):
             "location_name": "Linking Road Bandra",
             "latitude": 19.0600,
             "longitude": 72.8360,
-            "description": "Loose construction debris without dust suppression"
+            "description": "Loose construction debris without dust suppression",
         },
-        headers=headers
+        headers=headers,
     )
     assert create_resp.status_code == 200
     report = create_resp.json()
@@ -34,19 +37,22 @@ async def test_community_report_creation_and_upvote(client):
 
     # Upvote report
     upvote_resp = await client.post(
-        f"/api/v1/community/reports/{report['id']}/verify",
-        headers=headers
+        f"/api/v1/community/reports/{report['id']}/verify", headers=headers
     )
     assert upvote_resp.status_code == 200
     upvoted = upvote_resp.json()
     assert upvoted["upvote_count"] == 2
 
+
 @pytest.mark.asyncio
 async def test_admin_rbac_protection(client):
     # Standard user attempting admin endpoint should receive 403 Forbidden
     user_token = create_access_token(user_id=1, role="user")
-    resp = await client.get("/api/v1/admin/users", headers={"Authorization": f"Bearer {user_token}"})
+    resp = await client.get(
+        "/api/v1/admin/users", headers={"Authorization": f"Bearer {user_token}"}
+    )
     assert resp.status_code == 403
+
 
 @pytest.mark.asyncio
 async def test_admin_endpoints_with_admin_role(client):

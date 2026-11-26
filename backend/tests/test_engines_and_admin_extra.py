@@ -16,7 +16,11 @@ async def test_request_body_size_limit_returns_413(client):
 async def test_user_flow_crud_and_cleanroute_city_grounding(client):
     signup = await client.post(
         "/api/v1/auth/signup",
-        json={"email": "flowtester@example.com", "password": "Password123!", "full_name": "Flow Tester"},
+        json={
+            "email": "flowtester@example.com",
+            "password": "Password123!",
+            "full_name": "Flow Tester",
+        },
     )
     headers = {"Authorization": f"Bearer {signup.json()['access_token']}"}
 
@@ -54,11 +58,23 @@ async def test_user_flow_crud_and_cleanroute_city_grounding(client):
     # CleanRoute compares cities dynamically (Delhi higher PM2.5 than Bengaluru)
     delhi_routes = await client.post(
         "/api/v1/user/routes/navigate",
-        json={"origin": "CP", "destination": "Noida", "city": "Delhi", "distance_km": 12.0, "departure_hour": 9},
+        json={
+            "origin": "CP",
+            "destination": "Noida",
+            "city": "Delhi",
+            "distance_km": 12.0,
+            "departure_hour": 9,
+        },
     )
     blr_routes = await client.post(
         "/api/v1/user/routes/navigate",
-        json={"origin": "MG Road", "destination": "Whitefield", "city": "Bengaluru", "distance_km": 12.0, "departure_hour": 9},
+        json={
+            "origin": "MG Road",
+            "destination": "Whitefield",
+            "city": "Bengaluru",
+            "distance_km": 12.0,
+            "departure_hour": 9,
+        },
     )
     assert delhi_routes.status_code == 200 and blr_routes.status_code == 200
     d_hw = next(r for r in delhi_routes.json()["routes"] if r["id"] == "route_arterial")
@@ -77,7 +93,7 @@ async def test_admin_search_ai_traces_audit_and_integrations_health(client):
 
     users = await client.get("/api/v1/admin/users?search=priya", headers=headers)
     assert users.status_code == 200
-    assert any("user@breatheiq.org" == u["email"] for u in users.json())
+    assert any(u["email"] == "user@breatheiq.org" for u in users.json())
 
     # Search with SQL LIKE wildcard must not throw or leak unintended regex
     wild = await client.get("/api/v1/admin/users?search=%25_admin", headers=headers)

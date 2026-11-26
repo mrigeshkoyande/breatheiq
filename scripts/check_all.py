@@ -13,8 +13,8 @@ Executes all gates in sequence and fails fast:
 8. Route ledger status regeneration (build_status.py)
 """
 
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -31,6 +31,7 @@ CHECKS = [
     ("Route Ledger & Build Status", [sys.executable, "scripts/build_status.py"]),
 ]
 
+
 def run_step(name: str, cmd: list) -> bool:
     print(f"\n[RUNNING] {name}...")
     start = time.time()
@@ -41,6 +42,7 @@ def run_step(name: str, cmd: list) -> bool:
         return False
     print(f"[PASS] {name} completed successfully ({elapsed:.1f}s)")
     return True
+
 
 def main():
     print("=" * 75)
@@ -62,6 +64,7 @@ def main():
     print("ALL GATES PASSED! Codebase is completely verified and compliant.")
     print("=" * 75)
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

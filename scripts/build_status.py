@@ -10,7 +10,8 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 MANIFEST_PATH = os.path.join("docs", "routes.manifest.json")
 APP_PATH = os.path.join("frontend", "src", "App.tsx")
@@ -44,22 +45,27 @@ ROUTE_PAGE_MAP = {
     "/404": "NotFoundPage.tsx",
 }
 
-def load_manifest():
+
+def load_manifest() -> list[dict[str, Any]]:
+    """Load route specifications from ``docs/routes.manifest.json``."""
     if not os.path.exists(MANIFEST_PATH):
         print(f"[ERROR] Manifest {MANIFEST_PATH} not found.")
         sys.exit(1)
-    with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
+    with open(MANIFEST_PATH, encoding="utf-8") as f:
         return json.load(f)
 
-def check_e2e_screenshots(path):
+
+def check_e2e_screenshots(path: str) -> bool:
+    """Return True when mobile, tablet, and desktop E2E screenshots exist for ``path``."""
     clean_path = path.replace("/", "_").replace(":", "$").lstrip("_") or "root"
     screenshot_dir = os.path.join("test-results", "screenshots")
     if not os.path.exists(screenshot_dir):
         return False
-    mobile = os.path.exists(os.path.join(screenshot_dir, f"{clean_path}_mobile.png"))
-    tablet = os.path.exists(os.path.join(screenshot_dir, f"{clean_path}_tablet.png"))
-    desktop = os.path.exists(os.path.join(screenshot_dir, f"{clean_path}_desktop.png"))
-    return mobile and tablet and desktop
+    return all(
+        os.path.exists(os.path.join(screenshot_dir, f"{clean_path}_{vp}.png"))
+        for vp in ("mobile", "tablet", "desktop")
+    )
+
 
 def count_component_lines(subdir: str) -> int:
     """Count lines across extracted modular components for a composite page."""
@@ -69,134 +75,177 @@ def count_component_lines(subdir: str) -> int:
     total = 0
     for fname in os.listdir(folder):
         if fname.endswith((".ts", ".tsx")):
-            with open(os.path.join(folder, fname), "r", encoding="utf-8", errors="ignore") as f:
+            with open(os.path.join(folder, fname), encoding="utf-8", errors="ignore") as f:
                 total += len(f.read().splitlines())
     return total
 
 
-def audit_route(route, app_content):
-    path = route["path"]
-
-    # Check if deferred
-    if not route.get("inReleaseScope", False) or route.get("status") == "DEFERRED":
-        return {
-            "status": "DEFERRED",
-            "evidence": route.get("deferReason", "Scoped out for v1 release"),
-            "page": "—",
-            "lines": 0
-        }
-
-    # Escape path for regex
-    escaped_path = re.escape(path)
-    pattern = rf'path=["\']{escaped_path}["\']'
-    is_registered = bool(re.search(pattern, app_content))
-
-    page_filename = ROUTE_PAGE_MAP.get(path)
-    page_exists = False
-    page_content = ""
-    line_count = 0
-
-    if page_filename:
-        page_path = os.path.join(PAGES_DIR, page_filename)
-        if os.path.exists(page_path):
-            page_exists = True
-            with open(page_path, "r", encoding="utf-8", errors="ignore") as pf:
-                page_content = pf.read()
-                line_count = len(page_content.splitlines())
-
-    if not is_registered or not page_exists:
-        return {
-            "status": "MISSING",
-            "evidence": "Route not mounted in App.tsx or page component missing",
-            "page": page_filename or "None",
-            "lines": 0
-        }
-
-    has_e2e = check_e2e_screenshots(path)
-    status = "VERIFIED" if has_e2e else "FUNCTIONAL"
-
-    # Evaluate registered pages
-    if path == "/":
-        composite_lines = line_count + count_component_lines("landing")
-        if composite_lines >= 300:
-            evidence_prefix = "Verified across 3 viewports (390/768/1440px);" if has_e2e else "Functional layout;"
-            return {
-                "status": status,
-                "evidence": f"{evidence_prefix} Modular Mumbai landing ({line_count} page + {composite_lines - line_count} component lines); What-If simulator, bento grid, corridor selector",
-                "page": page_filename,
-                "lines": composite_lines
-            }
+def _audit_composite_route(
+    path: str, page_filename: str, line_count: int, status: str, has_e2e: bool
+) -> dict[str, Any]:
+    """Evaluate composite `/` and `/app/dashboard` routes including modular subcomponents."""
+    subdir = "landing" if path == "/" else "dashboard"
+    composite_lines = line_count + count_component_lines(subdir)
+    if composite_lines < 300:
+        label = "layout" if path == "/" else "dashboard"
         return {
             "status": "STUB",
-            "evidence": f"Incomplete layout ({composite_lines} lines)",
+            "evidence": f"Incomplete {label} ({composite_lines} lines)",
             "page": page_filename,
-            "lines": composite_lines
+            "lines": composite_lines,
         }
+    prefix = (
+        "Verified across 3 viewports (390/768/1440px);"
+        if has_e2e
+        else ("Functional layout;" if path == "/" else "Functional dashboard;")
+    )
+    detail = (
+        f"Modular Mumbai landing ({line_count} page + {composite_lines - line_count} component lines); What-If simulator, bento grid, corridor selector"
+        if path == "/"
+        else f"Modular Andheri West dashboard ({line_count} page + {composite_lines - line_count} component lines); interactive routine, Window Oracle, AQI dial"
+    )
+    return {
+        "status": status,
+        "evidence": f"{prefix} {detail}",
+        "page": page_filename,
+        "lines": composite_lines,
+    }
 
-    if path == "/app/dashboard":
-        composite_lines = line_count + count_component_lines("dashboard")
-        if composite_lines >= 300:
-            evidence_prefix = "Verified across 3 viewports (390/768/1440px);" if has_e2e else "Functional dashboard;"
-            return {
-                "status": status,
-                "evidence": f"{evidence_prefix} Modular Andheri West dashboard ({line_count} page + {composite_lines - line_count} component lines); interactive routine, Window Oracle, AQI dial",
-                "page": page_filename,
-                "lines": composite_lines
-            }
-        return {
-            "status": "STUB",
-            "evidence": f"Incomplete dashboard ({composite_lines} lines)",
-            "page": page_filename,
-            "lines": composite_lines
-        }
 
-    if path in ["/login", "/signup", "/forgot-password", "/reset-password"]:
-        evidence_prefix = "Verified across 3 viewports;" if has_e2e else "Functional form;"
+def _audit_standard_route(
+    path: str, page_filename: str, line_count: int, status: str, has_e2e: bool
+) -> dict[str, Any]:
+    """Evaluate auth, 404, and standard API-wired application routes."""
+    if path in ("/login", "/signup", "/forgot-password", "/reset-password"):
+        prefix = "Verified across 3 viewports;" if has_e2e else "Functional form;"
         return {
             "status": status,
-            "evidence": f"{evidence_prefix} Form wired to backend /api/v1/auth endpoints ({line_count} lines)",
+            "evidence": f"{prefix} Form wired to backend /api/v1/auth endpoints ({line_count} lines)",
             "page": page_filename,
-            "lines": line_count
+            "lines": line_count,
         }
-
     if path == "/404":
         if line_count >= 60:
-            evidence_prefix = "Verified across 3 viewports;" if has_e2e else "Functional view;"
+            prefix = "Verified across 3 viewports;" if has_e2e else "Functional view;"
             return {
                 "status": status,
-                "evidence": f"{evidence_prefix} Accessible 404 view ({line_count} lines); emergency air hotline, search fallback, quick nav",
+                "evidence": f"{prefix} Accessible 404 view ({line_count} lines); emergency air hotline, search fallback, quick nav",
                 "page": page_filename,
-                "lines": line_count
+                "lines": line_count,
             }
         return {
             "status": "UI-ONLY",
             "evidence": f"Basic not-found view ({line_count} lines)",
             "page": page_filename,
-            "lines": line_count
+            "lines": line_count,
         }
-
     if line_count >= 60:
-        evidence_prefix = "Verified across 3 viewports;" if has_e2e else "Implemented and mounted;"
+        prefix = "Verified across 3 viewports;" if has_e2e else "Implemented and mounted;"
         return {
             "status": status,
-            "evidence": f"{evidence_prefix} Connected to backend API ({line_count} lines)",
+            "evidence": f"{prefix} Connected to backend API ({line_count} lines)",
             "page": page_filename,
-            "lines": line_count
+            "lines": line_count,
         }
-
     return {
         "status": "STUB",
         "evidence": f"Component under min lines ({line_count} lines)",
         "page": page_filename,
-        "lines": line_count
+        "lines": line_count,
     }
 
-def main():
-    manifest = load_manifest()
 
+def audit_route(route: dict[str, Any], app_content: str) -> dict[str, Any]:
+    """Determine live ledger status and evidence summary for one route entry."""
+    path = route["path"]
+    if not route.get("inReleaseScope", False) or route.get("status") == "DEFERRED":
+        return {
+            "status": "DEFERRED",
+            "evidence": route.get("deferReason", "Scoped out for v1 release"),
+            "page": "—",
+            "lines": 0,
+        }
+
+    is_registered = bool(re.search(rf'path=["\']{re.escape(path)}["\']', app_content))
+    page_filename = ROUTE_PAGE_MAP.get(path)
+    line_count = 0
+    page_exists = False
+    if page_filename:
+        page_path = os.path.join(PAGES_DIR, page_filename)
+        if os.path.exists(page_path):
+            page_exists = True
+            with open(page_path, encoding="utf-8", errors="ignore") as pf:
+                line_count = len(pf.read().splitlines())
+
+    if not is_registered or not page_exists or not page_filename:
+        return {
+            "status": "MISSING",
+            "evidence": "Route not mounted in App.tsx or page component missing",
+            "page": page_filename or "None",
+            "lines": 0,
+        }
+
+    has_e2e = check_e2e_screenshots(path)
+    status = "VERIFIED" if has_e2e else "FUNCTIONAL"
+    if path in ("/", "/app/dashboard"):
+        return _audit_composite_route(path, page_filename, line_count, status, has_e2e)
+    return _audit_standard_route(path, page_filename, line_count, status, has_e2e)
+
+
+def _render_status_markdown(
+    status_counts: dict[str, int],
+    release_scope_total: int,
+    release_results: list[dict[str, Any]],
+    deferred_results: list[dict[str, Any]],
+) -> str:
+    """Format the full ``docs/BUILD_STATUS.md`` markdown report."""
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%SZ")
+    pct = lambda k: f"{(status_counts[k] / release_scope_total) * 100:.1f}%"  # noqa: E731
+    badges = {
+        "VERIFIED": "🟢 VERIFIED",
+        "FUNCTIONAL": "🟡 FUNCTIONAL",
+        "UI-ONLY": "🔵 UI-ONLY",
+        "STUB": "🟠 STUB",
+        "MISSING": "🔴 MISSING",
+        "DEFERRED": "⚪ DEFERRED",
+    }
+    rows = []
+    for r in release_results:
+        design = "—" if r.get("designFile", "—") == "NO-DESIGN" else r.get("designFile", "—")
+        rows.append(
+            f"| {r.get('id', '-')} | `{r['path']}` | {r['name']} | {r.get('category', 'App')} | {r.get('tier', 'T1')} | {r.get('access', 'user')} | {badges.get(r['status'], r['status'])} | {design} | {r['evidence']} |"
+        )
+    deferred_rows = [f"| `{r['path']}` | {r['name']} | {r['evidence']} |" for r in deferred_results]
+    return (
+        f"# BreatheIQ Route Ledger & Implementation Status\n\n"
+        f"> **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.\n"
+        f"> Last audit: `{timestamp}`.\n"
+        f"> Release Scope: **{release_scope_total} Routes** | Deferred: **{status_counts['DEFERRED']} Routes**\n\n---\n\n"
+        f"## 📊 Status Summary (Release Scope: {release_scope_total} Routes)\n\n"
+        "| Status | Count | Percentage of Release | Definition |\n|---|---|---|---|\n"
+        f"| 🟢 **VERIFIED** | `{status_counts['VERIFIED']}` | `{pct('VERIFIED')}` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |\n"
+        f"| 🟡 **FUNCTIONAL** | `{status_counts['FUNCTIONAL']}` | `{pct('FUNCTIONAL')}` | Wired to API and mounted, awaiting full automated verification run |\n"
+        f"| 🔵 **UI-ONLY** | `{status_counts['UI-ONLY']}` | `{pct('UI-ONLY')}` | UI exists but not connected to backend APIs |\n"
+        f"| 🟠 **STUB** | `{status_counts['STUB']}` | `{pct('STUB')}` | Placeholder, partial layout, or hardcoded component data |\n"
+        f"| 🔴 **MISSING** | `{status_counts['MISSING']}` | `{pct('MISSING')}` | Route and component do not exist |\n"
+        f"| ⚪ **DEFERRED** | `{status_counts['DEFERRED']}` | — | Scoped out for v1 release to ensure rigorous depth on core family flow |\n\n---\n\n"
+        f"## 📋 Release Scope Ledger ({release_scope_total} Routes)\n\n"
+        "| # | Route | Name | Category | Tier | Access | Status | Design Asset | Evidence / Audit Findings |\n"
+        "|---|---|---|---|---|---|---|---|---|\n"
+        + "\n".join(rows)
+        + f"\n\n---\n\n## ⏸️ Deferred Routes ({len(deferred_results)} Routes)\n*Scoped out for v1 hackathon release to ensure depth on core problem flow.*\n\n"
+        "| Route | Name | Reason |\n|---|---|---|\n"
+        + "\n".join(deferred_rows)
+        + "\n\n---\n*Ledger maintained per `AGENTS.md` Section 5. Only routes with status `VERIFIED` may be cited in final release materials.*\n"
+    )
+
+
+def main() -> None:
+    """Audit all routes from the manifest and regenerate ``docs/BUILD_STATUS.md``."""
+    manifest = load_manifest()
     app_content = ""
     if os.path.exists(APP_PATH):
-        with open(APP_PATH, "r", encoding="utf-8") as f:
+        with open(APP_PATH, encoding="utf-8") as f:
             app_content = f.read()
 
     status_counts = {
@@ -207,97 +256,27 @@ def main():
         "MISSING": 0,
         "DEFERRED": 0,
     }
-
     results = []
-    unverified_claims = []
-
     for route in manifest:
         audit = audit_route(route, app_content)
-        status = audit["status"]
-        status_counts[status] += 1
-
-        if status == "VERIFIED":
-            # Strict verification rule: only when explicitly verified by test suite run
-            pass
-
-        results.append({
-            **route,
-            **audit
-        })
+        status_counts[audit["status"]] += 1
+        results.append({**route, **audit})
 
     release_scope_total = sum(1 for r in manifest if r.get("inReleaseScope", False))
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-
-    md = f"""# BreatheIQ Route Ledger & Implementation Status
-
-> **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `{timestamp}`.  
-> Release Scope: **{release_scope_total} Routes** | Deferred: **{status_counts['DEFERRED']} Routes**
-
----
-
-## 📊 Status Summary (Release Scope: {release_scope_total} Routes)
-
-| Status | Count | Percentage of Release | Definition |
-|---|---|---|---|
-| 🟢 **VERIFIED** | `{status_counts['VERIFIED']}` | `{(status_counts['VERIFIED']/release_scope_total)*100:.1f}%` | Passes 3-width smoke, real API data, interaction tests, axe a11y, no stubs |
-| 🟡 **FUNCTIONAL** | `{status_counts['FUNCTIONAL']}` | `{(status_counts['FUNCTIONAL']/release_scope_total)*100:.1f}%` | Wired to API and mounted, awaiting full automated verification run |
-| 🔵 **UI-ONLY** | `{status_counts['UI-ONLY']}` | `{(status_counts['UI-ONLY']/release_scope_total)*100:.1f}%` | UI exists but not connected to backend APIs |
-| 🟠 **STUB** | `{status_counts['STUB']}` | `{(status_counts['STUB']/release_scope_total)*100:.1f}%` | Placeholder, partial layout, or hardcoded component data |
-| 🔴 **MISSING** | `{status_counts['MISSING']}` | `{(status_counts['MISSING']/release_scope_total)*100:.1f}%` | Route and component do not exist |
-| ⚪ **DEFERRED** | `{status_counts['DEFERRED']}` | — | Scoped out for v1 release to ensure rigorous depth on core family flow |
-
----
-
-## 📋 Release Scope Ledger ({release_scope_total} Routes)
-
-| # | Route | Name | Category | Tier | Access | Status | Design Asset | Evidence / Audit Findings |
-|---|---|---|---|---|---|---|---|---|
-"""
-
     release_results = [r for r in results if r.get("inReleaseScope", False)]
     deferred_results = [r for r in results if not r.get("inReleaseScope", False)]
-
-    for r in release_results:
-        status_badge = {
-            "VERIFIED": "🟢 VERIFIED",
-            "FUNCTIONAL": "🟡 FUNCTIONAL",
-            "UI-ONLY": "🔵 UI-ONLY",
-            "STUB": "🟠 STUB",
-            "MISSING": "🔴 MISSING",
-            "DEFERRED": "⚪ DEFERRED"
-        }.get(r["status"], r["status"])
-
-        design = r.get("designFile", "—")
-        if design == "NO-DESIGN":
-            design = "—"
-
-        md += f"| {r.get('id', '-')} | `{r['path']}` | {r['name']} | {r.get('category', 'App')} | {r.get('tier', 'T1')} | {r.get('access', 'user')} | {status_badge} | {design} | {r['evidence']} |\n"
-
-    md += f"""
----
-
-## ⏸️ Deferred Routes ({len(deferred_results)} Routes)
-*Scoped out for v1 hackathon release to ensure depth on core problem flow.*
-
-| Route | Name | Reason |
-|---|---|---|
-"""
-    for r in deferred_results:
-        md += f"| `{r['path']}` | {r['name']} | {r['evidence']} |\n"
-
-    md += """
----
-*Ledger maintained per `AGENTS.md` Section 5. Only routes with status `VERIFIED` may be cited in final release materials.*
-"""
-
+    md = _render_status_markdown(
+        status_counts, release_scope_total, release_results, deferred_results
+    )
     with open(BUILD_STATUS_PATH, "w", encoding="utf-8") as f:
         f.write(md)
 
     print(f"[OK] Wrote route ledger to {BUILD_STATUS_PATH}")
-    print(f"Release Scope: {status_counts['VERIFIED']}/{release_scope_total} verified, {status_counts['FUNCTIONAL']} functional, {status_counts['MISSING']} missing. Deferred: {status_counts['DEFERRED']}.")
-
+    print(
+        f"Release Scope: {status_counts['VERIFIED']}/{release_scope_total} verified, {status_counts['FUNCTIONAL']} functional, {status_counts['MISSING']} missing. Deferred: {status_counts['DEFERRED']}."
+    )
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

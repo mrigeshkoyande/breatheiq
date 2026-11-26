@@ -1,37 +1,44 @@
-import sys
 import re
+import sys
 from pathlib import Path
+
+import pytest
+from starlette.routing import Route
 
 # Ensure 'backend' directory is in sys.path regardless of execution working directory
 _BACKEND_DIR = str(Path(__file__).resolve().parent.parent)
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
 
-import pytest
-from starlette.routing import Route
-from app.core.security import create_access_token, hash_password, verify_password
-from app.main import app
+from app.core.security import create_access_token, hash_password, verify_password  # noqa: E402
+from app.main import app  # noqa: E402
 
 
 @pytest.mark.asyncio
 async def test_user_data_isolation(client):
     """Verifies User A cannot read, tamper with, or delete User B's data across all entities."""
     # 1. Sign up User A
-    res_a = await client.post("/api/v1/auth/signup", json={
-        "email": "user_alpha@isolation.org",
-        "password": "Password123!",
-        "full_name": "User Alpha"
-    })
+    res_a = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "user_alpha@isolation.org",
+            "password": "Password123!",
+            "full_name": "User Alpha",
+        },
+    )
     assert res_a.status_code == 201
     token_a = res_a.json()["access_token"]
     headers_a = {"Authorization": f"Bearer {token_a}"}
 
     # 2. Sign up User B
-    res_b = await client.post("/api/v1/auth/signup", json={
-        "email": "user_beta@isolation.org",
-        "password": "Password123!",
-        "full_name": "User Beta"
-    })
+    res_b = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "user_beta@isolation.org",
+            "password": "Password123!",
+            "full_name": "User Beta",
+        },
+    )
     assert res_b.status_code == 201
     token_b = res_b.json()["access_token"]
     headers_b = {"Authorization": f"Bearer {token_b}"}
@@ -39,8 +46,14 @@ async def test_user_data_isolation(client):
     # 3. User A creates household
     h_res_a = await client.post(
         "/api/v1/user/household",
-        json={"name": "Villa Alpha", "city": "Delhi", "neighborhood": "Rohini", "latitude": 28.7, "longitude": 77.1},
-        headers=headers_a
+        json={
+            "name": "Villa Alpha",
+            "city": "Delhi",
+            "neighborhood": "Rohini",
+            "latitude": 28.7,
+            "longitude": 77.1,
+        },
+        headers=headers_a,
     )
     assert h_res_a.status_code == 200
     assert h_res_a.json()["name"] == "Villa Alpha"
@@ -54,7 +67,7 @@ async def test_user_data_isolation(client):
     m_res_a = await client.post(
         "/api/v1/user/members",
         json={"name": "Alice Child", "age_category": "child", "sensitivity": "asthma"},
-        headers=headers_a
+        headers=headers_a,
     )
     assert m_res_a.status_code == 200
     member_a_id = m_res_a.json()["id"]
@@ -73,7 +86,7 @@ async def test_user_data_isolation(client):
     r_res_a = await client.post(
         "/api/v1/user/rooms",
         json={"name": "Master Bedroom Alpha", "length_m": 5.0, "width_m": 4.0, "height_m": 2.8},
-        headers=headers_a
+        headers=headers_a,
     )
     assert r_res_a.status_code == 200
     room_a_id = r_res_a.json()["id"]
@@ -88,7 +101,7 @@ async def test_user_data_isolation(client):
     reading_res_b = await client.post(
         f"/api/v1/user/rooms/{room_a_id}/readings",
         json={"pm25": 180.0, "co2": 800.0, "temperature_c": 24.0, "humidity_pct": 50.0},
-        headers=headers_b
+        headers=headers_b,
     )
     assert reading_res_b.status_code == 404
 
@@ -100,23 +113,17 @@ async def test_user_data_isolation(client):
     t_res_a = await client.post(
         "/api/v1/user/routine",
         json={"title": "Private Task Alpha", "time_slot": "morning"},
-        headers=headers_a
+        headers=headers_a,
     )
     assert t_res_a.status_code == 200
     task_a_id = t_res_a.json()["id"]
 
     # 13. User B attempts to toggle User A's task - must return 404
-    toggle_res_b = await client.patch(
-        f"/api/v1/user/routine/{task_a_id}/toggle",
-        headers=headers_b
-    )
+    toggle_res_b = await client.patch(f"/api/v1/user/routine/{task_a_id}/toggle", headers=headers_b)
     assert toggle_res_b.status_code == 404
 
     # 14. User B attempts to delete User A's task - must return 404
-    del_task_b = await client.delete(
-        f"/api/v1/user/routine/{task_a_id}",
-        headers=headers_b
-    )
+    del_task_b = await client.delete(f"/api/v1/user/routine/{task_a_id}", headers=headers_b)
     assert del_task_b.status_code == 404
 
 
@@ -142,40 +149,54 @@ async def test_admin_rbac_enforcement(client):
     for method, path in admin_endpoints:
         # Standard user -> 403 Forbidden
         user_res = await client.request(method, path, headers=user_headers)
-        assert user_res.status_code == 403, f"Expected 403 for user on {path}, got {user_res.status_code}"
+        assert user_res.status_code == 403, (
+            f"Expected 403 for user on {path}, got {user_res.status_code}"
+        )
 
         # Admin user -> 200 OK
         admin_res = await client.request(method, path, headers=admin_headers)
-        assert admin_res.status_code == 200, f"Expected 200 for admin on {path}, got {admin_res.status_code}"
+        assert admin_res.status_code == 200, (
+            f"Expected 200 for admin on {path}, got {admin_res.status_code}"
+        )
 
 
 @pytest.mark.asyncio
 async def test_pydantic_extra_forbid(client):
     """Verifies that extra unexpected fields in request payloads are rejected with 422."""
-    res_user = await client.post("/api/v1/auth/signup", json={
-        "email": "forbid_tester@example.com",
-        "password": "Password123!",
-        "full_name": "Forbid Tester"
-    })
+    res_user = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "forbid_tester@example.com",
+            "password": "Password123!",
+            "full_name": "Forbid Tester",
+        },
+    )
     assert res_user.status_code == 201
     token = res_user.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # Attempt signup with forbidden extra field
-    res = await client.post("/api/v1/auth/signup", json={
-        "email": "hacker2@example.com",
-        "password": "Password123!",
-        "admin_injected_role": "admin"
-    })
+    res = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "hacker2@example.com",
+            "password": "Password123!",
+            "admin_injected_role": "admin",
+        },
+    )
     assert res.status_code == 422
 
     # Attempt adding member with forbidden extra field
-    res_m = await client.post("/api/v1/user/members", json={
-        "name": "Bob",
-        "age_category": "adult",
-        "sensitivity": "none",
-        "malicious_override": True
-    }, headers=headers)
+    res_m = await client.post(
+        "/api/v1/user/members",
+        json={
+            "name": "Bob",
+            "age_category": "adult",
+            "sensitivity": "none",
+            "malicious_override": True,
+        },
+        headers=headers,
+    )
     assert res_m.status_code == 422
 
 

@@ -41,7 +41,9 @@ def test_purifier_domain_validation_and_high_capacity_tier():
 
 
 def test_ventilation_high_wind_and_mid_bl_modifiers():
-    score, rec, _ = score_hour(pm25=50.0, wind_speed=10.5, temp_c=24.0, humidity=45.0, bl_height=550.0)
+    score, rec, _ = score_hour(
+        pm25=50.0, wind_speed=10.5, temp_c=24.0, humidity=45.0, bl_height=550.0
+    )
     assert score > 0 and rec in {"VENTILATE_FREELY", "VENTILATE_BRIEFLY"}
 
 

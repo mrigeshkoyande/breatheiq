@@ -30,70 +30,61 @@ BANNED_RULES = [
     {
         "name": "zero_claim",
         "pattern": r"\bzero(?:\s*-\s*|\s+)(?:delay|hallucination|latency|risk|error|cost|downtime)\b",
-        "desc": "Unsubstantiated 'zero' claim (e.g. zero-delay, zero-hallucination)"
+        "desc": "Unsubstantiated 'zero' claim (e.g. zero-delay, zero-hallucination)",
     },
-    {
-        "name": "percentage_100",
-        "pattern": r"\b100\s*%",
-        "desc": "Unsubstantiated '100%' claim"
-    },
+    {"name": "percentage_100", "pattern": r"\b100\s*%", "desc": "Unsubstantiated '100%' claim"},
     {
         "name": "production_ready",
         "pattern": r"\bproduction\s*-\s*ready\b",
-        "desc": "Unsubstantiated 'production-ready' claim"
+        "desc": "Unsubstantiated 'production-ready' claim",
     },
     {
         "name": "comprehensive",
         "pattern": r"\bcomprehensive\b",
-        "desc": "Overclaimed 'comprehensive' marketing term"
+        "desc": "Overclaimed 'comprehensive' marketing term",
     },
     {
         "name": "state_of_the_art",
         "pattern": r"\bstate\s*-\s*of\s*-\s*the\s*-\s*art\b",
-        "desc": "Unsubstantiated 'state-of-the-art' claim"
+        "desc": "Unsubstantiated 'state-of-the-art' claim",
     },
     {
         "name": "peer_reviewed",
         "pattern": r"\bpeer\s*-\s*reviewed\b",
-        "desc": "Unsubstantiated 'peer-reviewed' citation without paper DOI"
+        "desc": "Unsubstantiated 'peer-reviewed' citation without paper DOI",
     },
     {
         "name": "guarantee",
         "pattern": r"\bguarante(?:e|ed|es|eing)\b",
-        "desc": "Unverifiable health or performance guarantee"
+        "desc": "Unverifiable health or performance guarantee",
     },
     {
         "name": "aaa_compliance",
         "pattern": r"\bAAA\b",
-        "desc": "Unsubstantiated 'AAA' accessibility/compliance claim"
+        "desc": "Unsubstantiated 'AAA' accessibility/compliance claim",
     },
     {
         "name": "hipaa_claim",
         "pattern": r"\bHIPAA\b",
-        "desc": "Inapplicable / unsubstantiated 'HIPAA' compliance claim"
+        "desc": "Inapplicable / unsubstantiated 'HIPAA' compliance claim",
     },
     {
         "name": "official_unqualified",
         "pattern": r"\bofficial\b(?!\s+(?:CAAQMS|CPCB|guidance|standard|station|source|advisory))",
-        "desc": "Unqualified 'official' claim not tied to CAAQMS/CPCB standards"
-    }
+        "desc": "Unqualified 'official' claim not tied to CAAQMS/CPCB standards",
+    },
 ]
 
-WHITELIST_TAGS = [
-    "verified-claim",
-    "justified-claim",
-    "AGENTS.md",
-    "check_claims.py",
-    "scripts/"
-]
+WHITELIST_TAGS = ["verified-claim", "justified-claim", "AGENTS.md", "check_claims.py", "scripts/"]
+
 
 def scan_file(file_path):
     violations = []
     try:
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
-    except Exception as e:
-        return [(1, f"Could not read file: {e}")]
+    except OSError as exc:
+        return [(1, f"Could not read file: {exc}")]
 
     for idx, line in enumerate(lines, 1):
         # Skip lines with whitelist tags
@@ -111,6 +102,7 @@ def scan_file(file_path):
                 violations.append((idx, line.strip(), f"{rule['desc']}: matched '{matched_text}'"))
 
     return violations
+
 
 def collect_files():
     files_to_scan = []
@@ -132,6 +124,7 @@ def collect_files():
                     files_to_scan.append(os.path.join(root, f))
 
     return files_to_scan
+
 
 def main():
     files = collect_files()
@@ -159,13 +152,16 @@ def main():
         for line_no, line_text, reason in violations:
             total_violations += 1
             print(f"  Line {line_no:4d}: {reason}")
-            print(f"             \"{line_text[:80]}\"")
+            print(f'             "{line_text[:80]}"')
 
     print("\n" + "=" * 60)
     print(f"Total Violations: {total_violations}")
-    print("Fix: Remove unverified claims, or justify with an evidence comment like `<!-- verified-claim: <citation> -->`.")
+    print(
+        "Fix: Remove unverified claims, or justify with an evidence comment like `<!-- verified-claim: <citation> -->`."
+    )
     print("=" * 60)
     sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
