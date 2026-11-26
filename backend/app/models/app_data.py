@@ -5,7 +5,22 @@ from datetime import UTC, datetime
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.constants import DEFAULT_CITY_LAT, DEFAULT_CITY_LON
 from app.db.session import Base
+from app.models.community import CommunityReport
+
+__all__ = [
+    "CommunityReport",
+    "Household",
+    "HouseholdMember",
+    "ImpactLog",
+    "Room",
+    "RoomReading",
+    "RoutineTask",
+    "SmogAlertNotification",
+    "SmogAlertRule",
+    "utcnow",
+]
 
 
 def utcnow() -> datetime:
@@ -25,9 +40,11 @@ class Household(Base):
     name: Mapped[str] = mapped_column(String(100), default="My Home", nullable=False)
     city: Mapped[str] = mapped_column(String(100), default="Mumbai", nullable=False)
     neighborhood: Mapped[str] = mapped_column(String(150), default="Andheri West", nullable=False)
-    latitude: Mapped[float] = mapped_column(Float, default=19.0760, nullable=False)
-    longitude: Mapped[float] = mapped_column(Float, default=72.8777, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, default=DEFAULT_CITY_LAT, nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, default=DEFAULT_CITY_LON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
     members: Mapped[list["HouseholdMember"]] = relationship(
         "HouseholdMember", back_populates="household", cascade="all, delete-orphan"
@@ -53,7 +70,9 @@ class HouseholdMember(Base):
     age_category: Mapped[str] = mapped_column(String(50), default="adult", nullable=False)
     sensitivity: Mapped[str] = mapped_column(String(50), default="none", nullable=False)
     vulnerability_score: Mapped[int] = mapped_column(Integer, default=30, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
     household: Mapped["Household | None"] = relationship("Household", back_populates="members")
     routine_tasks: Mapped[list["RoutineTask"]] = relationship(
@@ -79,7 +98,9 @@ class Room(Base):
     height_m: Mapped[float] = mapped_column(Float, default=2.7, nullable=False)
     has_purifier: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     purifier_cadr: Mapped[float | None] = mapped_column(Float, default=0.0, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
     household: Mapped["Household | None"] = relationship("Household", back_populates="rooms")
     readings: Mapped[list["RoomReading"]] = relationship(
@@ -101,7 +122,9 @@ class RoomReading(Base):
     temperature_c: Mapped[float | None] = mapped_column(Float, default=25.0, nullable=True)
     humidity_pct: Mapped[float | None] = mapped_column(Float, default=55.0, nullable=True)
     source: Mapped[str] = mapped_column(String(50), default="Manual", nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
     room: Mapped["Room"] = relationship("Room", back_populates="readings")
 
@@ -124,7 +147,9 @@ class RoutineTask(Base):
     category: Mapped[str] = mapped_column(String(50), default="routine", nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     date_str: Mapped[str] = mapped_column(String(10), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
     member: Mapped["HouseholdMember | None"] = relationship(
         "HouseholdMember", back_populates="routine_tasks"
@@ -146,7 +171,9 @@ class SmogAlertRule(Base):
     quiet_hours_end: Mapped[str] = mapped_column(String(10), default="07:00", nullable=False)
     channels: Mapped[str] = mapped_column(String(100), default="in_app,push", nullable=False)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
 
 class SmogAlertNotification(Base):
@@ -164,7 +191,9 @@ class SmogAlertNotification(Base):
     pollutant_driver: Mapped[str] = mapped_column(String(50), default="PM2.5", nullable=False)
     reason_why: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
 
 
 class ImpactLog(Base):
@@ -181,24 +210,6 @@ class ImpactLog(Base):
     averted_co2_kg: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     aqi_hours_avoided: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
-
-
-class CommunityReport(Base):
-    """Crowdsourced local pollution hazard report."""
-
-    __tablename__ = "community_reports"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
-    report_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    severity: Mapped[str] = mapped_column(String(50), default="moderate", nullable=False)
-    location_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    latitude: Mapped[float] = mapped_column(Float, default=19.0760, nullable=False)
-    longitude: Mapped[float] = mapped_column(Float, default=72.8777, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    upvote_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    status: Mapped[str] = mapped_column(String(50), default="UNVERIFIED", nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
