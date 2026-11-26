@@ -32,6 +32,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true
+concurrency = ["greenlet", "thread"]
 source = ["backend/app"]
 
 [tool.coverage.report]

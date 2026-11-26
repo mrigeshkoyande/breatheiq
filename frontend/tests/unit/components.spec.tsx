@@ -83,7 +83,9 @@ describe('Accessible UI Primitives & Pages', () => {
       vi.fn().mockImplementation((url: string) => {
         if (url.includes('/auth/config')) {
           return Promise.resolve(
-            new Response(JSON.stringify({ demo_mode: false, environment: 'production' }), { status: 200 })
+            new Response(JSON.stringify({ demo_mode: false, environment: 'production' }), {
+              status: 200,
+            })
           );
         }
         return Promise.resolve(new Response('{}', { status: 200 }));
@@ -101,7 +103,9 @@ describe('Accessible UI Primitives & Pages', () => {
       vi.fn().mockImplementation((url: string) => {
         if (url.includes('/auth/config')) {
           return Promise.resolve(
-            new Response(JSON.stringify({ demo_mode: true, environment: 'development' }), { status: 200 })
+            new Response(JSON.stringify({ demo_mode: true, environment: 'development' }), {
+              status: 200,
+            })
           );
         }
         return Promise.resolve(new Response('{}', { status: 200 }));
@@ -120,13 +124,25 @@ describe('Accessible UI Primitives & Pages', () => {
       vi.fn().mockImplementation((url: string) => {
         if (url.includes('/air-quality/cities')) {
           return Promise.resolve(
-            new Response(JSON.stringify([{ city: 'Delhi', state: 'DL', latitude: 28.61, longitude: 77.2 }]), { status: 200 })
+            new Response(
+              JSON.stringify([{ city: 'Delhi', state: 'DL', latitude: 28.61, longitude: 77.2 }]),
+              { status: 200 }
+            )
           );
         }
         if (url.includes('/user/household')) {
           return Promise.resolve(
             new Response(
-              JSON.stringify({ id: 1, user_id: 1, name: 'Home', city: 'Delhi', neighborhood: 'Rohini', latitude: 28.61, longitude: 77.2, created_at: '2026-01-01T00:00:00Z' }),
+              JSON.stringify({
+                id: 1,
+                user_id: 1,
+                name: 'Home',
+                city: 'Delhi',
+                neighborhood: 'Rohini',
+                latitude: 28.61,
+                longitude: 77.2,
+                created_at: '2026-01-01T00:00:00Z',
+              }),
               { status: 200 }
             )
           );
@@ -190,7 +206,16 @@ describe('Accessible UI Primitives & Pages', () => {
           return Promise.resolve(
             new Response(
               JSON.stringify([
-                { id: 7, user_id: 1, time_slot: 'morning', title: 'Seal Bedroom Windows', category: 'ventilation', is_completed: false, date_str: '2026-11-25', created_at: '2026-01-01T00:00:00Z' },
+                {
+                  id: 7,
+                  user_id: 1,
+                  time_slot: 'morning',
+                  title: 'Seal Bedroom Windows',
+                  category: 'ventilation',
+                  is_completed: false,
+                  date_str: '2026-11-25',
+                  created_at: '2026-01-01T00:00:00Z',
+                },
               ]),
               { status: 200 }
             )
@@ -199,18 +224,39 @@ describe('Accessible UI Primitives & Pages', () => {
         if (url.includes('/user/impact')) {
           return Promise.resolve(
             new Response(
-              JSON.stringify({ total_averted_pm25_mg: 4.1, total_averted_co2_kg: 18.2, total_aqi_hours_avoided: 1200, clean_air_streak_days: 7, history: [] }),
+              JSON.stringify({
+                total_averted_pm25_mg: 4.1,
+                total_averted_co2_kg: 18.2,
+                total_aqi_hours_avoided: 1200,
+                clean_air_streak_days: 7,
+                history: [],
+              }),
               { status: 200 }
             )
           );
         }
         if (url.includes('/user/members')) {
           return Promise.resolve(
-            new Response(JSON.stringify([{ id: 1, user_id: 1, name: 'Aarav', age_category: 'child', sensitivity: 'asthma', vulnerability_score: 80, created_at: '2026-01-01T00:00:00Z' }]), { status: 200 })
+            new Response(
+              JSON.stringify([
+                {
+                  id: 1,
+                  user_id: 1,
+                  name: 'Aarav',
+                  age_category: 'child',
+                  sensitivity: 'asthma',
+                  vulnerability_score: 80,
+                  created_at: '2026-01-01T00:00:00Z',
+                },
+              ]),
+              { status: 200 }
+            )
           );
         }
         if (url.includes('/user/alerts')) {
-          return Promise.resolve(new Response(JSON.stringify({ rules: [], notifications: [] }), { status: 200 }));
+          return Promise.resolve(
+            new Response(JSON.stringify({ rules: [], notifications: [] }), { status: 200 })
+          );
         }
         return Promise.resolve(new Response('{}', { status: 200 }));
       })

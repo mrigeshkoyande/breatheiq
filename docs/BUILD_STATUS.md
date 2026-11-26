@@ -1,7 +1,7 @@
 # BreatheIQ Route Ledger & Implementation Status
 
 > **Single Source of Truth** — Generated automatically by `scripts/build_status.py`.  
-> Last audit: `2026-11-26 15:24:10Z`.  
+> Last audit: `2026-11-26 15:39:45Z`.  
 > Release Scope: **24 Routes** | Deferred: **70 Routes**
 
 ---
@@ -34,7 +34,7 @@
 | 30 | `/app/dashboard` | Atmospheric Dashboard | Core app | T1 | user | 🟢 VERIFIED | breatheiq_main_dashboard_andheri_west_mumbai | Verified across 3 viewports (390/768/1440px); Modular Andheri West dashboard (190 page + 468 component lines); interactive routine, Window Oracle, AQI dial |
 | 31 | `/app/air-quality` | Atmospheric Command Center | Core app | T1 | user | 🟢 VERIFIED | breatheiq_atmospheric_command_center | Verified across 3 viewports; Connected to backend API (167 lines) |
 | 33 | `/app/analytics` | Inversion & AQI Analytics | Core app | T1 | user | 🟢 VERIFIED | breatheiq_air_quality_inversion_analytics | Verified across 3 viewports; Connected to backend API (112 lines) |
-| 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🟢 VERIFIED | breatheiq_ai_atmospheric_assistant | Verified across 3 viewports; Connected to backend API (182 lines) |
+| 35 | `/app/assistant` | AI Atmospheric Copilot | Core app | T1 | user | 🟢 VERIFIED | breatheiq_ai_atmospheric_assistant | Verified across 3 viewports; Connected to backend API (183 lines) |
 | 38 | `/app/routine` | Adaptive Daily Routine | Core app | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (157 lines) |
 | 40 | `/app/home` | Home & Indoor Air Oracle | Core app | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (196 lines) |
 | 44 | `/app/family` | Family Air Guardians | Core app | T1 | user | 🟢 VERIFIED | — | Verified across 3 viewports; Connected to backend API (193 lines) |

@@ -76,7 +76,9 @@ describe('API Client & In-Memory Auth Token Handling', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: 'Forbidden role' }), { status: 403 }));
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ detail: 'Forbidden role' }), { status: 403 })
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     const empty = await apiRequest<void>('/user/routine/1', { method: 'DELETE' });
@@ -91,5 +93,41 @@ describe('API Client & In-Memory Auth Token Handling', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abortErr));
 
     await expect(apiRequest('/air-quality/cities')).rejects.toThrow(/timed out/i);
+  });
+
+  it('clears session when 401 refresh fails and handles non-JSON errors', async () => {
+    setAccessToken('old-jwt');
+    window.localStorage.setItem('breatheiq_has_session', 'true');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response('Unauthorized', { status: 401, statusText: 'Unauthorized' })
+      )
+      .mockResolvedValueOnce(new Response('Expired', { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiRequest('/user/household')).rejects.toEqual(new ApiError('Unauthorized', 401));
+    expect(getAccessToken()).toBeNull();
+    expect(window.localStorage.getItem('breatheiq_has_session')).toBeNull();
+  });
+
+  it('throws connection error on network rejection and preserves FormData content type', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiRequest('/air-quality/cities')).rejects.toThrow(/Unable to connect/i);
+
+    const form = new FormData();
+    form.append('note', 'smoke');
+    const res = await apiRequest<{ ok: boolean }>('/community/reports', {
+      method: 'POST',
+      body: form,
+    });
+    expect(res.ok).toBe(true);
+    const [, init] = fetchMock.mock.calls[1];
+    expect((init.headers as Headers).has('Content-Type')).toBe(false);
   });
 });

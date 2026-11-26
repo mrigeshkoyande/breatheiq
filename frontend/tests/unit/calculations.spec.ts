@@ -49,7 +49,14 @@ describe('BreatheIQ Calculation Utilities', () => {
 
   describe('getNaqiTheme', () => {
     it('returns valid color tokens for all CPCB categories', () => {
-      const categories = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe'] as const;
+      const categories = [
+        'Good',
+        'Satisfactory',
+        'Moderate',
+        'Poor',
+        'Very Poor',
+        'Severe',
+      ] as const;
       for (const cat of categories) {
         const theme = getNaqiTheme(cat);
         expect(theme.bg).toContain('bg-[');
